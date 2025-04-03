@@ -1,4 +1,7 @@
-#!/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = ["pyserial==3.5"]
+# ///
 # pylint: disable=import-error
 # pylint: disable=no-name-in-module
 

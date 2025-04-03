@@ -11,3 +11,13 @@ To run the test, run the tester script e.g. with
 ```
 python3 ./scripts/tester/tester.py /dev/ttyACM0 /dev/ttyACM1;
 ```
+
+
+# BEWARE !!
+
+Currently the tests are flaky. Execute the test sereval times to be sure. 
+
+e.g.
+```sh
+for i in {1..4}; do ./scripts/tester/tester.py /dev/ttyACM0 /dev/ttyACM1 ; done
+```

@@ -51,7 +51,7 @@ static const struct device *const uart_devices[] = {DT_FOREACH_PROP_ELEM_SEP(
     }                                                                    \
                                                                          \
     char byte;                                                           \
-    while (uart_fifo_read(dev, &byte, 1) == 1) {                         \
+    while (uart_poll_in(dev, &byte) == 0) {                              \
     }                                                                    \
                                                                          \
     int ret = uart_irq_callback_user_data_set(                           \

@@ -31,6 +31,10 @@ static const struct device *const lin_devices[] = {DT_FOREACH_PROP_ELEM_SEP(
       LOG_ERR("%s: UART device not ready", dev->name);   \
       return;                                            \
     }                                                    \
+                                                         \
+    char byte;                                           \
+    while (uart_poll_in(dev, &byte) == 0) {              \
+    }                                                    \
   }                                                      \
                                                          \
   static void send_character_##idx() {                   \

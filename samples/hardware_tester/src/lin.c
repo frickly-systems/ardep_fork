@@ -50,6 +50,10 @@ static const struct device *const lin_devices[] = {DT_FOREACH_PROP_ELEM_SEP(
       return;                                                            \
     }                                                                    \
                                                                          \
+    char byte;                                                           \
+    while (uart_poll_in(dev, &byte) == 0) {                              \
+    }                                                                    \
+                                                                         \
     int ret = uart_irq_callback_user_data_set(                           \
         dev, uart_interrupt_callback_##idx, NULL);                       \
                                                                          \

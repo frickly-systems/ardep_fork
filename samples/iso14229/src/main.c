@@ -16,7 +16,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/byteorder.h>
 
-#include <ardep/uds_minimal.h>
+#include <ardep/iso14229.h>
 #include <server.h>
 #include <tp/isotp_c.h>
 #include <util.h>

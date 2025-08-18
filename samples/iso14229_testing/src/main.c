@@ -18,6 +18,7 @@
 
 #include <server.h>
 #include <tp/isotp_c.h>
+#include <uds_new.h>
 #include <util.h>
 
 LOG_MODULE_REGISTER(iso14229_testing, LOG_LEVEL_DBG);
@@ -58,6 +59,10 @@ UDSErr_t uds_cb(struct UDSServer *srv, UDSEvent_t event, void *arg) {
       uint8_t data = 1;
       routine->copyStatusRecord(srv, &data, 1);
       break;
+    }
+    case UDS_EVT_ReadDataByIdent: {
+      UDSRDBIArgs_t *read_args = (UDSRDBIArgs_t *)arg;
+      return handle_data_read_by_identifier(srv, read_args);
     }
     case UDS_EVT_RequestDownload: {
       UDSRequestDownloadArgs_t *req = (UDSRequestDownloadArgs_t *)arg;
@@ -110,6 +115,16 @@ UDSErr_t uds_cb(struct UDSServer *srv, UDSEvent_t event, void *arg) {
 
   return UDS_OK;
 }
+
+struct uds_new_instance_t instance;
+
+uint16_t variable = 5;
+char variable2[] = "Hello world";
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(dings, &instance, 0x1234, variable);
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(
+    dings2, &instance, 0x1235, variable2, sizeof(variable2));
+
+// todo: tickets für nötige msgs
 
 int main(void) {
   UDSISOTpCConfig_t cfg = {

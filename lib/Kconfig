@@ -19,6 +19,10 @@ menu "ARDEP"
         rsource "uds/Kconfig"
     endif
 
+    menuconfig UDS_NEW
+        bool "UDS New"
+        depends on ISO14229_LIB
+
 
     menuconfig CAN_ROUTER
         bool "Can frame router"

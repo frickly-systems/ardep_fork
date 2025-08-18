@@ -1,5 +1,7 @@
 // This would be dedicated into a separate library
 
+#pragma once
+
 #include <zephyr/drivers/can.h>
 #include <zephyr/kernel.h>
 

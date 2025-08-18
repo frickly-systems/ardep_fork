@@ -32,10 +32,13 @@ int iso14229_zephyr_init(struct iso14229_zephyr_instance* inst,
   inst->tp.phys_link.user_send_can_arg = (void*)can_dev;
   inst->tp.func_link.user_send_can_arg = (void*)can_dev;
 
+  // Von CAN Nachrichten
   const struct can_filter phys_filter = {
     .id = inst->tp.phys_sa,
     .mask = CAN_STD_ID_MASK,
   };
+
+  // KP woher das kommt?!
   const struct can_filter func_filter = {
     .id = inst->tp.func_sa,
     .mask = CAN_STD_ID_MASK,

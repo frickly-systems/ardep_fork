@@ -56,6 +56,7 @@ UDSErr_t _uds_new_data_identifier_static_write(
 
 UDSErr_t handle_data_read_by_identifier(UDSServer_t* srv, UDSRDBIArgs_t* args);
 
+// clang-format off
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(name, _instance, _data_id, \
                                                 variable)                  \
   STRUCT_SECTION_ITERABLE(uds_new_registration_t, name) = {                \
@@ -85,3 +86,5 @@ UDSErr_t handle_data_read_by_identifier(UDSServer_t* srv, UDSRDBIArgs_t* args);
           .write = _uds_new_data_identifier_static_write,   \
         },                                                  \
   };
+
+// clang-format on

@@ -128,8 +128,8 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(
 
 int main(void) {
   UDSISOTpCConfig_t cfg = {
-    .source_addr = 0x7E8,
-    .target_addr = 0x7E0,
+    .source_addr = 0x7E8,  // Can ID Target
+    .target_addr = 0x7E0,  // Can ID Source (wir)
     .source_addr_func = 0x7DF,
     .target_addr_func = UDS_TP_NOOP_ADDR,
   };

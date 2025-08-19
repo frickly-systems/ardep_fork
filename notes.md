@@ -1,0 +1,1 @@
+- [ ] add windows version to footnote

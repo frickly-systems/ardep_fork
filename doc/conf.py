@@ -29,6 +29,10 @@ html_static_path = ["_static"]
 html_css_files = [
     "css/custom.css",
 ]
+html_theme_options = {
+    "page_width": "1600px",
+    "sidebar_width": "300px",
+}
 
 breathe_projects = {project: "_build/xml/"}
 breathe_default_project = project

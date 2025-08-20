@@ -4,8 +4,8 @@
 
 LOG_MODULE_REGISTER(isotp, CONFIG_ISO14229_LIB_LOG_LEVEL);
 
-#include <tp/isotp-c/isotp.h>
-#include <tp/isotp-c/isotp_user.h>
+#include <iso14229/tp/isotp-c/isotp.h>
+#include <iso14229/tp/isotp-c/isotp_user.h>
 
 void isotp_user_debug(const char* fmt, ...) {
 #if CONFIG_ISO14229_LIB_LOG_LEVEL >= LOG_LEVEL_DEBUG
@@ -28,7 +28,7 @@ int isotp_user_send_can(const uint32_t arbitration_id,
   frame.flags = 0;
   const struct device* can_dev = arg;
   LOG_DBG("CAN TX: %03x [%d] %02x ...", frame.id, frame.dlc, frame.data[0]);
-  int ret = can_send(can_dev, &frame, K_FOREVER, NULL, NULL);
+  int ret = can_send(can_dev, &frame, K_FOREVER, NULL, &frame);
 
   if (ret != 0) {
     return ISOTP_RET_ERROR;

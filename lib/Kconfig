@@ -18,10 +18,13 @@ menu "ARDEP"
     if UDS
         rsource "uds/Kconfig"
     endif
+    
+
+    rsource "uds_minimal/Kconfig"
 
     menuconfig UDS_NEW
         bool "UDS New"
-        depends on ISO14229_LIB
+        select UDS_MINIMAL
 
 
     menuconfig CAN_ROUTER

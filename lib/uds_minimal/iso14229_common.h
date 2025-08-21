@@ -8,16 +8,6 @@
 #include <iso14229/server.h>
 #include <iso14229/tp/isotp_c.h>
 
-typedef UDSErr_t (*uds_read_mem_by_addr_fn)(
-    struct UDSServer* srv,
-    const UDSReadMemByAddrArgs_t* read_args,
-    void* user_context);
-
-typedef UDSErr_t (*uds_uds_diag_sess_ctrl_fn)(
-    struct UDSServer* srv,
-    const UDSDiagSessCtrlArgs_t* read_args,
-    void* user_context);
-
 struct iso14229_zephyr_instance;
 
 typedef UDSErr_t (*uds_callback)(struct iso14229_zephyr_instance* inst,

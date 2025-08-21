@@ -14,12 +14,12 @@ import udsoncan
 
 def write_read_memory(client: Client):
     client.change_session(DiagnosticSessionControl.Session.programmingSession)
-    client.write_memory_by_address(
-        udsoncan.MemoryLocation(
-            address=0x12, memorysize=8, address_format=32, memorysize_format=32
-        ),
-        b"\x12\x34\x56\x78\x9a\xbc\xde\xf0",
-    )
+    # client.write_memory_by_address(
+    #     udsoncan.MemoryLocation(
+    #         address=0x12, memorysize=8, address_format=32, memorysize_format=32
+    #     ),
+    #     b"\x12\x34\x56\x78\x9a\xbc\xde\xf0",
+    # )
 
     addr = 2
     print(f"Reading memory address 0x{addr:02x} with size 0x34:")

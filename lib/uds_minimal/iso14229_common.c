@@ -35,9 +35,7 @@ static void can_rx_cb(const struct device *dev,
 int iso14229_zephyr_init(struct iso14229_zephyr_instance *inst,
                          const UDSISOTpCConfig_t *iso_tp_config,
                          const struct device *can_dev,
-                         struct uds_callbacks callbacks,
                          void *user_context) {
-  inst->event_callbacks = callbacks;
   inst->user_context = user_context;
 
   int ret = k_mutex_init(&inst->event_callback_mutex);

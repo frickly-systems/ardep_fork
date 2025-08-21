@@ -12,16 +12,12 @@
 #include <iso14229/tp/isotp_c.h>
 #include <iso14229_common.h>
 
+// Test callback function for UDS events
 DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
-                        uds_diag_sess_ctrl_callback,
-                        struct UDSServer *,
-                        const UDSDiagSessCtrlArgs_t *,
-                        void *);
-
-DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
-                        uds_read_mem_by_addr_callback,
-                        struct UDSServer *,
-                        const UDSReadMemByAddrArgs_t *,
+                        test_uds_callback,
+                        struct iso14229_zephyr_instance *,
+                        UDSEvent_t,
+                        void *,
                         void *);
 
 struct lib_uds_minimal_fixture {

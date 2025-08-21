@@ -24,7 +24,7 @@
 
 LOG_MODULE_REGISTER(iso14229_testing, LOG_LEVEL_DBG);
 
-static const struct device* can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
+static const struct device *can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
 
 uint8_t dummy_memory[512] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x66, 0x7, 0x8};
 
@@ -40,9 +40,9 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(
 
 // todo: tickets für nötige msgs
 
-UDSErr_t read_mem_by_addr_impl(struct UDSServer* srv,
-                               const UDSReadMemByAddrArgs_t* read_args,
-                               void* user_context) {
+UDSErr_t read_mem_by_addr_impl(struct UDSServer *srv,
+                               const UDSReadMemByAddrArgs_t *read_args,
+                               void *user_context) {
   uint32_t addr = (uintptr_t)read_args->memAddr;
 
   LOG_INF("Read Memory By Address: addr=0x%08X size=%u", addr,
@@ -51,6 +51,89 @@ UDSErr_t read_mem_by_addr_impl(struct UDSServer* srv,
   return read_args->copy(srv,
                          &dummy_memory[(uint32_t)(uintptr_t)read_args->memAddr],
                          read_args->memSize);
+}
+
+UDSErr_t uds_cb(struct UDSServer *srv, UDSEvent_t event, void *arg) {
+  LOG_DBG("UDS Event: %s", UDSEventToStr(event));
+  switch (event) {
+    case UDS_EVT_Err: {
+      UDSErr_t *err = (UDSErr_t *)arg;
+      LOG_ERR("UDS Error: %d", *err);
+      break;
+    }
+    case UDS_EVT_DiagSessCtrl: {
+      UDSDiagSessCtrlArgs_t *session_args = (UDSDiagSessCtrlArgs_t *)arg;
+      LOG_INF("Diagnostic Session Control: %d", session_args->type);
+      break;
+    }
+    case UDS_EVT_EcuReset: {
+      uint8_t *reset_type = (uint8_t *)arg;
+      LOG_INF("ECU Reset: %d", *reset_type);
+      break;
+    }
+    case UDS_EVT_SessionTimeout: {
+      LOG_WRN("Session Timeout");
+      srv->sessionType = UDS_LEV_DS_DS;  // reset to default session
+      break;
+    }
+    case UDS_EVT_RoutineCtrl: {
+      UDSRoutineCtrlArgs_t *routine = (UDSRoutineCtrlArgs_t *)arg;
+      LOG_INF("Routine Control: %d %d", routine->id, routine->ctrlType);
+      // as per the standard, basically any data can be returned here
+      uint8_t data = 1;
+      routine->copyStatusRecord(srv, &data, 1);
+      break;
+    }
+    case UDS_EVT_RequestDownload: {
+      UDSRequestDownloadArgs_t *req = (UDSRequestDownloadArgs_t *)arg;
+      LOG_INF("Request Download: addr=%p size=%zu format=%d", req->addr,
+              req->size, req->dataFormatIdentifier);
+      break;
+    }
+    case UDS_EVT_TransferData: {  //! note: very import: the first block number
+                                  //! must be 1 with this library
+      UDSTransferDataArgs_t *transfer_args = (UDSTransferDataArgs_t *)arg;
+      LOG_HEXDUMP_INF(transfer_args->data, transfer_args->len, "Transfer Data");
+      LOG_INF("Transfer Data: len=%d", transfer_args->len);
+      break;
+    }
+    case UDS_EVT_RequestTransferExit: {
+      UDSRequestTransferExitArgs_t *exit_args =
+          (UDSRequestTransferExitArgs_t *)arg;
+      LOG_INF("Request Transfer Exit: len=%d", exit_args->len);
+      break;
+    }
+    case UDS_EVT_ReadMemByAddr: {
+      UDSReadMemByAddrArgs_t *read_args = (UDSReadMemByAddrArgs_t *)arg;
+      LOG_INF("Read Memory By Address: addr=%p size=%zu", read_args->memAddr,
+              read_args->memSize);
+      read_args->copy(srv, &dummy_memory[(uint32_t)read_args->memAddr],
+                      read_args->memSize);
+      break;
+    }
+    default:
+      UDSCustomArgs_t *custom_args = (UDSCustomArgs_t *)arg;
+
+      if (custom_args->sid == CUSTOMUDS_WriteMemoryByAddr_SID) {
+        struct CUSTOMUDS_WriteMemoryByAddr args;
+        UDSErr_t e = customuds_decode_write_memory_by_addr(custom_args, &args);
+        if (e != UDS_PositiveResponse) {
+          return e;
+        }
+
+        memcpy(&dummy_memory[args.addr], args.data, args.len);
+
+        LOG_HEXDUMP_INF(args.data, args.len, "Write Memory By Address");
+        LOG_INF("Write Memory By Address: addr=0x%08X len=%zu", args.addr,
+                args.len);
+
+        return customuds_answer(srv, custom_args, &args);
+      }
+
+      return UDS_NRC_ServiceNotSupported;
+  }
+
+  return UDS_OK;
 }
 
 int main(void) {
@@ -63,11 +146,11 @@ int main(void) {
     .source_addr_func = 0x7DF,             // ID Client
     .target_addr_func = UDS_TP_NOOP_ADDR,  // ID Server (us)
   };
-  struct uds_callbacks cbs = {
-    .uds_read_mem_by_addr_fn = read_mem_by_addr_impl,
-  };
 
-  iso14229_zephyr_init(&inst, &cfg, can_dev, cbs, NULL);
+  iso14229_zephyr_init(&inst, &cfg, can_dev, NULL);
+
+  // Set the callback to use the existing uds_cb function
+  iso14229_zephyr_set_callback(&inst, (iso14229_zephyr_callback_t)uds_cb);
 
   int err;
   if (!device_is_ready(can_dev)) {
@@ -91,4 +174,24 @@ int main(void) {
   while (1) {
     iso14229_zephyr_thread(&inst);
   }
+}
+return -ENODEV;
+}
+
+err = can_set_mode(can_dev, CAN_MODE_NORMAL);
+if (err) {
+  printk("Failed to set CAN mode: %d\n", err);
+  return err;
+}
+
+err = can_start(can_dev);
+if (err) {
+  printk("Failed to start CAN device: %d\n", err);
+  return err;
+}
+printk("CAN device started\n");
+
+while (1) {
+  iso14229_zephyr_thread(&inst);
+}
 }

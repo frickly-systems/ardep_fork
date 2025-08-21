@@ -16,96 +16,13 @@ UDSErr_t uds_cb(struct UDSServer *srv, UDSEvent_t event, void *arg) {
   struct iso14229_zephyr_instance *inst =
       (struct iso14229_zephyr_instance *)srv->fn_data;
 
-  switch (event) {
-    case UDS_EVT_Err: {
-      UDSErr_t *err = (UDSErr_t *)arg;
-      LOG_ERR("UDS Error: %d", *err);
-      break;
-    }
-    case UDS_EVT_DiagSessCtrl: {
-      UDSDiagSessCtrlArgs_t *session_args = (UDSDiagSessCtrlArgs_t *)arg;
-      LOG_INF("Diagnostic Session Control: %d", session_args->type);
-
-      if (inst->event_callbacks.uds_uds_diag_sess_ctrl_fn) {
-        return inst->event_callbacks.uds_uds_diag_sess_ctrl_fn(
-            srv, session_args, inst->user_context);
-      }
-      break;
-    }
-    case UDS_EVT_EcuReset: {
-      uint8_t *reset_type = (uint8_t *)arg;
-      LOG_INF("ECU Reset: %d", *reset_type);
-      break;
-    }
-    case UDS_EVT_SessionTimeout: {
-      LOG_WRN("Session Timeout");
-      srv->sessionType = UDS_LEV_DS_DS;  // reset to default session
-      break;
-    }
-    case UDS_EVT_RoutineCtrl: {
-      UDSRoutineCtrlArgs_t *routine = (UDSRoutineCtrlArgs_t *)arg;
-      LOG_INF("Routine Control: %d %d", routine->id, routine->ctrlType);
-      // as per the standard, basically any data can be returned here
-      uint8_t data = 1;
-      routine->copyStatusRecord(srv, &data, 1);
-      break;
-    }
-    case UDS_EVT_ReadDataByIdent: {
-      UDSRDBIArgs_t *read_args = (UDSRDBIArgs_t *)arg;
-      return handle_data_read_by_identifier(srv, read_args);
-    }
-    case UDS_EVT_RequestDownload: {
-      UDSRequestDownloadArgs_t *req = (UDSRequestDownloadArgs_t *)arg;
-      LOG_INF("Request Download: addr=%p size=%zu format=%d", req->addr,
-              req->size, req->dataFormatIdentifier);
-      break;
-    }
-    case UDS_EVT_TransferData: {  //! note: very import: the first block number
-                                  //! must be 1 with this library
-      UDSTransferDataArgs_t *transfer_args = (UDSTransferDataArgs_t *)arg;
-      LOG_HEXDUMP_INF(transfer_args->data, transfer_args->len, "Transfer Data");
-      LOG_INF("Transfer Data: len=%d", transfer_args->len);
-      break;
-    }
-    case UDS_EVT_RequestTransferExit: {
-      UDSRequestTransferExitArgs_t *exit_args =
-          (UDSRequestTransferExitArgs_t *)arg;
-      LOG_INF("Request Transfer Exit: len=%d", exit_args->len);
-      break;
-    }
-    case UDS_EVT_ReadMemByAddr: {
-      UDSReadMemByAddrArgs_t *read_args = (UDSReadMemByAddrArgs_t *)arg;
-      LOG_INF("Read Memory By Address: addr=%p size=%zu", read_args->memAddr,
-              read_args->memSize);
-
-      return inst->event_callbacks.uds_read_mem_by_addr_fn(srv, read_args,
-                                                           inst->user_context);
-    }
-    default:
-      UDSCustomArgs_t *custom_args = (UDSCustomArgs_t *)arg;
-
-      if (custom_args->sid == CUSTOMUDS_WriteMemoryByAddr_SID) {
-        struct CUSTOMUDS_WriteMemoryByAddr args;
-        UDSErr_t e = customuds_decode_write_memory_by_addr(custom_args, &args);
-        if (e != UDS_PositiveResponse) {
-          return e;
-        }
-
-        // TODO TIM: cb
-        // This executes the actual write to the memory
-        // memcpy(&dummy_memory[args.addr], args.data, args.len);
-
-        LOG_HEXDUMP_INF(args.data, args.len, "Write Memory By Address");
-        LOG_INF("Write Memory By Address: addr=0x%08X len=%zu", args.addr,
-                args.len);
-
-        return customuds_answer(srv, custom_args, &args);
-      }
-
-      return UDS_NRC_ServiceNotSupported;
+  UDSErr_t ret = UDS_OK;
+  k_mutex_lock(&inst->event_callback_mutex, K_FOREVER);
+  if (inst->event_callback) {
+    ret = inst->event_callback(inst, event, arg, inst->user_context);
   }
-
-  return UDS_OK;
+  k_mutex_unlock(&inst->event_callback_mutex);
+  return ret;
 }
 
 static void can_rx_cb(const struct device *dev,
@@ -122,6 +39,12 @@ int iso14229_zephyr_init(struct iso14229_zephyr_instance *inst,
                          void *user_context) {
   inst->event_callbacks = callbacks;
   inst->user_context = user_context;
+
+  int ret = k_mutex_init(&inst->event_callback_mutex);
+  if (ret != 0) {
+    LOG_ERR("Failed to initialize event callback mutex");
+    return ret;
+  }
 
   k_msgq_init(&inst->can_phys_msgq, inst->can_phys_buffer,
               sizeof(struct can_frame),
@@ -165,6 +88,15 @@ int iso14229_zephyr_init(struct iso14229_zephyr_instance *inst,
     return err;
   }
 
+  return 0;
+}
+
+int iso14229_zephyr_set_callback(struct iso14229_zephyr_instance *inst,
+                                 uds_callback callback) {
+  LOG_DBG("Setting UDS callback");
+  k_mutex_lock(&inst->event_callback_mutex, K_FOREVER);
+  inst->event_callback = callback;
+  k_mutex_unlock(&inst->event_callback_mutex);
   return 0;
 }
 

@@ -18,10 +18,12 @@ typedef UDSErr_t (*uds_uds_diag_sess_ctrl_fn)(
     const UDSDiagSessCtrlArgs_t* read_args,
     void* user_context);
 
-struct uds_callbacks {
-  uds_read_mem_by_addr_fn uds_read_mem_by_addr_fn;
-  uds_uds_diag_sess_ctrl_fn uds_uds_diag_sess_ctrl_fn;
-};
+struct iso14229_zephyr_instance;
+
+typedef UDSErr_t (*uds_callback)(struct iso14229_zephyr_instance* inst,
+                                 UDSEvent_t event,
+                                 void* arg,
+                                 void* user_context);
 
 struct iso14229_zephyr_instance {
   UDSServer_t server;
@@ -33,7 +35,9 @@ struct iso14229_zephyr_instance {
   char can_phys_buffer[sizeof(struct can_frame) * 25];
   char can_func_buffer[sizeof(struct can_frame) * 25];
 
-  struct uds_callbacks event_callbacks;
+  struct k_mutex event_callback_mutex;
+  uds_callback event_callback;
+
   void* user_context;
 };
 
@@ -44,8 +48,10 @@ typedef UDSErr_t (*uds_cb_fn)(struct UDSServer* srv,
 int iso14229_zephyr_init(struct iso14229_zephyr_instance* inst,
                          const UDSISOTpCConfig_t* iso_tp_config,
                          const struct device* can_dev,
-                         struct uds_callbacks callbacks,
                          void* user_context);
+
+int iso14229_zephyr_set_callback(struct iso14229_zephyr_instance* inst,
+                                 uds_callback callback);
 
 void iso14229_zephyr_thread_tick(struct iso14229_zephyr_instance* inst);
 void iso14229_zephyr_thread(struct iso14229_zephyr_instance* inst);

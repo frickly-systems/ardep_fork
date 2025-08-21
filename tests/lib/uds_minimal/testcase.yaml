@@ -7,4 +7,3 @@ common:
 tests:
   lib.uds_minimal:
     harness: ztest
-    type: unit

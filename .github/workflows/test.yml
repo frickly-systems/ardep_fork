@@ -1,13 +1,11 @@
-name: Build
+name: Test
 
 on:
   push:
   pull_request:
-  schedule:
-    - cron: "0 0 * * *"
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-22.04
     container: ghcr.io/zephyrproject-rtos/ci:v0.28.4
     env:
@@ -24,13 +22,7 @@ jobs:
           west init -l --mf ./west.yml .
           west update -o=--depth=1 -n
 
-      - name: Build firmware examples
+      - name: Run tests
         working-directory: zephyr-workspace/ardep
         run: |
-          west twister -T samples -v --inline-logs --integration
-
-      - name: build bootloader
-        working-directory: zephyr-workspace/ardep
-        run: |
-          pip install -r scripts/requirements.txt
-          west ardep build-bootloader
+          west twister -T ardep/tests -p native_sim -v --inline-logs

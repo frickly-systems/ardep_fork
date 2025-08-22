@@ -29,6 +29,22 @@ struct lib_uds_minimal_fixture {
 };
 
 /**
+ * Tick the iso14229 thread once
+ *
+ * @param fixture The fixture containing the configuration and device
+ */
+void tick_thread(struct iso14229_zephyr_instance *instance);
+
+/**
+ * Advance Time andTick the iso14229 thread once
+ *
+ * Necessary to elapse the timeout to send the next response to the client
+ *
+ * @param fixture The fixture containing the configuration and device
+ */
+void advance_time_and_tick_thread(struct iso14229_zephyr_instance *instance);
+
+/**
  *  Fake the reception of a physical CAN Frame
  *
  * @param fixture The fixture containing the configuration and device
@@ -55,6 +71,7 @@ void receive_phys_can_frame(const struct lib_uds_minimal_fixture *fixture,
  * @param data_len The length of the CAN frame data (== dlc)
  */
 void assert_send_phy_can_frame(const struct lib_uds_minimal_fixture *fixture,
+                               uint32_t frame_index,
                                uint8_t *data,
                                uint8_t data_len);
 
@@ -64,7 +81,8 @@ void assert_send_phy_can_frame(const struct lib_uds_minimal_fixture *fixture,
  * The array holds the expected full CAN Frame.
  *
  */
-#define assert_send_phy_can_frame_array(fixture, data_array) \
-  assert_send_phy_can_frame(fixture, data_array, ARRAY_SIZE(data_array))
+#define assert_send_phy_can_frame_array(fixture, frame_index, data_array) \
+  assert_send_phy_can_frame(fixture, frame_index, data_array,             \
+                            ARRAY_SIZE(data_array))
 
 #endif  // APP_TESTS_LIB_UDS_MINIMAL_SRC_FIXTURE_H_

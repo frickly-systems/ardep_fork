@@ -58,6 +58,88 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance *inst,
                             UDSEvent_t event,
                             void *arg,
                             void *user_context) {
+  LOG_DBG("UDS Event: %s", UDSEventToStr(event));
+  switch (event) {
+    case UDS_EVT_Err: {
+      UDSErr_t *err = (UDSErr_t *)arg;
+      LOG_ERR("UDS Error: %d", *err);
+      break;
+    }
+    case UDS_EVT_DiagSessCtrl: {
+      UDSDiagSessCtrlArgs_t *session_args = (UDSDiagSessCtrlArgs_t *)arg;
+      LOG_INF("Diagnostic Session Control: %d", session_args->type);
+      break;
+    }
+    case UDS_EVT_EcuReset: {
+      uint8_t *reset_type = (uint8_t *)arg;
+      LOG_INF("ECU Reset: %d", *reset_type);
+      break;
+    }
+    case UDS_EVT_SessionTimeout: {
+      LOG_WRN("Session Timeout");
+      inst->server.sessionType = UDS_LEV_DS_DS;  // reset to default session
+      break;
+    }
+    case UDS_EVT_RoutineCtrl: {
+      UDSRoutineCtrlArgs_t *routine = (UDSRoutineCtrlArgs_t *)arg;
+      LOG_INF("Routine Control: %d %d", routine->id, routine->ctrlType);
+      // as per the standard, basically any data can be returned here
+      uint8_t data = 1;
+      routine->copyStatusRecord(&inst->server, &data, 1);
+      break;
+    }
+    case UDS_EVT_RequestDownload: {
+      UDSRequestDownloadArgs_t *req = (UDSRequestDownloadArgs_t *)arg;
+      LOG_INF("Request Download: addr=%p size=%zu format=%d", req->addr,
+              req->size, req->dataFormatIdentifier);
+      break;
+    }
+    case UDS_EVT_TransferData: {  //! note: very import: the first block number
+                                  //! must be 1 with this library
+      UDSTransferDataArgs_t *transfer_args = (UDSTransferDataArgs_t *)arg;
+      LOG_HEXDUMP_INF(transfer_args->data, transfer_args->len, "Transfer Data");
+      LOG_INF("Transfer Data: len=%d", transfer_args->len);
+      break;
+    }
+    case UDS_EVT_RequestTransferExit: {
+      UDSRequestTransferExitArgs_t *exit_args =
+          (UDSRequestTransferExitArgs_t *)arg;
+      LOG_INF("Request Transfer Exit: len=%d", exit_args->len);
+      break;
+    }
+    case UDS_EVT_ReadMemByAddr: {
+      UDSReadMemByAddrArgs_t *read_args = (UDSReadMemByAddrArgs_t *)arg;
+      LOG_INF("Read Memory By Address: addr=%p size=%zu", read_args->memAddr,
+              read_args->memSize);
+      read_args->copy(&inst->server,
+                      &dummy_memory[(uint32_t)(uintptr_t)read_args->memAddr],
+                      read_args->memSize);
+      break;
+    }
+    default:
+      UDSCustomArgs_t *custom_args = (UDSCustomArgs_t *)arg;
+
+      if (custom_args->sid == CUSTOMUDS_WriteMemoryByAddr_SID) {
+        struct CUSTOMUDS_WriteMemoryByAddr args;
+        UDSErr_t e = customuds_decode_write_memory_by_addr(custom_args, &args);
+        if (e != UDS_PositiveResponse) {
+          return e;
+        }
+
+        memcpy(&dummy_memory[args.addr], args.data, args.len);
+
+        LOG_HEXDUMP_INF(args.data, args.len, "Write Memory By Address");
+        LOG_INF("Write Memory By Address: addr=0x%08X len=%zu", args.addr,
+                args.len);
+
+        return customuds_answer(&inst->server, custom_args, &args);
+      }
+
+      return UDS_NRC_ServiceNotSupported;
+  }
+
+  return UDS_OK;
+
   switch (event) {
     case UDS_EVT_ReadMemByAddr: {
       UDSReadMemByAddrArgs_t *read_args = (UDSReadMemByAddrArgs_t *)arg;

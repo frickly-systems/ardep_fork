@@ -158,8 +158,8 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance *inst,
 int main(void) {
   UDSISOTpCConfig_t cfg = {
     // Hardwarea Addresses
-    .source_addr = 0x7E8,  // Can ID Client
-    .target_addr = 0x7E0,  // Can ID Server (us)
+    .source_addr = 0x7E8,  // Can ID Server (us)
+    .target_addr = 0x7E0,  // Can ID Client (them)
 
     // Functional Addresses
     .source_addr_func = 0x7DF,             // ID Client

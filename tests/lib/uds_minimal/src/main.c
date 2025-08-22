@@ -66,7 +66,7 @@ ZTEST_F(lib_uds_minimal, test_read_memory) {
   // Size = 0x04 (1 byte size)
   uint8_t request_data[] = {0x07, 0x23, 0x14, 0x00, 0x00, 0x00, 0x01, 0x04};
 
-  send_phys_can_frame_array(fixture, request_data);
+  receive_phys_can_frame_array(fixture, request_data);
   iso14229_zephyr_thread_tick(instance);
 
   // Verify the unified callback was called correctly for ReadMemByAddr event
@@ -96,47 +96,46 @@ ZTEST_F(lib_uds_minimal, test_read_memory) {
   assert_send_phy_can_frame_array(fixture, response_data);
 }
 
-// ZTEST_F(lib_uds_minimal, test_diag_session_ctrl) {
-//   struct iso14229_zephyr_instance *instance = &fixture->instance;
+ZTEST_F(lib_uds_minimal, test_diag_session_ctrl) {
+  struct iso14229_zephyr_instance *instance = &fixture->instance;
 
-//   // Create a UDS Diagnostic Session Control request frame (single frame
-//   ISO-TP)
-//   // Service ID 0x10 = DiagnosticSessionControl
-//   // Format: [PCI] [DSC] [DS]
-//   // PCI = 0x02 (single frame, 2 bytes of data)
-//   // SID = 0x10 (DiagnosticSessionControl)
-//   // DS  = 0x02 (Programming Session)
-//   uint8_t request_data[] = {0x02, 0x10, 0x02};
+  // Create a UDS Diagnostic Session Control request frame (single frame ISO-TP)
+  // Service ID 0x10 = DiagnosticSessionControl
+  // Format: [PCI] [DSC] [DS]
+  // PCI = 0x02 (single frame, 2 bytes of data)
+  // SID = 0x10 (DiagnosticSessionControl)
+  // DS  = 0x02 (Programming Session)
+  uint8_t request_data[] = {0x02, 0x10, 0x02};
 
-//   send_phys_can_frame_array(fixture, request_data);
-//   k_msleep(1000);
-//   iso14229_zephyr_thread_tick(instance);
+  receive_phys_can_frame_array(fixture, request_data);
+  k_msleep(1000);
+  iso14229_zephyr_thread_tick(instance);
 
-//   // Verify the unified callback was called correctly for DiagSessCtrl event
-//   zassert_equal(test_uds_callback_fake.call_count, 1);
-//   // arg1_val is the UDSEvent_t event parameter
-//   zassert_equal(test_uds_callback_fake.arg1_val, UDS_EVT_DiagSessCtrl);
+  // Verify the unified callback was called correctly for DiagSessCtrl event
+  zassert_equal(test_uds_callback_fake.call_count, 1);
+  // arg1_val is the UDSEvent_t event parameter
+  zassert_equal(test_uds_callback_fake.arg1_val, UDS_EVT_DiagSessCtrl);
 
-//   // Sleep long enough to elapse the timeout for the response to be send
-//   k_msleep(1000);
-//   iso14229_zephyr_thread_tick(instance);
+  // Sleep long enough to elapse the timeout for the response to be send
+  k_msleep(1000);
+  iso14229_zephyr_thread_tick(instance);
 
-//   // Verify that a CAN frame was sent in response
-//   zassert_equal(fake_can_send_fake.call_count, 1);
+  // Verify that a CAN frame was sent in response
+  zassert_equal(fake_can_send_fake.call_count, 1);
 
-//   // Expected: [PCI=0x05] [SID=0x63] [Data=1,2,3,4]
-//   // PCI   = 0x05 (single frame, 5 bytes of data: SID + 4 data bytes)
-//   // DSCPR = 0x50 (positive response to 0x10)
-//   // DS    = 0x2 (programming session)
-//   // SPREC = session parameter (p2_ms and p2*_ms encoded)
-//   uint8_t response_data[] = {
-//     0x05,
-//     0x63,
-//     0x02,
-//     UDS_CLIENT_DEFAULT_P2_MS >> 8,
-//     UDS_CLIENT_DEFAULT_P2_MS & 0xFF,
-//     (uint8_t)((UDS_CLIENT_DEFAULT_P2_STAR_MS / 10) >> 8),
-//     (uint8_t)(UDS_CLIENT_DEFAULT_P2_STAR_MS / 10),
-//   };
-//   assert_send_phy_can_frame_array(fixture, response_data);
-// }
+  // Expected: [PCI=0x05] [SID=0x63] [Data=1,2,3,4]
+  // PCI   = 0x05 (single frame, 5 bytes of data: SID + 4 data bytes)
+  // DSCPR = 0x50 (positive response to 0x10)
+  // DS    = 0x2 (programming session)
+  // SPREC = session parameter (p2_ms and p2*_ms encoded)
+  uint8_t response_data[] = {
+    0x06,
+    0x50,
+    0x02,
+    UDS_CLIENT_DEFAULT_P2_MS >> 8,
+    UDS_CLIENT_DEFAULT_P2_MS & 0xFF,
+    (uint8_t)((UDS_CLIENT_DEFAULT_P2_STAR_MS / 10) >> 8),
+    (uint8_t)(UDS_CLIENT_DEFAULT_P2_STAR_MS / 10),
+  };
+  assert_send_phy_can_frame_array(fixture, response_data);
+}

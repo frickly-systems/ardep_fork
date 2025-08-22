@@ -29,13 +29,13 @@ DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
                        void *);
 
 static const UDSISOTpCConfig_t cfg = {
-  // Hardwarea Addresses
-  .source_addr = 0x7E8,  // Can ID Client
-  .target_addr = 0x7E0,  // Can ID Server (us)
+  // Hardware Addresses
+  .source_addr = 0x7E8,  // Can ID Server (us)
+  .target_addr = 0x7E0,  // Can ID Client (them)
 
   // Functional Addresses
-  .source_addr_func = 0x7DF,             // ID Client
-  .target_addr_func = UDS_TP_NOOP_ADDR,  // ID Server (us)
+  .source_addr_func = 0x7DF,             // ID Server (us)
+  .target_addr_func = UDS_TP_NOOP_ADDR,  // ID Client (them)
 };
 
 // Variables to capture callback and test data
@@ -44,16 +44,53 @@ static void *captured_user_data_phy = NULL;
 static can_rx_callback_t captured_rx_callback_func = NULL;
 static void *captured_user_data_func = NULL;
 
+void receive_phys_can_frame(const struct lib_uds_minimal_fixture *fixture,
+                            uint8_t *data,
+                            uint8_t data_len) {
+  const struct device *dev = fixture->can_dev;
+
+  struct can_frame frame = {
+    .id = fixture->cfg.source_addr,  // 0x7E8 - message TO the server
+    .dlc = data_len,                 // data_len == dlc for Can CC
+    .flags = 0,
+  };
+  memcpy(frame.data, data, data_len);
+
+  captured_rx_callback_phys(dev, &frame, captured_user_data_phy);
+}
+
+void assert_send_phy_can_frame(const struct lib_uds_minimal_fixture *fixture,
+                               uint8_t *data,
+                               uint8_t data_len) {
+  struct can_frame expected_frame = {
+    .id = fixture->cfg.target_addr,  // 0x7E8 - message TO the server
+    .dlc = data_len,                 // data_len == dlc for Can CC
+    .flags = 0,
+  };
+  memcpy(expected_frame.data, data, data_len);
+
+  struct can_frame actual_frame = *fake_can_send_fake.arg1_val;
+
+  zassert_equal(actual_frame.id, expected_frame.id);  // response address
+  zassert_equal(actual_frame.dlc,
+                expected_frame.dlc);  // data_len == dlc for Can CC
+  zassert_mem_equal(actual_frame.data, expected_frame.data, data_len);
+}
+
+// Actual definition in zephyr/drivers/can/can_common.c
+// Re-defined here for proper injection fake can send command
 struct can_tx_default_cb_ctx {
   struct k_sem done;
   int status;
 };
 
-int can_send_t_fake_impl(const struct device *dev,
-                         const struct can_frame *frame,
-                         k_timeout_t timeout,
-                         can_tx_callback_t callback,
-                         void *user_data) {
+// Fake CAN send to set the return code and
+// unlock the semaphore
+static int can_send_t_fake_impl(const struct device *dev,
+                                const struct can_frame *frame,
+                                k_timeout_t timeout,
+                                can_tx_callback_t callback,
+                                void *user_data) {
   struct can_tx_default_cb_ctx *ctx = user_data;
 
   k_sem_give(&ctx->done);
@@ -62,6 +99,7 @@ int can_send_t_fake_impl(const struct device *dev,
 }
 
 // Custom fake to capture the RX filter callback
+// These are used to inject received CAN messages
 static int capture_rx_filter_fake(const struct device *dev,
                                   can_rx_callback_t callback,
                                   void *user_data,
@@ -83,39 +121,6 @@ static int capture_rx_filter_fake(const struct device *dev,
   return 0;
 }
 
-void send_phys_can_frame(const struct lib_uds_minimal_fixture *fixture,
-                         uint8_t *data,
-                         uint8_t data_len) {
-  const struct device *dev = fixture->can_dev;
-
-  struct can_frame frame = {
-    .id = fixture->cfg.target_addr,  // 0x7E0 - message TO the server
-    .dlc = data_len,                 // data_len == dlc for Can CC
-    .flags = 0,
-  };
-  memcpy(frame.data, data, data_len);
-
-  captured_rx_callback_phys(dev, &frame, captured_user_data_phy);
-}
-
-void assert_send_phy_can_frame(const struct lib_uds_minimal_fixture *fixture,
-                               uint8_t *data,
-                               uint8_t data_len) {
-  struct can_frame expected_frame = {
-    .id = fixture->cfg.source_addr,  // 0x7E0 - message TO the server
-    .dlc = data_len,                 // data_len == dlc for Can CC
-    .flags = 0,
-  };
-  memcpy(expected_frame.data, data, data_len);
-
-  struct can_frame actual_frame = *fake_can_send_fake.arg1_val;
-
-  zassert_equal(actual_frame.id, expected_frame.id);  // response address
-  zassert_equal(actual_frame.dlc,
-                expected_frame.dlc);  // data_len == dlc for Can CC
-  zassert_mem_equal(actual_frame.data, expected_frame.data, data_len);
-}
-
 static void *uds_minimal_setup(void) {
   static struct lib_uds_minimal_fixture fixture = {
     .cfg = cfg,
@@ -130,6 +135,7 @@ static void uds_minimal_before(void *f) {
   const struct device *dev = fixture->can_dev;
   struct iso14229_zephyr_instance *uds_instance = &fixture->instance;
 
+  RESET_FAKE(fake_can_send);
   RESET_FAKE(test_uds_callback);
   FFF_RESET_HISTORY();
 

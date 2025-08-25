@@ -3,6 +3,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-config UDS_MINIMAL
+menuconfig UDS_MINIMAL
     bool "UDS Minimal support"
     depends on ISO14229_LIB
+    
+if UDS_MINIMAL
+
+module = UDS_MINIMAL
+module-str = UDS minimal
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # UDS_MINIMAL

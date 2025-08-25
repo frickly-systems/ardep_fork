@@ -1,21 +1,30 @@
+#include <zephyr/logging/log.h>
+LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
+
 #include "iso14229/uds.h"
 
 #include <ardep/uds_minimal.h>
+#include <ardep/uds_new.h>
 #include <iso14229/server.h>
 
 UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
                             UDSEvent_t event,
                             void* arg,
                             void* user_context) {
-  UDSServer_t* server = &inst->server;
+  //   UDSServer_t* server = &inst->server;
 
   switch (event) {
     case UDS_EVT_Err:
     case UDS_EVT_DiagSessCtrl:
-    case UDS_EVT_EcuReset:
+    case UDS_EVT_EcuReset: {
+#ifdef CONFIG_UDS_NEW_ENABLE_RESET
       UDSECUResetArgs_t* args = arg;
-      args->type;
-      break;
+
+      return handle_ecu_reset_event(inst, (enum ecu_reset_type)args->type);
+#else
+      return UDS_NRC_ServiceNotSupported;
+#endif
+    }
     case UDS_EVT_ReadDataByIdent:
     case UDS_EVT_ReadMemByAddr:
     case UDS_EVT_CommCtrl:
@@ -40,4 +49,23 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
   }
 
   return UDS_OK;
+}
+
+int uds_new_init(struct iso14229_zephyr_instance* inst,
+                 const UDSISOTpCConfig_t* iso_tp_config,
+                 const struct device* can_dev,
+                 void* user_context) {
+  int ret = iso14229_zephyr_init(inst, iso_tp_config, can_dev, user_context);
+  if (ret < 0) {
+    LOG_ERR("Failed to initialize UDS instance");
+    return ret;
+  }
+
+  ret = iso14229_zephyr_set_callback(inst, uds_event_callback);
+  if (ret < 0) {
+    LOG_ERR("Failed to set UDS event callback");
+    return ret;
+  }
+
+  return 0;
 }

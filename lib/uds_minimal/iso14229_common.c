@@ -6,7 +6,7 @@
 #include <iso14229/server.h>
 #include <iso14229/util.h>
 
-LOG_MODULE_REGISTER(iso14229_common, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(uds_minimal, CONFIG_UDS_MINIMAL_LOG_LEVEL);
 
 UDSErr_t uds_cb(struct UDSServer *srv, UDSEvent_t event, void *arg) {
   LOG_DBG("UDS Event: %s", UDSEventToStr(event));

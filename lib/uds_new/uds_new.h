@@ -1,4 +1,4 @@
-#include "iso14229_common.h"
+#include <ardep/uds_minimal.h>
 
 #pragma once
 

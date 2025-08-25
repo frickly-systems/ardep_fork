@@ -9,9 +9,14 @@ menuconfig UDS_NEW
     
 if UDS_NEW
 
+module = UDS_NEW
+module-str = UDS new
+source "subsys/logging/Kconfig.template.log_config"
+
 config UDS_NEW_ENABLE_RESET
     bool "Enable reboot/reset from ECU reset command"
     default y
+    select REBOOT
 
 
 endif # UDS_NEW

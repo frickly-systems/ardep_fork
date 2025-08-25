@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "ardep/uds_new.h"
 #include "fixture.h"
 
 #include <string.h>
@@ -17,13 +18,6 @@
 #include <iso14229/tp/isotp_c.h>
 
 DEFINE_FFF_GLOBALS;
-
-DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
-                       test_uds_callback,
-                       struct iso14229_zephyr_instance *,
-                       UDSEvent_t,
-                       void *,
-                       void *);
 
 static const UDSISOTpCConfig_t cfg = {
   // Hardware Addresses
@@ -151,7 +145,6 @@ static void uds_new_before(void *f) {
   struct iso14229_zephyr_instance *uds_instance = &fixture->instance;
 
   RESET_FAKE(fake_can_send);
-  RESET_FAKE(test_uds_callback);
   FFF_RESET_HISTORY();
 
   memset(send_can_frames, 0, sizeof(send_can_frames));
@@ -173,15 +166,12 @@ static void uds_new_before(void *f) {
     .target_addr_func = fixture->cfg.target_addr_func,  // UDS_TP_NOOP_ADDR
   };
 
-  int ret = iso14229_zephyr_init(uds_instance, &tp_config, dev, NULL);
+  int ret = uds_new_init(uds_instance, &tp_config, dev, NULL);
 
   assert(ret == 0);
-  // we add 2 can filters in iso14229_zephyr_init()
+  // we add 2 can filters in uds_new_init()
   assert(fake_can_add_rx_filter_fake.call_count == 2);
   assert(uds_instance->server.fn);
-
-  // Set the unified callback
-  iso14229_zephyr_set_callback(uds_instance, test_uds_callback);
 }
 
-ZTEST_SUITE(lib_uds_minimal, NULL, uds_new_setup, uds_new_before, NULL, NULL);
+ZTEST_SUITE(lib_uds_new, NULL, uds_new_setup, uds_new_before, NULL, NULL);

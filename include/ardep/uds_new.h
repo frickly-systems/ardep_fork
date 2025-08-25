@@ -28,6 +28,8 @@ enum ecu_reset_type {
  *
  * @param inst Pointer to the UDS server instance
  * @param reset_type Type of reset to perform
+ * @param user_context User-defined context pointer as passed to \ref
+ * uds_new_init()
  */
 typedef UDSErr_t (*ecu_reset_callback_t)(struct iso14229_zephyr_instance* inst,
                                          enum ecu_reset_type reset_type,

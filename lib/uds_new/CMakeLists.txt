@@ -5,6 +5,7 @@
 
 zephyr_library()
 zephyr_library_sources(
+    ecu_reset.c
     uds_new.c
     write_memory_by_addr_impl.c
 )

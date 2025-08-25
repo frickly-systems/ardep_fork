@@ -21,11 +21,7 @@ menu "ARDEP"
     
 
     rsource "uds_minimal/Kconfig"
-
-    menuconfig UDS_NEW
-        bool "UDS New"
-        select UDS_MINIMAL
-
+    rsource "uds_new/Kconfig"
 
     menuconfig CAN_ROUTER
         bool "Can frame router"

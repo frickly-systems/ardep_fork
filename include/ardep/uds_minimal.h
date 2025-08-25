@@ -1,4 +1,5 @@
-// This would be dedicated into a separate library
+#ifndef ARDEP_UDS_MINIMAL_H
+#define ARDEP_UDS_MINIMAL_H
 
 #pragma once
 
@@ -31,10 +32,6 @@ struct iso14229_zephyr_instance {
   void* user_context;
 };
 
-typedef UDSErr_t (*uds_cb_fn)(struct UDSServer* srv,
-                              UDSEvent_t event,
-                              void* arg);
-
 int iso14229_zephyr_init(struct iso14229_zephyr_instance* inst,
                          const UDSISOTpCConfig_t* iso_tp_config,
                          const struct device* can_dev,
@@ -45,3 +42,5 @@ int iso14229_zephyr_set_callback(struct iso14229_zephyr_instance* inst,
 
 void iso14229_zephyr_thread_tick(struct iso14229_zephyr_instance* inst);
 void iso14229_zephyr_thread(struct iso14229_zephyr_instance* inst);
+
+#endif  // ARDEP_UDS_MINIMAL_H

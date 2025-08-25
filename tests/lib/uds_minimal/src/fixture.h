@@ -1,16 +1,14 @@
 #ifndef APP_TESTS_LIB_UDS_MINIMAL_SRC_FIXTURE_H_
 #define APP_TESTS_LIB_UDS_MINIMAL_SRC_FIXTURE_H_
 
-#include "iso14229_common.h"
-
 #include <zephyr/drivers/can.h>
 #include <zephyr/drivers/can/can_fake.h>
 #include <zephyr/fff.h>
 
+#include <ardep/uds_minimal.h>
 #include <iso14229/server.h>
 #include <iso14229/tp.h>
 #include <iso14229/tp/isotp_c.h>
-#include <iso14229_common.h>
 
 // Test callback function for UDS events
 DECLARE_FAKE_VALUE_FUNC(UDSErr_t,

@@ -1,8 +1,5 @@
 // This would be dedicated into a separate library
-#include "iso14229_common.h"
-#include "uds_new.h"
-#include "write_memory_by_addr_impl.h"
-#include "zephyr/sys/byteorder.h"
+#include "ardep/uds_minimal.h"
 
 #include <zephyr/logging/log.h>
 

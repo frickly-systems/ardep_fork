@@ -5,7 +5,6 @@
  */
 
 #include "fixture.h"
-#include "iso14229_common.h"
 
 #include <string.h>
 
@@ -16,8 +15,6 @@
 #include <iso14229/server.h>
 #include <iso14229/tp.h>
 #include <iso14229/tp/isotp_c.h>
-#include <iso14229_common.h>
-#include <uds_new.h>
 
 DEFINE_FFF_GLOBALS;
 

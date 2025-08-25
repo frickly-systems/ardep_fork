@@ -10,11 +10,10 @@
 #include <zephyr/ztest.h>
 
 // Include UDS minimal library headers
+#include <ardep/uds_minimal.h>
 #include <iso14229/server.h>
 #include <iso14229/tp/isotp_c.h>
 #include <iso14229/uds.h>
-#include <iso14229_common.h>
-#include <uds_new.h>
 
 static const uint8_t uds_mem_data[255] = {
   0x01, 0x02, 0x03, 0x04, 0x05, 0x66, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D,
@@ -130,6 +129,36 @@ ZTEST_F(lib_uds_minimal, test_0x11_ecu_reset) {
     0x01,  // LEV_RT (hard reset)
   };
   assert_send_phy_can_frame_array(fixture, 0, response_data);
+  zassert_equal(fake_can_send_fake.call_count, 1);
+}
+
+ZTEST_F(lib_uds_minimal, test_0x11_ecu_reset_response_pending) {
+  struct iso14229_zephyr_instance *instance = &fixture->instance;
+
+  uint8_t request_data[] = {
+    0x02,  // PCI    (single frame, 2 bytes of data)
+    0x11,  // ER     (ECU Reset)
+    0x01,  // LEV_RT (Hard Reset)
+  };
+
+  receive_phys_can_frame_array(fixture, request_data);
+  advance_time_and_tick_thread(instance);
+  zassert_equal(test_uds_callback_fake.call_count, 1);
+
+  advance_time_and_tick_thread(instance);
+  zassert_equal(fake_can_send_fake.call_count, 1);
+
+  // There should be no response to this request
+  uint8_t denied_request_data[] = {
+    0x02,  // PCI (single frame, 2 bytes of data)
+    0x10,  // SID (DiagnosticSessionControl)
+    0x02,  // DS  (Programming Session)
+  };
+  receive_phys_can_frame_array(fixture, denied_request_data);
+  advance_time_and_tick_thread(instance);
+  advance_time_and_tick_thread(instance);
+
+  // Session Control request should have been ignored
   zassert_equal(fake_can_send_fake.call_count, 1);
 }
 

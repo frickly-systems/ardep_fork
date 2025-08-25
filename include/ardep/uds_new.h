@@ -30,7 +30,8 @@ enum ecu_reset_type {
  * @param reset_type Type of reset to perform
  */
 typedef UDSErr_t (*ecu_reset_callback_t)(struct iso14229_zephyr_instance* inst,
-                                         enum ecu_reset_type reset_type);
+                                         enum ecu_reset_type reset_type,
+                                         void* user_context);
 
 /**
  * @brief Set a custom callback for ECU reset events

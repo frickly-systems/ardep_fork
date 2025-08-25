@@ -46,6 +46,13 @@ def write_read_memory(client: Client):
     client.change_session(DiagnosticSessionControl.Session.defaultSession)
 
 
+def ecu_reset(client: Client):
+    # Send ECU reset request (hard reset)
+    print("Sending ECU hard reset request...")
+    client.ecu_reset(ECUReset.ResetType.hardReset)
+    print("ECU reset request sent successfully")
+
+
 def main(args: Namespace):
     can = args.can
 
@@ -63,6 +70,15 @@ def main(args: Namespace):
             )
         except (InvalidResponseException, UnexpectedResponseException) as e:
             print(f"Server sent an invalid payload : {e.response.original_payload}")
+
+        try:
+            ecu_reset(client)
+
+        except NegativeResponseException as e:
+            print(
+                f"Server refused our request for service {e.response.service.get_name()} "
+                f'with code "{e.response.code_name}" (0x{e.response.code:02x})'
+            )
 
 
 if __name__ == "__main__":

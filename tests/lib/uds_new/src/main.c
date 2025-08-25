@@ -17,7 +17,8 @@
 FAKE_VALUE_FUNC(UDSErr_t,
                 test_ecu_reset_callback,
                 struct iso14229_zephyr_instance *,
-                enum ecu_reset_type);
+                enum ecu_reset_type,
+                void *);
 
 ZTEST_F(lib_uds_new, test_0x11_ecu_reset) {
   RESET_FAKE(test_ecu_reset_callback);

@@ -55,6 +55,7 @@ UDSErr_t handle_data_read_by_identifier(struct uds_new_instance_t* instance,
     return args->copy(&instance->iso14229.server, read_buf, len);
   }
 
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
   struct uds_new_registration_t* current = instance->dynamic_registrations;
 
   while (current != NULL) {
@@ -77,10 +78,12 @@ UDSErr_t handle_data_read_by_identifier(struct uds_new_instance_t* instance,
     current->data_identifier.read(read_buf, &len, current);
     return args->copy(&instance->iso14229.server, read_buf, len);
   }
+#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 
   return UDS_NRC_RequestOutOfRange;
 }
 
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 int uds_new_register_runtime_data_identifier(struct uds_new_instance_t* inst,
                                              uint16_t data_id,
                                              void* addr,
@@ -112,3 +115,5 @@ int uds_new_register_runtime_data_identifier(struct uds_new_instance_t* inst,
 
   return 0;
 }
+
+#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID

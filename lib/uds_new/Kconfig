@@ -23,4 +23,8 @@ config UDS_NEW_RESET_DELAY_MS
     default 0
     depends on UDS_NEW_ENABLE_RESET
 
+config UDS_NEW_USE_DYNAMIC_DATA_BY_ID
+    bool "Delay for the default ecu reset handling by this time (minimum of p2 is forced to ensure a response is send)"
+    default y
+
 endif # UDS_NEW

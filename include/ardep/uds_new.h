@@ -40,6 +40,7 @@ typedef UDSErr_t (*ecu_reset_callback_t)(struct uds_new_instance_t* inst,
 typedef int (*set_ecu_reset_callback_fn)(struct uds_new_instance_t* inst,
                                          ecu_reset_callback_t callback);
 
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 /**
  * @brief Register a data identifier for the data at @p addr.
  *
@@ -54,26 +55,19 @@ typedef int (*register_data_by_identifier_fn)(struct uds_new_instance_t* inst,
                                               void* addr,
                                               size_t len,
                                               size_t len_elem);
+#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 
 struct uds_new_instance_t {
   struct iso14229_zephyr_instance iso14229;
-
   struct uds_new_registration_t* static_registrations;
-  struct uds_new_registration_t* dynamic_registrations;
-
   void* user_context;
-
   set_ecu_reset_callback_fn set_ecu_reset_callback;
-  register_data_by_identifier_fn register_data_by_identifier;
-};
 
-//  * @param name      User identifier.
-//  * @param _instance uds_new instance that owns the reference.
-//  * @param _data_id  Identifier for the data at @p addr.
-//  * @param addr      Memory address where the data is found.
-//  * @param len       Length of the data at @p addr in elements.
-//  * @param len_elem  Length of each element in bytes ad @p addr. These amount
-//  of
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
+  struct uds_new_registration_t* dynamic_registrations;
+  register_data_by_identifier_fn register_data_by_identifier;
+#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
+};
 
 int uds_new_init(struct uds_new_instance_t* inst,
                  const UDSISOTpCConfig_t* iso_tp_config,

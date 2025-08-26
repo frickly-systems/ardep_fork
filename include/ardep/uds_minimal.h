@@ -34,6 +34,7 @@ struct iso14229_zephyr_instance {
   int (*set_callback)(struct iso14229_zephyr_instance* inst,
                       uds_callback callback);
   void (*thread_tick)(struct iso14229_zephyr_instance* inst);
+  // TODO: Start a thread and don't block
   void (*thread_run)(struct iso14229_zephyr_instance* inst);
 };
 

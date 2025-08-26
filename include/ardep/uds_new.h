@@ -147,7 +147,7 @@ UDSErr_t _uds_new_data_identifier_static_write(
  * byte are converted to be each
  */
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(    \
-  _instance,                                                 \
+  _instance,                                           \
   _data_id,                                                  \
   addr,                                                      \
   _len,                                                      \
@@ -155,7 +155,7 @@ UDSErr_t _uds_new_data_identifier_static_write(
   readable,                                                  \
   writable                                                   \
   )                                                          \
-  STRUCT_SECTION_ITERABLE(uds_new_registration_t, id_##_data_id) = {  \
+  STRUCT_SECTION_ITERABLE(uds_new_registration_t, id##_data_id) = {  \
     .instance = _instance,                                   \
     .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,      \
     .user_data = addr,                                       \

@@ -24,10 +24,10 @@ DEFINE_FFF_GLOBALS;
 DEFINE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(
-    operate_on_id1, NULL, by_id_data1_id, by_id_data1, true, true);
+    NULL, by_id_data1_id, by_id_data1, true, true);
 
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(
-    operate_on_id2, NULL, by_id_data2_id, by_id_data2, true, true);
+    NULL, by_id_data2_id, by_id_data2, true, true);
 
 static const UDSISOTpCConfig_t cfg = {
   // Hardware Addresses
@@ -78,11 +78,17 @@ static void uds_new_before(void *f) {
   int ret = uds_new_init(uds_instance, &cfg, dev, NULL);
   assert(ret == 0);
 
-  operate_on_id1.instance = uds_instance;
-  by_id_data1 = by_id_data1_default;
+  STRUCT_SECTION_FOREACH (uds_new_registration_t, reg) {
+    reg->instance = uds_instance;
 
-  operate_on_id2.instance = uds_instance;
-  memcpy(by_id_data2, by_id_data2_default, sizeof(by_id_data2_default));
+    if (reg->data_identifier.data_id == by_id_data1_id) {
+      memcpy(reg->user_data, &by_id_data1_default, sizeof(by_id_data1_default));
+    }
+
+    if (reg->data_identifier.data_id == by_id_data2_id) {
+      memcpy(reg->user_data, &by_id_data2_default, sizeof(by_id_data2_default));
+    }
+  }
 
   memset(copied_data, 0, sizeof(copied_data));
   copied_len = 0;

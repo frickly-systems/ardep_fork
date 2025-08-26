@@ -60,7 +60,6 @@ struct uds_new_instance_t {
 
   struct uds_new_registration_t* static_registrations;
   struct uds_new_registration_t* dynamic_registrations;
-  size_t num_dynamic_registrations;
 
   void* user_context;
 

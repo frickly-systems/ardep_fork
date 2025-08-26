@@ -64,7 +64,7 @@ int uds_new_init(struct uds_new_instance_t* inst,
   inst->user_context = user_context;
   inst->set_ecu_reset_callback = uds_new_set_ecu_reset_callback;
   inst->register_data_by_identifier = uds_new_register_runtime_data_identifier;
-  inst->num_dynamic_registrations = 0;
+  inst->dynamic_registrations = NULL;
 
   int ret = iso14229_zephyr_init(&inst->iso14229, iso_tp_config, can_dev, inst);
   if (ret < 0) {

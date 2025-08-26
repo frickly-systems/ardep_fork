@@ -27,7 +27,7 @@ static void ecu_reset_work_handler(struct k_work *work) {
 }
 K_WORK_DELAYABLE_DEFINE(reset_work, ecu_reset_work_handler);
 
-UDSErr_t handle_ecu_reset_event(struct iso14229_zephyr_instance *inst,
+UDSErr_t handle_ecu_reset_event(struct uds_new_instance_t *inst,
                                 enum ecu_reset_type reset_type) {
   int ret = k_mutex_lock(&custom_callback_mutex, K_FOREVER);
   if (ret < 0) {
@@ -52,7 +52,8 @@ UDSErr_t handle_ecu_reset_event(struct iso14229_zephyr_instance *inst,
     return UDS_NRC_SubFunctionNotSupported;
   }
 
-  uint32_t delay_ms = MAX(CONFIG_UDS_NEW_RESET_DELAY_MS, inst->server.p2_ms);
+  uint32_t delay_ms =
+      MAX(CONFIG_UDS_NEW_RESET_DELAY_MS, inst->iso14229.server.p2_ms);
   LOG_INF("Scheduling ECU reset in %u ms, type: %d", delay_ms, reset_type);
   if (!k_work_delayable_is_pending(&reset_work)) {
     ret = k_work_schedule(&reset_work, K_MSEC(delay_ms));

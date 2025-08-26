@@ -5,6 +5,8 @@
 #include "ardep/uds_minimal.h"
 #include "iso14229/uds.h"
 
+struct uds_new_instance_t;
+
 enum ecu_reset_type {
   ECU_RESET_HARD = 1,
   ECU_RESET_KEY_OFF_ON = 2,
@@ -24,27 +26,55 @@ enum ecu_reset_type {
  * @param user_context User-defined context pointer as passed to \ref
  * uds_new_init()
  */
-typedef UDSErr_t (*ecu_reset_callback_t)(struct iso14229_zephyr_instance* inst,
+typedef UDSErr_t (*ecu_reset_callback_t)(struct uds_new_instance_t* inst,
                                          enum ecu_reset_type reset_type,
                                          void* user_context);
+
+/**
+ * Set the ECU reset callback function for custom callbacks
+ *
+ * @param inst Pointer to the UDS server instance
+ * @param callback Pointer to the callback function to set
+ * @return 0 on success, negative error code on failure
+ */
+typedef int (*set_ecu_reset_callback_fn)(struct uds_new_instance_t* inst,
+                                         ecu_reset_callback_t callback);
+
+/**
+ * @brief Register a data identifier for the data at @p addr.
+ *
+ * This macro registers a data identifier at runtime, associating an id
+ * with a memory address so it can be read by the <read_data_by_identifier>
+ * command.
+ *
+ * See UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM for details.
+ */
+typedef int (*register_data_by_identifier_fn)(struct uds_new_instance_t* inst,
+                                              uint16_t data_id,
+                                              void* addr,
+                                              size_t len,
+                                              size_t len_elem);
+
 struct uds_new_instance_t {
   struct iso14229_zephyr_instance iso14229;
 
   struct uds_new_registration_t* static_registrations;
   struct uds_new_registration_t* dynamic_registrations;
+  size_t num_dynamic_registrations;
 
   void* user_context;
 
-  /**
-   * Set the ECU reset callback function for custom callbacks
-   *
-   * @param inst Pointer to the UDS server instance
-   * @param callback Pointer to the callback function to set
-   * @return 0 on success, negative error code on failure
-   */
-  int (*set_ecu_reset_callback)(struct iso14229_zephyr_instance* inst,
-                                ecu_reset_callback_t callback);
+  set_ecu_reset_callback_fn set_ecu_reset_callback;
+  register_data_by_identifier_fn register_data_by_identifier;
 };
+
+//  * @param name      User identifier.
+//  * @param _instance uds_new instance that owns the reference.
+//  * @param _data_id  Identifier for the data at @p addr.
+//  * @param addr      Memory address where the data is found.
+//  * @param len       Length of the data at @p addr in elements.
+//  * @param len_elem  Length of each element in bytes ad @p addr. These amount
+//  of
 
 int uds_new_init(struct uds_new_instance_t* inst,
                  const UDSISOTpCConfig_t* iso_tp_config,

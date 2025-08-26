@@ -5,6 +5,7 @@
  */
 
 #include "fixture.h"
+#include "zephyr/ztest_assert.h"
 
 #include <zephyr/fff.h>
 #include <zephyr/ztest.h>

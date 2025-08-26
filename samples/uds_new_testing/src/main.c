@@ -18,18 +18,16 @@
 #include <zephyr/sys/byteorder.h>
 
 #include <ardep/uds_minimal.h>
+#include <ardep/uds_new.h>
 #include <iso14229/server.h>
 #include <iso14229/tp/isotp_c.h>
 #include <iso14229/util.h>
-#include <uds_new.h>
 
 LOG_MODULE_REGISTER(iso14229_testing, LOG_LEVEL_DBG);
 
 static const struct device *can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
 
 uint8_t dummy_memory[512] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x66, 0x7, 0x8};
-
-struct iso14229_zephyr_instance inst;
 
 struct uds_new_instance_t instance;
 
@@ -65,7 +63,7 @@ int main(void) {
     .target_addr_func = UDS_TP_NOOP_ADDR,  // ID Server (us)
   };
 
-  uds_new_init(&inst, &cfg, can_dev, NULL);
+  uds_new_init(&instance, &cfg, can_dev, &instance);
 
   int err;
   if (!device_is_ready(can_dev)) {
@@ -86,5 +84,5 @@ int main(void) {
   }
   printk("CAN device started\n");
 
-  iso14229_zephyr_thread(&inst);
+  iso14229_zephyr_thread(&instance.iso14229);
 }

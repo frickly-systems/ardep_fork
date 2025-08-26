@@ -1,3 +1,4 @@
+import struct
 from udsoncan.client import Client
 from udsoncan.connections import IsoTPSocketConnection
 from udsoncan.exceptions import (
@@ -46,11 +47,27 @@ def write_read_memory(client: Client):
     client.change_session(DiagnosticSessionControl.Session.defaultSession)
 
 
+def read_data_by_identifier(client: Client):
+    data = client.read_data_by_identifier([0x1234])
+    print(f"Reading data from identifier 0x1234: {data.service_data.values[0x1234]}")
+
+
 def ecu_reset(client: Client):
     # Send ECU reset request (hard reset)
     print("Sending ECU hard reset request...")
     client.ecu_reset(ECUReset.ResetType.hardReset)
     print("ECU reset request sent successfully")
+
+
+class MyCustomCodec(udsoncan.DidCodec):
+    def encode(self, val):
+        return struct.pack("<H", val)  # Little endian, 16 bit value
+
+    def decode(self, payload):
+        return struct.unpack("<H", payload)[0]  # decode the 16 bits value
+
+    def __len__(self):
+        return 2  # encoded payload is 2 byte long.
 
 
 def main(args: Namespace):
@@ -59,20 +76,35 @@ def main(args: Namespace):
     addr = isotp.Address(isotp.AddressingMode.Normal_11bits, rxid=0x7E0, txid=0x7E8)
     conn = IsoTPSocketConnection(can, addr)
 
-    with Client(conn, request_timeout=2) as client:
-        try:
-            write_read_memory(client)
+    config = dict(udsoncan.configs.default_client_config)
+    config["data_identifiers"] = {
+        "default": ">H",  # Default codec is a struct.pack/unpack string. 16bits little endian
+        0x1234: MyCustomCodec,
+    }
 
-        except NegativeResponseException as e:
-            print(
-                f"Server refused our request for service {e.response.service.get_name()} "
-                f'with code "{e.response.code_name}" (0x{e.response.code:02x})'
-            )
-        except (InvalidResponseException, UnexpectedResponseException) as e:
-            print(f"Server sent an invalid payload : {e.response.original_payload}")
+    with Client(conn, config=config, request_timeout=2) as client:
+        # try:
+        #     write_read_memory(client)
+
+        # except NegativeResponseException as e:
+        #     print(
+        #         f"Server refused our request for service {e.response.service.get_name()} "
+        #         f'with code "{e.response.code_name}" (0x{e.response.code:02x})'
+        #     )
+        # except (InvalidResponseException, UnexpectedResponseException) as e:
+        #     print(f"Server sent an invalid payload : {e.response.original_payload}")
+
+        # try:
+        #     ecu_reset(client)
+
+        # except NegativeResponseException as e:
+        #     print(
+        #         f"Server refused our request for service {e.response.service.get_name()} "
+        #         f'with code "{e.response.code_name}" (0x{e.response.code:02x})'
+        #     )
 
         try:
-            ecu_reset(client)
+            read_data_by_identifier(client)
 
         except NegativeResponseException as e:
             print(

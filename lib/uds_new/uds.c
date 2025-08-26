@@ -60,14 +60,15 @@ int uds_new_init(struct uds_new_instance_t* inst,
                  const UDSISOTpCConfig_t* iso_tp_config,
                  const struct device* can_dev,
                  void* user_context) {
-  int ret = iso14229_zephyr_init(&inst->iso14229, iso_tp_config, can_dev,
-                                 user_context);
+  inst->user_context = user_context;
+
+  int ret = iso14229_zephyr_init(&inst->iso14229, iso_tp_config, can_dev, inst);
   if (ret < 0) {
     LOG_ERR("Failed to initialize UDS instance");
     return ret;
   }
 
-  ret = iso14229_zephyr_set_callback(&inst->iso14229, uds_event_callback);
+  ret = inst->iso14229.set_callback(&inst->iso14229, uds_event_callback);
   if (ret < 0) {
     LOG_ERR("Failed to set UDS event callback");
     return ret;

@@ -29,11 +29,47 @@ static void can_rx_cb(const struct device *dev,
   k_msgq_put((struct k_msgq *)user_data, frame, K_NO_WAIT);
 }
 
+int iso14229_zephyr_set_callback(struct iso14229_zephyr_instance *inst,
+                                 uds_callback callback) {
+  LOG_DBG("Setting UDS callback");
+  k_mutex_lock(&inst->event_callback_mutex, K_FOREVER);
+  inst->event_callback = callback;
+  k_mutex_unlock(&inst->event_callback_mutex);
+  return 0;
+}
+
+void iso14229_zephyr_thread_tick(struct iso14229_zephyr_instance *inst) {
+  struct can_frame frame_phys;
+  struct can_frame frame_func;
+  int ret_phys = k_msgq_get(&inst->can_phys_msgq, &frame_phys, K_NO_WAIT);
+  int ret_func = k_msgq_get(&inst->can_func_msgq, &frame_func, K_NO_WAIT);
+
+  if (ret_phys == 0) {
+    isotp_on_can_message(&inst->tp.phys_link, frame_phys.data, frame_phys.dlc);
+  }
+
+  if (ret_func == 0) {
+    isotp_on_can_message(&inst->tp.func_link, frame_func.data, frame_func.dlc);
+  }
+
+  UDSServerPoll(&inst->server);
+}
+
+void iso14229_zephyr_thread(struct iso14229_zephyr_instance *inst) {
+  while (1) {
+    iso14229_zephyr_thread_tick(inst);
+    k_sleep(K_MSEC(1));
+  }
+}
+
 int iso14229_zephyr_init(struct iso14229_zephyr_instance *inst,
                          const UDSISOTpCConfig_t *iso_tp_config,
                          const struct device *can_dev,
                          void *user_context) {
   inst->user_context = user_context;
+  inst->set_callback = iso14229_zephyr_set_callback;
+  inst->thread_tick = iso14229_zephyr_thread_tick;
+  inst->thread_run = iso14229_zephyr_thread;
 
   int ret = k_mutex_init(&inst->event_callback_mutex);
   if (ret != 0) {
@@ -84,37 +120,4 @@ int iso14229_zephyr_init(struct iso14229_zephyr_instance *inst,
   }
 
   return 0;
-}
-
-int iso14229_zephyr_set_callback(struct iso14229_zephyr_instance *inst,
-                                 uds_callback callback) {
-  LOG_DBG("Setting UDS callback");
-  k_mutex_lock(&inst->event_callback_mutex, K_FOREVER);
-  inst->event_callback = callback;
-  k_mutex_unlock(&inst->event_callback_mutex);
-  return 0;
-}
-
-void iso14229_zephyr_thread_tick(struct iso14229_zephyr_instance *inst) {
-  struct can_frame frame_phys;
-  struct can_frame frame_func;
-  int ret_phys = k_msgq_get(&inst->can_phys_msgq, &frame_phys, K_NO_WAIT);
-  int ret_func = k_msgq_get(&inst->can_func_msgq, &frame_func, K_NO_WAIT);
-
-  if (ret_phys == 0) {
-    isotp_on_can_message(&inst->tp.phys_link, frame_phys.data, frame_phys.dlc);
-  }
-
-  if (ret_func == 0) {
-    isotp_on_can_message(&inst->tp.func_link, frame_func.data, frame_func.dlc);
-  }
-
-  UDSServerPoll(&inst->server);
-}
-
-void iso14229_zephyr_thread(struct iso14229_zephyr_instance *inst) {
-  while (1) {
-    iso14229_zephyr_thread_tick(inst);
-    k_sleep(K_MSEC(1));
-  }
 }

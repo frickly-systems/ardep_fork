@@ -1,5 +1,6 @@
 #include "ardep/uds_minimal.h"
 #include "read_data_by_identifier.h"
+#include "zephyr/sys/byteorder.h"
 
 UDSErr_t _uds_new_data_identifier_static_read(
     void* data, size_t* len, struct uds_new_registration_t* reg) {
@@ -7,8 +8,18 @@ UDSErr_t _uds_new_data_identifier_static_read(
     return UDS_NRC_IncorrectMessageLengthOrInvalidFormat;  // todo: better error
   }
 
-  *len = reg->data_identifier.len;
+  *len = reg->data_identifier.len * reg->data_identifier.len_elem;
   memcpy(data, reg->user_data, *len);
+
+  if (reg->data_identifier.len_elem == 1) {
+    return UDS_OK;
+  }
+
+  // Data is send MSB first, so we convert every element of the array to BE
+  for (uint32_t i = 0; i < *len; i += reg->data_identifier.len_elem) {
+    sys_cpu_to_be(((uint8_t*)data) + i, reg->data_identifier.len_elem);
+  }
+
   return UDS_OK;
 }
 

@@ -30,17 +30,16 @@ struct iso14229_zephyr_instance {
   uds_callback event_callback;
 
   void* user_context;
+
+  int (*set_callback)(struct iso14229_zephyr_instance* inst,
+                      uds_callback callback);
+  void (*thread_tick)(struct iso14229_zephyr_instance* inst);
+  void (*thread_run)(struct iso14229_zephyr_instance* inst);
 };
 
 int iso14229_zephyr_init(struct iso14229_zephyr_instance* inst,
                          const UDSISOTpCConfig_t* iso_tp_config,
                          const struct device* can_dev,
                          void* user_context);
-
-int iso14229_zephyr_set_callback(struct iso14229_zephyr_instance* inst,
-                                 uds_callback callback);
-
-void iso14229_zephyr_thread_tick(struct iso14229_zephyr_instance* inst);
-void iso14229_zephyr_thread(struct iso14229_zephyr_instance* inst);
 
 #endif  // ARDEP_UDS_MINIMAL_H

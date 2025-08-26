@@ -10,6 +10,8 @@ struct uds_new_instance_t {
 
   struct uds_new_registration_t* static_registrations;
   struct uds_new_registration_t* dynamic_registrations;
+
+  void* user_context;
 };
 
 int uds_new_init(struct uds_new_instance_t* inst,
@@ -89,6 +91,7 @@ struct uds_new_registration_t {
     struct {
       uint16_t data_id;
       size_t len;
+      size_t len_elem;
       UDSErr_t (*read)(void* data,
                        size_t* len,
                        struct uds_new_registration_t*
@@ -115,36 +118,88 @@ UDSErr_t _uds_new_data_identifier_static_write(
     const void* data, size_t len, struct uds_new_registration_t* reg);
 
 // clang-format off
+
+/**
+ * @brief Register a static data identifier for the data at @p addr.
+ *
+ * This macro registers a static data identifier, associating a name and id
+ * with a memory address so it can be read by the <read_data_by_identifier> 
+ * command.
+ * 
+ * To not convert the data to big endian before sending, pass 1 as len_elem and
+ * the size of the data in bytes to len.
+ *
+ * @param name      User identifier.
+ * @param _instance uds_new instance that owns the reference.
+ * @param _data_id  Identifier for the data at @p addr.
+ * @param addr      Memory address where the data is found.
+ * @param len       Length of the data at @p addr in elements.
+ * @param len_elem  Length of each element in bytes ad @p addr. These amount of
+ * byte are converted to be each
+ */
+#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(name, _instance, _data_id, \
+                                                addr, _len, _len_elem)           \
+  STRUCT_SECTION_ITERABLE(uds_new_registration_t, name) = {                    \
+    .instance = _instance,                                                     \
+    .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,                        \
+    .user_data = addr,                                                         \
+    .data_identifier =                                                         \
+        {                                                                      \
+          .data_id = _data_id,                                                 \
+          .len = _len,                                                          \
+          .len_elem = _len_elem,                                                \
+          .read = _uds_new_data_identifier_static_read,                        \
+          .write = _uds_new_data_identifier_static_write,                      \
+        },                                                                     \
+  };
+
+/**
+ * @brief Register a static data identifier for a primitive data type.
+ *
+ * This macro registers a static data identifier, associating a name and id
+ * with a variable so it can be read by the <read_data_by_identifier> command.
+ *
+ * @param name      User identifier.
+ * @param _instance uds_new instance that owns the reference.
+ * @param _data_id  Identifier for the data at @p addr.
+ * @param variable  Variable to associate with the data identifier.
+ */
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(name, _instance, _data_id, \
                                                 variable)                  \
-  STRUCT_SECTION_ITERABLE(uds_new_registration_t, name) = {                \
-    .instance = _instance,                                                 \
-    .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,                    \
-    .user_data = &variable,                                                \
-    .data_identifier =                                                     \
-        {                                                                  \
-          .data_id = _data_id,                                             \
-          .len = sizeof(variable),                                         \
-          .read = _uds_new_data_identifier_static_read,                    \
-          .write = _uds_new_data_identifier_static_write,                  \
-        },                                                                 \
-  };
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                               \
+  name,                                                                    \
+  _instance,                                                               \
+  _data_id,                                                                \
+  &variable,                                                               \
+  1,                                                                       \
+  sizeof(variable)                                                         \
+)
 
+
+/**
+ * @brief Register a static data identifier for an array of data.
+ *
+ * This macro registers a static data identifier, associating a name and id
+ * with an array of data so it can be read by the <read_data_by_identifier>
+ * command.
+ * 
+ * Every element of the array is converted to Big Endian format before transmit
+ *
+ * @param name      User identifier.
+ * @param _instance uds_new instance that owns the reference.
+ * @param _data_id  Identifier for the data at @p addr.
+ * @param array     Array to associate with the data identifier.
+ */
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(      \
-    name, _instance, _data_id, variable, size)              \
-  STRUCT_SECTION_ITERABLE(uds_new_registration_t, name) = { \
-    .instance = _instance,                                  \
-    .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,     \
-    .user_data = variable,                                  \
-    .data_identifier =                                      \
-        {                                                   \
-          .data_id = _data_id,                              \
-          .len = size,                                      \
-          .read = _uds_new_data_identifier_static_read,     \
-          .write = _uds_new_data_identifier_static_write,   \
-        },                                                  \
-  };
-
+    name, _instance, _data_id, array)                       \
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                \
+  name,                                                     \
+  _instance,                                                \
+  _data_id,                                                 \
+  &array[0],                                                \
+  ARRAY_SIZE(array),                                        \
+  sizeof(array[0])                                          \
+)
 // clang-format on
 
 #endif  // ARDEP_UDS_NEW_H

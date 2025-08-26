@@ -6,6 +6,8 @@
 
 #include "ardep/uds_new.h"
 #include "fixture.h"
+#include "iso14229/uds.h"
+#include "zephyr/sys/util.h"
 
 #include <string.h>
 
@@ -19,6 +21,18 @@
 
 DEFINE_FFF_GLOBALS;
 
+DEFINE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
+
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(operate_on_id1,
+                                        &_dummy_instance,
+                                        by_id_data1_id,
+                                        by_id_data1);
+
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(operate_on_id2,
+                                              &_dummy_instance,
+                                              by_id_data2_id,
+                                              by_id_data2);
+
 static const UDSISOTpCConfig_t cfg = {
   // Hardware Addresses
   .source_addr = 0x7E8,  // Can ID Server (us)
@@ -29,103 +43,19 @@ static const UDSISOTpCConfig_t cfg = {
   .target_addr_func = UDS_TP_NOOP_ADDR,  // ID Client (them)
 };
 
-// Variables to capture callback and test data
-static can_rx_callback_t captured_rx_callback_phys = NULL;
-static void *captured_user_data_phy = NULL;
-static can_rx_callback_t captured_rx_callback_func = NULL;
-static void *captured_user_data_func = NULL;
+static uint8_t copied_data[32];
+static uint32_t copied_len;
 
-// Variable to capture the last sent CAN frame
-static struct can_frame send_can_frames[20];
-static uint32_t send_can_frame_count = 0;
-
-void tick_thread(struct iso14229_zephyr_instance *instance) {
-  iso14229_zephyr_thread_tick(instance);
+void assert_copy_data(uint8_t *data, uint32_t len) {
+  zassert_equal(copied_len, len);
+  zassert_mem_equal(copied_data, data, len);
 }
 
-void advance_time_and_tick_thread(struct iso14229_zephyr_instance *instance) {
-  k_msleep(1000);
-  tick_thread(instance);
-}
-
-void receive_phys_can_frame(const struct lib_uds_new_fixture *fixture,
-                            uint8_t *data,
-                            uint8_t data_len) {
-  const struct device *dev = fixture->can_dev;
-
-  struct can_frame frame = {
-    .id = fixture->cfg.source_addr,  // 0x7E8 - message TO the server (us)
-    .dlc = data_len,                 // data_len == dlc for Can CC
-    .flags = 0,
-  };
-  memcpy(frame.data, data, data_len);
-
-  captured_rx_callback_phys(dev, &frame, captured_user_data_phy);
-}
-
-void assert_send_phy_can_frame(const struct lib_uds_new_fixture *fixture,
-                               uint32_t frame_index,
-                               uint8_t *data,
-                               uint8_t data_len) {
-  struct can_frame expected_frame = {
-    .id = fixture->cfg.target_addr,  // 0x7E8 - message TO the server
-    .dlc = data_len,                 // data_len == dlc for Can CC
-    .flags = 0,
-  };
-  memcpy(expected_frame.data, data, data_len);
-
-  struct can_frame actual_frame = send_can_frames[frame_index];
-
-  zassert_equal(actual_frame.id, expected_frame.id);  // response address
-  zassert_equal(actual_frame.dlc,
-                expected_frame.dlc);  // data_len == dlc for Can CC
-  zassert_mem_equal(actual_frame.data, expected_frame.data, data_len);
-}
-
-// Actual definition in zephyr/drivers/can/can_common.c
-// Re-defined here for proper injection fake can send command
-struct can_tx_default_cb_ctx {
-  struct k_sem done;
-  int status;
-};
-
-// Fake CAN send to set the return code and
-// unlock the semaphore AND capture the frame data
-static int can_send_t_fake_impl(const struct device *dev,
-                                const struct can_frame *frame,
-                                k_timeout_t timeout,
-                                can_tx_callback_t callback,
-                                void *user_data) {
-  struct can_tx_default_cb_ctx *ctx = user_data;
-
-  // Capture the frame data
-  send_can_frames[send_can_frame_count] = *frame;
-  send_can_frame_count++;
-
-  k_sem_give(&ctx->done);
-  ctx->status = 0;  // Success
-  return 0;
-}
-
-// Custom fake to capture the RX filter callback
-// These are used to inject received CAN messages
-static int capture_rx_filter_fake(const struct device *dev,
-                                  can_rx_callback_t callback,
-                                  void *user_data,
-                                  const struct can_filter *filter) {
-  ARG_UNUSED(dev);
-  ARG_UNUSED(filter);
-
-  if (filter->id == cfg.source_addr) {
-    captured_rx_callback_phys = callback;
-    captured_user_data_phy = user_data;
-  } else if (filter->id == cfg.source_addr_func) {
-    captured_rx_callback_func = callback;
-    captured_user_data_func = user_data;
-  } else {
-    // If the filter ID does not match, we do not capture it
-    return -EINVAL;  // Return error for unsupported filter ID
-  }
+static uint8_t custom_copy(UDSServer_t *server,
+                           const void *data,
+                           uint16_t len) {
+  copied_len = len;
+  memcpy(copied_data, data, len);
 
   return 0;
 }
@@ -142,36 +72,35 @@ static void *uds_new_setup(void) {
 static void uds_new_before(void *f) {
   struct lib_uds_new_fixture *fixture = f;
   const struct device *dev = fixture->can_dev;
-  struct iso14229_zephyr_instance *uds_instance = &fixture->instance;
+  struct uds_new_instance_t *uds_instance = &fixture->instance;
 
-  RESET_FAKE(fake_can_send);
+  RESET_FAKE(copy);
   FFF_RESET_HISTORY();
 
-  memset(send_can_frames, 0, sizeof(send_can_frames));
-  send_can_frame_count = 0;
+  copy_fake.custom_fake = custom_copy;
 
-  // Set up the fake to capture RX filter callbacks
-  fake_can_send_fake.custom_fake = can_send_t_fake_impl;
-  fake_can_add_rx_filter_fake.custom_fake = capture_rx_filter_fake;
-
-  // Variables to capture CAN RX filter setup
-  captured_rx_callback_phys = NULL;
-  captured_user_data_phy = NULL;
-
-  // Configure UDS TP settings
-  UDSISOTpCConfig_t tp_config = {
-    .source_addr = fixture->cfg.source_addr,            // 0x7E8 (client)
-    .target_addr = fixture->cfg.target_addr,            // 0x7E0 (server - us)
-    .source_addr_func = fixture->cfg.source_addr_func,  // 0x7DF
-    .target_addr_func = fixture->cfg.target_addr_func,  // UDS_TP_NOOP_ADDR
-  };
-
-  int ret = uds_new_init(uds_instance, &tp_config, dev, NULL);
-
+  int ret = uds_new_init(uds_instance, &cfg, dev, NULL);
   assert(ret == 0);
-  // we add 2 can filters in uds_new_init()
-  assert(fake_can_add_rx_filter_fake.call_count == 2);
-  assert(uds_instance->server.fn);
+
+  operate_on_id1.instance = uds_instance;
+  by_id_data1 = by_id_data1_default;
+
+  operate_on_id2.instance = uds_instance;
+  memcpy(by_id_data2, by_id_data2_default, sizeof(by_id_data2_default));
+
+  memset(copied_data, 0, sizeof(copied_data));
+  copied_len = 0;
+}
+
+typedef UDSErr_t (*uds_callback)(struct iso14229_zephyr_instance *inst,
+                                 UDSEvent_t event,
+                                 void *arg,
+                                 void *user_context);
+
+UDSErr_t receive_event(struct uds_new_instance_t *inst,
+                       UDSEvent_t event,
+                       void *args) {
+  return inst->iso14229.event_callback(&inst->iso14229, event, args, inst);
 }
 
 ZTEST_SUITE(lib_uds_new, NULL, uds_new_setup, uds_new_before, NULL, NULL);

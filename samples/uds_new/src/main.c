@@ -84,5 +84,5 @@ int main(void) {
   }
   printk("CAN device started\n");
 
-  iso14229_zephyr_thread(&instance.iso14229);
+  instance.iso14229.thread_run(&instance.iso14229);
 }

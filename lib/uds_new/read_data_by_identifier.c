@@ -45,6 +45,7 @@ UDSErr_t handle_data_read_by_identifier(struct uds_new_instance_t* instance,
     if (reg->type != UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER) {
       continue;
     }
+
     if (reg->data_identifier.data_id != args->dataId) {
       continue;
     }

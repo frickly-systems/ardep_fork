@@ -23,15 +23,11 @@ DEFINE_FFF_GLOBALS;
 
 DEFINE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(operate_on_id1,
-                                        NULL,
-                                        by_id_data1_id,
-                                        by_id_data1);
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(
+    operate_on_id1, NULL, by_id_data1_id, by_id_data1, true, true);
 
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(operate_on_id2,
-                                              NULL,
-                                              by_id_data2_id,
-                                              by_id_data2);
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(
+    operate_on_id2, NULL, by_id_data2_id, by_id_data2, true, true);
 
 static const UDSISOTpCConfig_t cfg = {
   // Hardware Addresses

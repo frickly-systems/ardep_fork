@@ -61,10 +61,10 @@ def ecu_reset(client: Client):
 
 class MyCustomCodec(udsoncan.DidCodec):
     def encode(self, val):
-        return struct.pack("<H", val)  # Little endian, 16 bit value
+        return struct.pack(">H", val)  # Big endian, 16 bit value
 
     def decode(self, payload):
-        return struct.unpack("<H", payload)[0]  # decode the 16 bits value
+        return struct.unpack(">H", payload)[0]  # decode the 16 bits value
 
     def __len__(self):
         return 2  # encoded payload is 2 byte long.

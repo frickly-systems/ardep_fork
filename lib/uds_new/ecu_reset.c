@@ -54,7 +54,12 @@ UDSErr_t handle_ecu_reset_event(struct iso14229_zephyr_instance *inst,
 
   uint32_t delay_ms = MAX(CONFIG_UDS_NEW_RESET_DELAY_MS, inst->server.p2_ms);
   LOG_INF("Scheduling ECU reset in %u ms, type: %d", delay_ms, reset_type);
-  ret = k_work_schedule(&reset_work, K_MSEC(delay_ms));
+  if (!k_work_delayable_is_pending(&reset_work)) {
+    ret = k_work_schedule(&reset_work, K_MSEC(delay_ms));
+  } else {
+    LOG_WRN("ECU reset work item is already scheduled");
+    ret = UDS_NRC_ConditionsNotCorrect;
+  }
   if (ret < 0) {
     LOG_ERR("Failed to schedule ECU reset work");
     return UDS_NRC_ConditionsNotCorrect;

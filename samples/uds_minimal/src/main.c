@@ -8,7 +8,6 @@
 // Use scripts/uds_iso14229_demo_script.py to test
 
 #include "ardep/uds_new.h"
-#include "write_memory_by_addr_impl.h"
 
 #include <errno.h>
 
@@ -21,7 +20,6 @@
 #include <iso14229/server.h>
 #include <iso14229/tp/isotp_c.h>
 #include <iso14229/util.h>
-#include <uds_new.h>
 
 LOG_MODULE_REGISTER(iso14229_testing, LOG_LEVEL_DBG);
 
@@ -30,16 +28,6 @@ static const struct device *can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
 uint8_t dummy_memory[512] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x66, 0x7, 0x8};
 
 struct iso14229_zephyr_instance inst;
-
-struct uds_new_instance_t instance;
-
-uint16_t variable = 5;
-char variable2[] = "Hello world";
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(dings, &instance, 0x1234, variable);
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(
-    dings2, &instance, 0x1235, variable2, sizeof(variable2));
-
-// todo: tickets für nötige msgs
 
 UDSErr_t read_mem_by_addr_impl(struct UDSServer *srv,
                                const UDSReadMemByAddrArgs_t *read_args,
@@ -65,9 +53,12 @@ int main(void) {
     .target_addr_func = UDS_TP_NOOP_ADDR,  // ID Server (us)
   };
 
-  uds_new_init(&inst, &cfg, can_dev, NULL);
+  int err = iso14229_zephyr_init(&inst, &cfg, can_dev, NULL);
+  if (err) {
+    printk("Failed to initialize ISO 14229 Zephyr instance: %d\n", err);
+    return err;
+  }
 
-  int err;
   if (!device_is_ready(can_dev)) {
     printk("CAN device not ready\n");
     return -ENODEV;

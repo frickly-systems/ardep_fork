@@ -5,22 +5,6 @@
 #include "ardep/uds_minimal.h"
 #include "iso14229/uds.h"
 
-struct uds_new_instance_t {
-  struct iso14229_zephyr_instance iso14229;
-
-  struct uds_new_registration_t* static_registrations;
-  struct uds_new_registration_t* dynamic_registrations;
-
-  void* user_context;
-};
-
-int uds_new_init(struct uds_new_instance_t* inst,
-                 const UDSISOTpCConfig_t* iso_tp_config,
-                 const struct device* can_dev,
-                 void* user_context);
-
-#ifdef CONFIG_UDS_NEW_ENABLE_RESET
-
 enum ecu_reset_type {
   ECU_RESET_HARD = 1,
   ECU_RESET_KEY_OFF_ON = 2,
@@ -43,31 +27,31 @@ enum ecu_reset_type {
 typedef UDSErr_t (*ecu_reset_callback_t)(struct iso14229_zephyr_instance* inst,
                                          enum ecu_reset_type reset_type,
                                          void* user_context);
+struct uds_new_instance_t {
+  struct iso14229_zephyr_instance iso14229;
 
-/**
- * @brief Set a custom callback for ECU reset events
- *
- * The default event handling is disabled when a callback is set
- *
- * @param callback Pointer to the custom callback function
- *
- * @retval 0 on success
- * @retval Negative error code on failure
- *
- */
-int set_ecu_reset_callback(ecu_reset_callback_t callback);
+  struct uds_new_registration_t* static_registrations;
+  struct uds_new_registration_t* dynamic_registrations;
 
-/**
- * @brief Schedule a delayed ECU reset after p2 timeout
- *
- * @param server Pointer to the UDS server instance
- * @param reset_type Type of reset to perform
- *
- * @retval UDS_OK on success
- * @retval UDS_NRC on failure
- */
-UDSErr_t handle_ecu_reset_event(struct iso14229_zephyr_instance* inst,
-                                enum ecu_reset_type reset_type);
+  void* user_context;
+
+  /**
+   * Set the ECU reset callback function for custom callbacks
+   *
+   * @param inst Pointer to the UDS server instance
+   * @param callback Pointer to the callback function to set
+   * @return 0 on success, negative error code on failure
+   */
+  int (*set_ecu_reset_callback)(struct iso14229_zephyr_instance* inst,
+                                ecu_reset_callback_t callback);
+};
+
+int uds_new_init(struct uds_new_instance_t* inst,
+                 const UDSISOTpCConfig_t* iso_tp_config,
+                 const struct device* can_dev,
+                 void* user_context);
+
+#ifdef CONFIG_UDS_NEW_ENABLE_RESET
 
 #endif  // CONFIG_UDS_NEW_ENABLE_RESET
 

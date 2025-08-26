@@ -62,7 +62,7 @@ UDSErr_t handle_ecu_reset_event(struct iso14229_zephyr_instance *inst,
   return UDS_OK;
 }
 
-int set_ecu_reset_callback(ecu_reset_callback_t callback) {
+int uds_new_set_ecu_reset_callback(ecu_reset_callback_t callback) {
   int ret = k_mutex_lock(&custom_callback_mutex, K_FOREVER);
   if (ret < 0) {
     LOG_ERR("Failed to acquire ECU Reset custom callback mutex");

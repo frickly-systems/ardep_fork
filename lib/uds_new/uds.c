@@ -1,6 +1,7 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 
+#include "ecu_reset.h"
 #include "iso14229/uds.h"
 #include "read_data_by_identifier.h"
 
@@ -61,6 +62,7 @@ int uds_new_init(struct uds_new_instance_t* inst,
                  const struct device* can_dev,
                  void* user_context) {
   inst->user_context = user_context;
+  inst->set_ecu_reset_callback = uds_new_set_ecu_reset_callback;
 
   int ret = iso14229_zephyr_init(&inst->iso14229, iso_tp_config, can_dev, inst);
   if (ret < 0) {

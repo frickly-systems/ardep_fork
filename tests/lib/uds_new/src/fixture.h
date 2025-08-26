@@ -22,8 +22,6 @@ struct lib_uds_new_fixture {
   const struct device *can_dev;
 };
 
-static struct uds_new_instance_t _dummy_instance;
-
 static const uint16_t by_id_data1_default = 5;
 static uint16_t by_id_data1;
 static const uint16_t by_id_data1_id = 0x1234;

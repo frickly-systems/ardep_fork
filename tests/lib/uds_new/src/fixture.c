@@ -24,12 +24,12 @@ DEFINE_FFF_GLOBALS;
 DEFINE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(operate_on_id1,
-                                        &_dummy_instance,
+                                        NULL,
                                         by_id_data1_id,
                                         by_id_data1);
 
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(operate_on_id2,
-                                              &_dummy_instance,
+                                              NULL,
                                               by_id_data2_id,
                                               by_id_data2);
 

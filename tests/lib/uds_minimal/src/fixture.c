@@ -46,7 +46,7 @@ static struct can_frame send_can_frames[20];
 static uint32_t send_can_frame_count = 0;
 
 void tick_thread(struct iso14229_zephyr_instance *instance) {
-  iso14229_zephyr_thread_tick(instance);
+  instance->thread_tick(instance);
 }
 
 void advance_time_and_tick_thread(struct iso14229_zephyr_instance *instance) {
@@ -181,7 +181,7 @@ static void uds_new_before(void *f) {
   assert(uds_instance->server.fn);
 
   // Set the unified callback
-  iso14229_zephyr_set_callback(uds_instance, test_uds_callback);
+  uds_instance->set_callback(uds_instance, test_uds_callback);
 }
 
 ZTEST_SUITE(lib_uds_minimal, NULL, uds_new_setup, uds_new_before, NULL, NULL);

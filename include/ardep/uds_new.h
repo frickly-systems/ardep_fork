@@ -146,7 +146,7 @@ UDSErr_t _uds_new_data_identifier_static_write(
  * @param len_elem  Length of each element in bytes ad @p addr. These amount of
  * byte are converted to be each
  */
-#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(name,    \
+#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(    \
   _instance,                                                 \
   _data_id,                                                  \
   addr,                                                      \
@@ -155,7 +155,7 @@ UDSErr_t _uds_new_data_identifier_static_write(
   readable,                                                  \
   writable                                                   \
   )                                                          \
-  STRUCT_SECTION_ITERABLE(uds_new_registration_t, name) = {  \
+  STRUCT_SECTION_ITERABLE(uds_new_registration_t, id_##_data_id) = {  \
     .instance = _instance,                                   \
     .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,      \
     .user_data = addr,                                       \
@@ -182,13 +182,12 @@ UDSErr_t _uds_new_data_identifier_static_write(
  * @param _data_id  Identifier for the data at @p addr.
  * @param variable  Variable to associate with the data identifier.
  */
-#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(name, _instance, _data_id, \
+#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(_instance, _data_id, \
                                                 variable,\
   readable,                                                  \
   writable                                                   \
                                               )                  \
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                               \
-  name,                                                                    \
   _instance,                                                               \
   _data_id,                                                                \
   &variable,                                                               \
@@ -214,12 +213,11 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                               \
  * @param array     Array to associate with the data identifier.
  */
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(      \
-    name, _instance, _data_id, array,\
+     _instance, _data_id, array,\
   readable,                                                  \
   writable                                                   \
   )                       \
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                \
-  name,                                                     \
   _instance,                                                \
   _data_id,                                                 \
   &array[0],                                                \

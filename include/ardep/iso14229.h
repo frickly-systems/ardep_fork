@@ -1,18 +1,27 @@
+/*
+ * Copyright (C) Frickly Systems GmbH
+ * Copyright (C) MBition GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef ARDEP_ISO14229_H
 #define ARDEP_ISO14229_H
 
 #pragma once
 
+#include "iso14229_events.h"
+#include "iso14229_nrc.h"
+
 #include <zephyr/drivers/can.h>
 #include <zephyr/kernel.h>
 
-#include <server.h>
-#include <tp/isotp_c.h>
+#include <iso14229.h>
 
 struct iso14229_zephyr_instance;
 
 typedef UDSErr_t (*uds_callback)(struct iso14229_zephyr_instance* inst,
-                                 UDSEvent_t event,
+                                 enum uds_event event,
                                  void* arg,
                                  void* user_context);
 

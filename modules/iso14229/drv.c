@@ -4,8 +4,7 @@
 
 LOG_MODULE_REGISTER(isotp, CONFIG_MODULE_ISO14229_EXTERNAL_LOG_LEVEL);
 
-#include <tp/isotp-c/isotp.h>
-#include <tp/isotp-c/isotp_user.h>
+#include <iso14229.h>
 
 void isotp_user_debug(const char* fmt, ...) {
 #if CONFIG_ISO14229_LIB_LOG_LEVEL >= LOG_LEVEL_DEBUG

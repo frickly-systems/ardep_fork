@@ -9,7 +9,8 @@ if(CONFIG_MODULE_ISO14229_EXTERNAL)
     ${ZEPHYR_ISO14229_MODULE_DIR}/src/tp/isotp-c/isotp.c
     drv.c
   )
-  zephyr_include_directories(include)
-  zephyr_include_directories(${ZEPHYR_ISO14229_MODULE_DIR}/src)
+  zephyr_library_include_directories(${ZEPHYR_ISO14229_MODULE_DIR}/src)
+
+  zephyr_include_directories(${ZEPHYR_ISO14229_MODULE_DIR})
   zephyr_compile_definitions(ISO_TP_USER_SEND_CAN_ARG UDS_CUSTOM_MILLIS=1 UDS_TP_ISOTP_C)
 endif()

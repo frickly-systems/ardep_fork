@@ -4,7 +4,7 @@
 
 zephyr_library()
 zephyr_library_sources(
-    iso14229_common.c
+    iso14229.c
 )
 
 zephyr_include_directories(.)

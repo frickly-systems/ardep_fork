@@ -6,9 +6,7 @@
 #include <zephyr/fff.h>
 
 #include <ardep/iso14229.h>
-#include <server.h>
-#include <tp.h>
-#include <tp/isotp_c.h>
+#include <iso14229.h>
 
 // Test callback function for UDS events
 DECLARE_FAKE_VALUE_FUNC(UDSErr_t,

@@ -2,7 +2,7 @@
 #define ARDEP_UDS_NEW_H
 
 // Forward declaration to avoid include dependency issues
-#include "ardep/uds_minimal.h"
+#include "ardep/iso14229.h"
 #include "uds.h"
 
 struct uds_new_instance_t;

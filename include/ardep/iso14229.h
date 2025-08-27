@@ -1,5 +1,5 @@
-#ifndef ARDEP_UDS_MINIMAL_H
-#define ARDEP_UDS_MINIMAL_H
+#ifndef ARDEP_ISO14229_H
+#define ARDEP_ISO14229_H
 
 #pragma once
 
@@ -43,4 +43,4 @@ int iso14229_zephyr_init(struct iso14229_zephyr_instance* inst,
                          const struct device* can_dev,
                          void* user_context);
 
-#endif  // ARDEP_UDS_MINIMAL_H
+#endif  // ARDEP_ISO14229_H

@@ -5,7 +5,7 @@ LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 #include "read_data_by_identifier.h"
 #include "uds.h"
 
-#include <ardep/uds_minimal.h>
+#include <ardep/iso14229.h>
 #include <ardep/uds_new.h>
 #include <server.h>
 

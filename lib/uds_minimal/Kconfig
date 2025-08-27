@@ -5,7 +5,7 @@
 
 menuconfig UDS_MINIMAL
     bool "UDS Minimal support"
-    depends on ISO14229_LIB
+    select MODULE_ISO14229_EXTERNAL
     
 if UDS_MINIMAL
 

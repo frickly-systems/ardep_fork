@@ -1,4 +1,4 @@
-if(CONFIG_ISO14229_LIB)
+if(CONFIG_MODULE_ISO14229_EXTERNAL)
   zephyr_library()
   zephyr_library_sources(
     ${ZEPHYR_ISO14229_MODULE_DIR}/src/server.c

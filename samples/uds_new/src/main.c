@@ -19,9 +19,9 @@
 
 #include <ardep/uds_minimal.h>
 #include <ardep/uds_new.h>
-#include <iso14229/server.h>
-#include <iso14229/tp/isotp_c.h>
-#include <iso14229/util.h>
+#include <server.h>
+#include <tp/isotp_c.h>
+#include <util.h>
 
 LOG_MODULE_REGISTER(iso14229_testing, LOG_LEVEL_DBG);
 

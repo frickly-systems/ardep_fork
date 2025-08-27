@@ -10,6 +10,6 @@ if(CONFIG_ISO14229_LIB)
     drv.c
   )
   zephyr_include_directories(include)
-  zephyr_include_directories(${ZEPHYR_ISO14229_MODULE_DIR}/include)
+  zephyr_include_directories(${ZEPHYR_ISO14229_MODULE_DIR}/src)
   zephyr_compile_definitions(ISO_TP_USER_SEND_CAN_ARG UDS_CUSTOM_MILLIS=1 UDS_TP_ISOTP_C)
 endif()

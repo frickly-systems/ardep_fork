@@ -2,12 +2,12 @@
 LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 
 #include "ecu_reset.h"
-#include "iso14229/uds.h"
 #include "read_data_by_identifier.h"
+#include "uds.h"
 
 #include <ardep/uds_minimal.h>
 #include <ardep/uds_new.h>
-#include <iso14229/server.h>
+#include <server.h>
 
 UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
                             UDSEvent_t event,

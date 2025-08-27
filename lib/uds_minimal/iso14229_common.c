@@ -3,8 +3,8 @@
 
 #include <zephyr/logging/log.h>
 
-#include <iso14229/server.h>
-#include <iso14229/util.h>
+#include <server.h>
+#include <util.h>
 
 LOG_MODULE_REGISTER(uds_minimal, CONFIG_UDS_MINIMAL_LOG_LEVEL);
 

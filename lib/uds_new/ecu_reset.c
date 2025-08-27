@@ -1,7 +1,7 @@
 
 
 // #ifdef UDS_NEW_ENABLE_RESET
-#include "iso14229/uds.h"
+#include "uds.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
@@ -9,7 +9,7 @@
 #include <zephyr/sys/util.h>
 
 #include <ardep/uds_new.h>
-#include <iso14229/server.h>
+#include <server.h>
 
 LOG_MODULE_REGISTER(uds_new, LOG_LEVEL_INF);
 

@@ -43,4 +43,6 @@ int iso14229_zephyr_init(struct iso14229_zephyr_instance* inst,
                          const struct device* can_dev,
                          void* user_context);
 
+void iso14229_zephyr_thread(struct iso14229_zephyr_instance *inst);
+
 #endif  // ARDEP_UDS_MINIMAL_H

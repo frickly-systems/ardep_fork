@@ -2,8 +2,8 @@
 
 config MODULE_ISO14229_EXTERNAL
   bool "ISO14229 Library"
-  depends on ZEPHYR_ISO14229_MODULE
   depends on CAN
+	depends on STD_C11 || STD_C17 || STD_C23
 
 if MODULE_ISO14229_EXTERNAL
 

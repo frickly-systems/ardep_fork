@@ -182,21 +182,39 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_dynamic_array) {
   struct uds_new_instance_t *instance = &fixture->instance;
 
   uint16_t id = 0x8899;
-  uint8_t data[16] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
-                      0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00};
+  uint32_t element_data[4] = {0};
 
-  instance->register_data_by_identifier(instance, id, data, ARRAY_SIZE(data),
-                                        sizeof(data[0]), false, true);
+  instance->register_data_by_identifier(instance, id, element_data,
+                                        ARRAY_SIZE(element_data),
+                                        sizeof(element_data[0]), false, true);
+
+  uint8_t data_to_write[16] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
+                               0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00};
 
   UDSWDBIArgs_t args = {
     .dataId = id,
-    .data = (uint8_t *)data,
-    .len = sizeof(data),
+    .data = (uint8_t *)data_to_write,
+    .len = sizeof(data_to_write),
   };
 
-  int ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &args);
+  int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
   zassert_ok(ret);
 
   uint32_t expected[4] = {0x11223344, 0x55667788, 0x99AABBCC, 0xDDEEFF00};
-  zassert_mem_equal(expected, data, sizeof(expected));
+  zassert_mem_equal(expected, element_data, sizeof(expected));
+}
+
+ZTEST_F(lib_uds_new, test_0x2E_write_by_id_fails_when_write_not_allowed) {
+  struct uds_new_instance_t *instance = &fixture->instance;
+
+  uint8_t data_to_write[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+
+  UDSWDBIArgs_t args = {
+    .dataId = by_id_data_no_rw_id,
+    .data = data_to_write,
+    .len = sizeof(data_to_write),
+  };
+
+  int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
+  zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }

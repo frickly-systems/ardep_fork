@@ -63,7 +63,7 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_fails_when_id_unknown) {
   struct uds_new_instance_t *instance = fixture->instance;
 
   UDSRDBIArgs_t args = {
-    .dataId = 0xFFFF,  // unknown ID
+    .dataId = by_id_data_unknown_id,
     .copy = copy,
   };
 
@@ -97,7 +97,7 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_dynamic_array) {
   uint32_t data[4] = {0x11223344, 0x55667788, 0x99AABBCC, 0xDDEEFF00};
 
   instance->register_data_by_identifier(instance, id, data, ARRAY_SIZE(data),
-                                        sizeof(data[0]));
+                                        sizeof(data[0]), true, false);
 
   UDSRDBIArgs_t args = {
     .dataId = id,
@@ -115,4 +115,47 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_dynamic_array) {
                           0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00};
 
   assert_copy_data(expected, sizeof(expected));
+}
+
+ZTEST_F(lib_uds_new, test_0x22_read_by_id_fails_when_read_not_allowed) {
+  struct uds_new_instance_t *instance = &fixture->instance;
+
+  UDSRDBIArgs_t args = {
+    .dataId = by_id_data_no_rw_id,
+    .copy = copy,
+  };
+
+  int ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &args);
+  zassert_equal(ret, UDS_NRC_RequestOutOfRange);
+}
+
+ZTEST_F(lib_uds_new, test_0x2E_write_by_id_fails_when_id_unknown) {
+  struct uds_new_instance_t *instance = &fixture->instance;
+
+  uint8_t data[2] = {0xBE, 0xEF};
+  UDSWDBIArgs_t args = {
+    .dataId = by_id_data_unknown_id,
+    .data = data,
+    .len = sizeof(data),
+  };
+
+  int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
+  zassert_equal(ret, UDS_NRC_RequestOutOfRange);
+}
+
+ZTEST_F(lib_uds_new, test_0x2E_write_by_id_static_single_element) {
+  struct uds_new_instance_t *instance = &fixture->instance;
+
+  uint8_t data[2] = {0xBE, 0xEF};
+  UDSWDBIArgs_t args = {
+    .dataId = by_id_data1_id,
+    .data = data,
+    .len = sizeof(data),
+  };
+
+  int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
+  zassert_ok(ret);
+
+  uint16_t expected = 0xBEEF;
+  zassert_equal(expected, by_id_data1);
 }

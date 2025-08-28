@@ -77,5 +77,5 @@ int main(void) {
   }
   printk("CAN device started\n");
 
-  iso14229_zephyr_thread(&inst);
+  inst.thread_run(&inst);
 }

@@ -61,7 +61,6 @@ int uds_new_init(struct uds_new_instance_t* inst,
                  const struct device* can_dev,
                  void* user_context) {
   inst->user_context = user_context;
-  inst->set_ecu_reset_callback = uds_new_set_ecu_reset_callback;
 
 #ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
   inst->register_data_by_identifier = uds_new_register_runtime_data_identifier;

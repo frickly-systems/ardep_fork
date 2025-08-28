@@ -22,7 +22,7 @@ ZTEST_F(lib_uds_new, test_0x11_ecu_reset) {
   int ret = receive_event(instance, UDS_EVT_EcuReset, &args);
   zassert_ok(ret);
 
-  k_msleep(CONFIG_UDS_NEW_RESET_DELAY_MS * 2);
+  // Wait for the scheduled worker to finish
   k_msleep(2000);
   zassert_equal(ecu_reset_work_handler_fake.call_count, 1);
 }

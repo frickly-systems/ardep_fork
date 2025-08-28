@@ -15,10 +15,6 @@ LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 #include <ardep/uds_new.h>
 #include <iso14229.h>
 
-#ifndef CONFIG_UDS_NEW_RESET_DELAY_MS
-#define CONFIG_UDS_NEW_RESET_DELAY_MS 0
-#endif
-
 /**
  * @brief Work handler that performs the actual ECU reset
  */
@@ -32,7 +28,7 @@ K_WORK_DELAYABLE_DEFINE(reset_work, ecu_reset_work_handler);
 
 UDSErr_t handle_ecu_reset_event(struct uds_new_instance_t *inst,
                                 enum ecu_reset_type reset_type) {
-  // Only support these two reset types by default
+  // By default only support hard reset
   if (reset_type != ECU_RESET_HARD) {
     return UDS_NRC_SubFunctionNotSupported;
   }

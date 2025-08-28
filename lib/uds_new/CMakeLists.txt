@@ -11,9 +11,7 @@ zephyr_library_sources(
     write_memory_by_addr_impl.c
 )
 
-if(CONFIG_UDS_NEW_ENABLE_RESET)
-    zephyr_library_sources(ecu_reset.c)
-endif()
+zephyr_library_sources_ifdef(CONFIG_UDS_NEW_ENABLE_RESET ecu_reset.c)
 
 zephyr_linker_sources(SECTIONS iterables.ld)
 

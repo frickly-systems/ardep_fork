@@ -17,9 +17,7 @@
 #include <zephyr/sys/byteorder.h>
 
 #include <ardep/iso14229.h>
-#include <server.h>
-#include <tp/isotp_c.h>
-#include <util.h>
+#include <iso14229.h>
 
 LOG_MODULE_REGISTER(iso14229_testing, LOG_LEVEL_DBG);
 

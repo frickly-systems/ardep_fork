@@ -12,9 +12,7 @@
 #include <zephyr/drivers/can/can_fake.h>
 #include <zephyr/ztest.h>
 
-#include <server.h>
-#include <tp.h>
-#include <tp/isotp_c.h>
+#include <iso14229.h>
 
 DEFINE_FFF_GLOBALS;
 

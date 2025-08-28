@@ -3,8 +3,7 @@
 
 #include <zephyr/logging/log.h>
 
-#include <server.h>
-#include <util.h>
+#include <iso14229.h>
 
 LOG_MODULE_REGISTER(iso14229, CONFIG_ISO14229_LOG_LEVEL);
 

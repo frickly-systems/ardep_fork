@@ -6,8 +6,7 @@
 #include <zephyr/drivers/can.h>
 #include <zephyr/kernel.h>
 
-#include <server.h>
-#include <tp/isotp_c.h>
+#include <iso14229.h>
 
 struct iso14229_zephyr_instance;
 

@@ -8,9 +8,7 @@
 #include <zephyr/fff.h>
 
 #include <ardep/iso14229.h>
-#include <server.h>
-#include <tp.h>
-#include <tp/isotp_c.h>
+#include <iso14229.h>
 
 DECLARE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 

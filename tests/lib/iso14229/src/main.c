@@ -12,9 +12,7 @@
 
 // Include UDS minimal library headers
 #include <ardep/iso14229.h>
-#include <server.h>
-#include <tp/isotp_c.h>
-#include <uds.h>
+#include <iso14229.h>
 
 static const uint8_t uds_mem_data[255] = {
   0x01, 0x02, 0x03, 0x04, 0x05, 0x66, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D,

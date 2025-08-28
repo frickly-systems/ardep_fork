@@ -45,7 +45,9 @@ UDSErr_t _uds_new_data_identifier_static_read(
 UDSErr_t _uds_new_data_identifier_static_write(
     const void* data, size_t len, struct uds_new_registration_t* reg) {
   if (len != DATA_LEN_IN_BYTES(reg)) {
-    return UDS_NRC_IncorrectMessageLengthOrInvalidFormat;
+    LOG_WRN("Wrong length to write Data to Identifier 0x%04X",
+            reg->data_identifier.data_id);
+    return UDS_NRC_ConditionsNotCorrect;
   }
 
   // Use separate buffer to convert to system byte order to minimize access time

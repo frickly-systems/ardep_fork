@@ -28,11 +28,10 @@ extern const uint16_t by_id_data2_default[3];
 extern uint16_t by_id_data2[3];
 extern const uint16_t by_id_data2_id;
 
-__attribute__((unused)) static uint16_t by_id_data_no_rw[4] = {0xB1, 0x6B, 0x00,
-                                                               0xB5};
-static const uint16_t by_id_data_no_rw_id = 0xBAAD;
+__attribute__((unused)) extern uint16_t by_id_data_no_rw[4];
+extern const uint16_t by_id_data_no_rw_id;
 
-static const uint16_t by_id_data_unknown_id = 0xDEAD;
+extern const uint16_t by_id_data_unknown_id;
 
 /**
  * @brief Receive an event from iso14229

@@ -157,5 +157,46 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_static_single_element) {
   zassert_ok(ret);
 
   uint16_t expected = 0xBEEF;
-  zassert_equal(expected, by_id_data1);
+  zassert_equal(expected, by_id_data1, "Expected 0x%04X, but was: 0x%04X",
+                expected, by_id_data1);
+}
+
+ZTEST_F(lib_uds_new, test_0x2E_write_by_id_static_array) {
+  struct uds_new_instance_t *instance = &fixture->instance;
+
+  uint8_t data[6] = {0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE};
+  UDSWDBIArgs_t args = {
+    .dataId = by_id_data2_id,
+    .data = data,
+    .len = sizeof(data),
+  };
+
+  int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
+  zassert_ok(ret);
+
+  uint16_t expected[3] = {0xBEEF, 0xCAFE, 0xBABE};
+  zassert_mem_equal(expected, by_id_data2, sizeof(expected));
+}
+
+ZTEST_F(lib_uds_new, test_0x2E_write_by_id_dynamic_array) {
+  struct uds_new_instance_t *instance = &fixture->instance;
+
+  uint16_t id = 0x8899;
+  uint8_t data[16] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
+                      0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00};
+
+  instance->register_data_by_identifier(instance, id, data, ARRAY_SIZE(data),
+                                        sizeof(data[0]), false, true);
+
+  UDSWDBIArgs_t args = {
+    .dataId = id,
+    .data = (uint8_t *)data,
+    .len = sizeof(data),
+  };
+
+  int ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &args);
+  zassert_ok(ret);
+
+  uint32_t expected[4] = {0x11223344, 0x55667788, 0x99AABBCC, 0xDDEEFF00};
+  zassert_mem_equal(expected, data, sizeof(expected));
 }

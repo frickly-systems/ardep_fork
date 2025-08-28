@@ -16,6 +16,19 @@
 
 #include <iso14229.h>
 
+const uint16_t by_id_data1_default = 5;
+uint16_t by_id_data1;
+const uint16_t by_id_data1_id = 0x1234;
+
+const uint16_t by_id_data2_default[3] = {0x1234, 0x5678, 0x9ABC};
+uint16_t by_id_data2[3];
+const uint16_t by_id_data2_id = 0x2468;
+
+__attribute__((unused)) uint16_t by_id_data_no_rw[4] = {0xB1, 0x6B, 0x00, 0xB5};
+const uint16_t by_id_data_no_rw_id = 0xBAAD;
+
+const uint16_t by_id_data_unknown_id = 0xDEAD;
+
 DEFINE_FFF_GLOBALS;
 
 DEFINE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);

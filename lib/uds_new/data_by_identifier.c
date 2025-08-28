@@ -42,19 +42,25 @@ UDSErr_t _uds_new_data_identifier_static_read(
 
 UDSErr_t _uds_new_data_identifier_static_write(
     const void* data, size_t len, struct uds_new_registration_t* reg) {
-  if (len < DATA_LEN_IN_BYTES(reg)) {
-    return UDS_NRC_IncorrectMessageLengthOrInvalidFormat;  // todo: better error
+  if (len != DATA_LEN_IN_BYTES(reg)) {
+    return UDS_NRC_IncorrectMessageLengthOrInvalidFormat;
   }
 
+  // Use separate buffer to convert to system byte order to minimize access time
+  // to user_data
   uint8_t write_buf[DATA_LEN_IN_BYTES(reg)];
-  memcpy(write_buf, data, len);
+  memcpy(write_buf, data, DATA_LEN_IN_BYTES(reg));
 
-  // Data is send MSB first, so we convert every element of the array to BE
-  for (uint32_t i = 0; i < len; i += reg->data_identifier.len_elem) {
-    sys_be_to_cpu(((uint8_t*)data) + i, reg->data_identifier.len_elem);
+  // Data is send MSB first, so we convert every element of the array back to
+  // system byteorder
+  if (reg->data_identifier.len_elem > 1) {
+    for (uint32_t i = 0; i < DATA_LEN_IN_BYTES(reg);
+         i += reg->data_identifier.len_elem) {
+      sys_be_to_cpu(write_buf + i, reg->data_identifier.len_elem);
+    }
   }
 
-  memcpy(reg->user_data, data, len);
+  memmove(reg->user_data, write_buf, DATA_LEN_IN_BYTES(reg));
   return UDS_OK;
 }
 
@@ -139,6 +145,17 @@ UDSErr_t uds_new_handle_write_data_by_identifier(
       return ret;
     }
   }
+
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
+  struct uds_new_registration_t* current = instance->dynamic_registrations;
+  while (current != NULL) {
+    int ret = uds_new_try_write_to_identifier(instance, args, current);
+    if (ret != UDS_FAIL) {
+      current = current->next;
+      return ret;
+    }
+  }
+#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 
   return UDS_NRC_RequestOutOfRange;
 }

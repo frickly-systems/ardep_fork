@@ -46,7 +46,7 @@ UDSErr_t handle_ecu_reset_event(struct uds_new_instance_t *inst,
     ret = k_work_schedule(&reset_work, K_MSEC(delay_ms));
   } else {
     LOG_WRN("ECU reset work item is already scheduled");
-    ret = UDS_NRC_ConditionsNotCorrect;
+    ret = -1;
   }
   if (ret < 0) {
     LOG_ERR("Failed to schedule ECU reset work");

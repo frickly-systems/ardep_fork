@@ -22,7 +22,9 @@ LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 UDSErr_t _uds_new_data_identifier_static_read(
     void* data, size_t* len, struct uds_new_registration_t* reg) {
   if (*len < DATA_LEN_IN_BYTES(reg)) {
-    return UDS_NRC_IncorrectMessageLengthOrInvalidFormat;  // todo: better error
+    LOG_WRN("Buffer too small to read Data Identifier 0x%04X",
+            reg->data_identifier.data_id);
+    return UDS_NRC_ConditionsNotCorrect;
   }
 
   *len = DATA_LEN_IN_BYTES(reg);

@@ -1,14 +1,19 @@
+/*
+ * Copyright (C) Frickly Systems GmbH
+ * Copyright (C) MBition GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
+#include <zephyr/logging/log.h>
+LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 
 #include <zephyr/kernel.h>
-#include <zephyr/logging/log.h>
 #include <zephyr/sys/reboot.h>
 #include <zephyr/sys/util.h>
 
 #include <ardep/uds_new.h>
 #include <iso14229.h>
-
-LOG_MODULE_REGISTER(uds_new, LOG_LEVEL_INF);
 
 #ifndef CONFIG_UDS_NEW_RESET_DELAY_MS
 #define CONFIG_UDS_NEW_RESET_DELAY_MS 0

@@ -54,7 +54,7 @@ typedef int (*set_ecu_reset_callback_fn)(struct uds_new_instance_t* inst,
 typedef int (*register_data_by_identifier_fn)(struct uds_new_instance_t* inst,
                                               uint16_t data_id,
                                               void* addr,
-                                              size_t len,
+                                              size_t num_of_elem,
                                               size_t len_elem,
                                               bool can_read,
                                               bool can_write);
@@ -95,7 +95,6 @@ struct uds_new_registration_t {
   enum uds_new_registration_type_t type;
 
   void* user_data;
-  bool can_read;
   bool can_write;
 
   union {
@@ -154,14 +153,12 @@ UDSErr_t _uds_new_data_identifier_static_write(
   addr,                                                      \
   _num_of_elem,                                                      \
   _len_elem,                                                 \
-  readable,                                                  \
   writable                                                   \
   )                                                          \
   STRUCT_SECTION_ITERABLE(uds_new_registration_t, id##_data_id) = {  \
     .instance = _instance,                                   \
     .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,      \
     .user_data = addr,                                       \
-    .can_read = readable,                                    \
     .can_write = writable,                                   \
     .data_identifier =                                       \
         {                                                    \
@@ -186,7 +183,6 @@ UDSErr_t _uds_new_data_identifier_static_write(
  */
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(_instance, _data_id, \
                                                 variable,\
-  readable,                                                  \
   writable                                                   \
                                               )                  \
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                               \
@@ -195,7 +191,6 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                               \
   &variable,                                                               \
   1,                                                                       \
   sizeof(variable),                                                         \
-  readable,                                                  \
   writable                                                   \
 )
 
@@ -216,7 +211,6 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                               \
  */
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(      \
      _instance, _data_id, array,\
-  readable,                                                  \
   writable                                                   \
   )                       \
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                \
@@ -225,7 +219,6 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                \
   &array[0],                                                \
   ARRAY_SIZE(array),                                        \
   sizeof(array[0]),                                          \
-  readable,                                                  \
   writable                                                   \
 )
 // clang-format on

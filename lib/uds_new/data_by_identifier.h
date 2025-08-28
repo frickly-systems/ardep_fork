@@ -23,7 +23,6 @@ int uds_new_register_runtime_data_identifier(struct uds_new_instance_t* inst,
                                              void* addr,
                                              size_t num_of_elem,
                                              size_t len_elem,
-                                             bool can_read,
                                              bool can_write);
 
 #endif  // ARDEP_LIB_UDS_NEW_DATA_BY_IDENTIFIER_H

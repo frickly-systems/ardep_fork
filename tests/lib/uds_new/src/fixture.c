@@ -48,8 +48,10 @@ const uint16_t by_id_data2_id = 0x2468;
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(
     &fixture_uds_instance, by_id_data2_id, by_id_data2, true, true);
 
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(
-    NULL, by_id_data_no_rw_id, by_id_data_no_rw, false, false);
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(&fixture_uds_instance,
+                                              by_id_data_no_rw_id,
+                                              by_id_data_no_rw,
+                                              false);
 
 static const UDSISOTpCConfig_t cfg = {
   // Hardware Addresses

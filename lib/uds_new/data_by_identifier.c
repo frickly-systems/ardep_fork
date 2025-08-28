@@ -80,11 +80,6 @@ static UDSErr_t uds_new_try_read_from_identifier(
     return UDS_FAIL;
   }
 
-  if (!reg->can_read) {
-    LOG_WRN("Data Identifier 0x%04X cannot be read", args->dataId);
-    return UDS_NRC_RequestOutOfRange;
-  }
-
   uint8_t read_buf[DATA_LEN_IN_BYTES(reg)];
   size_t len = sizeof(read_buf);
   reg->data_identifier.read(read_buf, &len, reg);
@@ -166,7 +161,6 @@ int uds_new_register_runtime_data_identifier(struct uds_new_instance_t* inst,
                                              void* addr,
                                              size_t num_of_elem,
                                              size_t len_elem,
-                                             bool can_read,
                                              bool can_write) {
   struct uds_new_registration_t* reg =
       k_malloc(sizeof(struct uds_new_registration_t));
@@ -180,7 +174,6 @@ int uds_new_register_runtime_data_identifier(struct uds_new_instance_t* inst,
   reg->data_identifier.len_elem = len_elem;
   reg->data_identifier.read = _uds_new_data_identifier_static_read;
   reg->data_identifier.write = _uds_new_data_identifier_static_write;
-  reg->can_read = can_read;
   reg->can_write = can_write;
 
   // Append reg to the singly linked list at inst->dynamic_registrations

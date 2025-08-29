@@ -20,13 +20,13 @@ struct lib_uds_new_fixture {
   const struct device *can_dev;
 };
 
-static const uint16_t by_id_data1_default = 5;
-static uint16_t by_id_data1;
-static const uint16_t by_id_data1_id = 0x1234;
+extern const uint16_t by_id_data1_default;
+extern uint16_t by_id_data1;
+extern const uint16_t by_id_data1_id;
 
-static const uint16_t by_id_data2_default[3] = {0x1234, 0x5678, 0x9ABC};
-static uint16_t by_id_data2[3];
-static const uint16_t by_id_data2_id = 0x2468;
+extern const uint16_t by_id_data2_default[3];
+extern uint16_t by_id_data2[3];
+extern const uint16_t by_id_data2_id;
 
 /**
  * @brief Receive an event from iso14229

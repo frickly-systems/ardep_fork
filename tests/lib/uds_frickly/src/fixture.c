@@ -39,6 +39,9 @@ static void uds_frickly_before(void *f) {
   struct lib_uds_frickly_fixture *fixture = f;
   struct uds_service *service = &fixture->service;
 
+  *service = ARDEP_UDS_SERVICE_DEFINE(
+      fixture->can_dev, ARDEP_UDS_SERVICE_DATA_BY_ID_SERVICES_DEFINE());
+
   FFF_RESET_HISTORY();
 
   int ret = ardep_uds_service_init(service, f);

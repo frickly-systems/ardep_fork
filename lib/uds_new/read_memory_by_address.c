@@ -20,12 +20,6 @@ static bool is_memory_address_valid(uintptr_t addr, size_t size) {
         LOG_ERR("Memory address overflow detected");
         return false;
     }
-    
-    // Don't allow NULL pointer access
-    if (addr == 0) {
-        LOG_ERR("Memory address is NULL");
-        return false;
-    }
 
     #if CONFIG_BOARD_NATIVE_SIM
         return true; // In simulation, allow all addresses
@@ -70,13 +64,11 @@ UDSErr_t handle_read_memory_by_address(struct uds_new_instance_t* instance,
         return UDS_NRC_RequestOutOfRange;
     }
     
-    // Get the memory address as integer for range checking
     uintptr_t mem_addr = (uintptr_t)args->memAddr;
     
     LOG_DBG("Read Memory By Address: addr=0x%08lX, size=%zu", 
             (unsigned long)mem_addr, args->memSize);
     
-    // Validate memory address range
     if (!is_memory_address_valid(mem_addr, args->memSize)) {
         LOG_WRN("Read Memory By Address: Invalid address range 0x%08lX-0x%08lX",
                 (unsigned long)mem_addr, 
@@ -84,7 +76,6 @@ UDSErr_t handle_read_memory_by_address(struct uds_new_instance_t* instance,
         return UDS_NRC_RequestOutOfRange;
     }
     
-    // Copy the requested memory to response buffer
     uint8_t copy_result = args->copy(&instance->iso14229.server, args->memAddr, args->memSize);
     if (copy_result != UDS_PositiveResponse) {
         LOG_ERR("Read Memory By Address: Copy failed with result %d", copy_result);

@@ -16,7 +16,7 @@
 FAKE_VOID_FUNC(ecu_reset_work_handler, struct k_work *);
 
 ZTEST_F(lib_uds_new, test_0x11_ecu_reset) {
-  struct uds_new_instance_t *instance = &fixture->instance;
+  struct uds_new_instance_t *instance = fixture->instance;
 
   UDSECUResetArgs_t args = {.type = ECU_RESET_HARD};
 
@@ -29,7 +29,7 @@ ZTEST_F(lib_uds_new, test_0x11_ecu_reset) {
 }
 
 ZTEST_F(lib_uds_new, test_0x11_ecu_reset_fails_when_subtype_not_implemented) {
-  struct uds_new_instance_t *instance = &fixture->instance;
+  struct uds_new_instance_t *instance = fixture->instance;
 
   UDSECUResetArgs_t args = {.type = ECU_RESET_KEY_OFF_ON};
 
@@ -60,7 +60,7 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_static_single_element) {
 }
 
 ZTEST_F(lib_uds_new, test_0x22_read_by_id_fails_when_id_unknown) {
-  struct uds_new_instance_t *instance = &fixture->instance;
+  struct uds_new_instance_t *instance = fixture->instance;
 
   UDSRDBIArgs_t args = {
     .dataId = 0xFFFF,  // unknown ID
@@ -146,11 +146,11 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_zero_size) {
 #if CONFIG_BOARD_NATIVE_SIM
 
 
-const static uint8_t local_buffer[16] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-                            0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10};
-
 ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_valid_memory) {
   struct uds_new_instance_t *instance = fixture->instance;
+
+  const uint8_t local_buffer[16] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+                            0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10};
 
   UDSReadMemByAddrArgs_t args = {
     .memAddr = local_buffer,
@@ -366,6 +366,34 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_large_read_flash) {
   
   zassert_equal(copy_fake.call_count, 1);
   zassert_equal(copy_fake.arg2_val, 1024);
+}
+
+ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_before_ram) {
+  struct uds_new_instance_t *instance = fixture->instance;
+
+  // Test reading just before RAM
+  UDSReadMemByAddrArgs_t args = {
+    .memAddr = (void*)(known_ram_start - 1),
+    .memSize = 4, // overlapping
+    .copy = copy,
+  };
+
+  int ret = receive_event(instance, UDS_EVT_ReadMemByAddr, &args);
+  zassert_equal(ret, UDS_NRC_RequestOutOfRange);
+}
+
+ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_before_flash) {
+  struct uds_new_instance_t *instance = fixture->instance;
+
+  // Test reading just before Flash
+  UDSReadMemByAddrArgs_t args = {
+    .memAddr = (void*)(known_flash_start - 1),
+    .memSize = 4, // overlapping
+    .copy = copy,
+  };
+
+  int ret = receive_event(instance, UDS_EVT_ReadMemByAddr, &args);
+  zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
 #endif

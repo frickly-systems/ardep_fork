@@ -1,7 +1,7 @@
 #ifndef ARDEP_LIB_UDS_NEW_READ_MEMORY_BY_ADDRESS_H
 #define ARDEP_LIB_UDS_NEW_READ_MEMORY_BY_ADDRESS_H
 
-#include <ardep/uds_minimal.h>
+#include <ardep/iso14229.h>
 #include <ardep/uds_new.h>
 
 UDSErr_t handle_read_memory_by_address(struct uds_new_instance_t* instance,

@@ -10,7 +10,6 @@ zephyr_library_sources(
     read_data_by_identifier.c
     read_memory_by_address.c
     write_memory_by_addr_impl.c
-    
 )
 
 zephyr_library_sources_ifdef(CONFIG_UDS_NEW_ENABLE_RESET ecu_reset.c)

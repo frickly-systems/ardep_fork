@@ -69,7 +69,8 @@ struct uds_service {
 // READ Callback
 // Write Callback (can be null)
 
-#define ARDEP_UDS_SERVICE_DATA_BY_ID_SERVICES_DEFINE(...) [__VA_ARGS__]
+#define ARDEP_UDS_SERVICE_DATA_BY_ID_SERVICES_DEFINE(...) \
+  COND_CODE_1(IS_EMPTY(__VA_ARGS__), ({}), ({__VA_ARGS__}))
 
 // List of ARDEP_UDS_SERVICE_DATA_BY_ID_DEFINE
 

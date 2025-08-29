@@ -28,7 +28,7 @@ const uint16_t by_id_data1_id = 0x1234;
 
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(
     &fixture_uds_instance, by_id_data1_id, by_id_data1, true, true);
-  
+
 const uint16_t by_id_data2_default[3] = {0x1234, 0x5678, 0x9ABC};
 uint16_t by_id_data2[3];
 const uint16_t by_id_data2_id = 0x2468;
@@ -49,7 +49,8 @@ static uint8_t copied_data[4096];
 static uint32_t copied_len;
 
 void assert_copy_data(const uint8_t *data, uint32_t len) {
-  zassert_equal(copied_len, len, "Expected length %u, but got %u", len, copied_len);
+  zassert_equal(copied_len, len, "Expected length %u, but got %u", len,
+                copied_len);
   zassert_mem_equal(copied_data, data, len);
 }
 

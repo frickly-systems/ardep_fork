@@ -4,90 +4,87 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#include "zephyr/kernel.h"
 
-#include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
-
-#include "data_by_identifier.h"
-#include "ecu_reset.h"
-
-#include <ardep/iso14229.h>
-#include <ardep/uds_new.h>
 #include <iso14229.h>
 
-UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
-                            UDSEvent_t event,
-                            void* arg,
-                            void* user_context) {
-  struct uds_new_instance_t* instance = user_context;
+enum uds_service_security_level_check_type {
+  UDS_SERVICE_SECURITY_LEVEL_CHECK_TYPE_EQUAL,
+  UDS_SERVICE_SECURITY_LEVEL_CHECK_TYPE_AT_LEAST,
+  UDS_SERVICE_SECURITY_LEVEL_CHECK_TYPE_AT_MOST,
+};
 
-  switch (event) {
-    case UDS_EVT_Err:
-    case UDS_EVT_DiagSessCtrl:
-      break;
-    case UDS_EVT_EcuReset: {
-#ifdef CONFIG_UDS_NEW_ENABLE_RESET
-      UDSECUResetArgs_t* args = arg;
+struct uds_service_can {
+  struct device* can_bus;
+  struct UDSISOTpCConfig_t config;
+};
 
-      return handle_ecu_reset_event(instance, (enum ecu_reset_type)args->type);
-#else
-      return UDS_NRC_ServiceNotSupported;
-#endif
-    }
-    case UDS_EVT_ReadDataByIdent: {
-      UDSRDBIArgs_t* args = arg;
-      return uds_new_handle_read_data_by_identifier(instance, args);
-    }
-    case UDS_EVT_ReadMemByAddr:
-    case UDS_EVT_CommCtrl:
-    case UDS_EVT_SecAccessRequestSeed:
-    case UDS_EVT_SecAccessValidateKey:
-    case UDS_EVT_WriteDataByIdent: {
-      UDSWDBIArgs_t* args = arg;
-      return uds_new_handle_write_data_by_identifier(instance, args);
-    }
-    case UDS_EVT_RoutineCtrl:
-    case UDS_EVT_RequestDownload:
-    case UDS_EVT_RequestUpload:
-    case UDS_EVT_TransferData:
-    case UDS_EVT_RequestTransferExit:
-    case UDS_EVT_SessionTimeout:
-    case UDS_EVT_DoScheduledReset:
-    case UDS_EVT_RequestFileTransfer:
-    case UDS_EVT_Custom:
-    case UDS_EVT_Poll:
-    case UDS_EVT_SendComplete:
-    case UDS_EVT_ResponseReceived:
-    case UDS_EVT_Idle:
-    case UDS_EVT_MAX:
-      break;
+typedef UDSErr_t (*uds_service_read_data_by_id_callback_t)();
+typedef UDSErr_t (*uds_service_write_data_by_id_callback_t)();
+
+struct uds_server_service_requirements {
+  bool authentication;
+  uint8_t security_level;
+  enum uds_service_security_level_check_type security_level_check;
+};
+
+struct uds_service_data_by_id {
+  uint16_t identifier;
+  uds_service_read_data_by_id_callback_t read;
+  uds_service_write_data_by_id_callback_t write;
+  struct uds_server_service_requirements req;
+};
+
+struct uds_service_state {
+  uint8_t session_id;
+  uint8_t security_access_level;
+  bool authenticated;
+};
+
+struct uds_service {
+  uds_service_can can;
+  uds_service_data_by_id ids[];
+  uds_service_state state;
+
+  struct k_mutex lock;
+};
+
+// instance name
+// struct device* CAN bus
+// UDS Can Configuration
+
+#define ARDEP_UDS_SERVICE_DATA_BY_ID_DEFINE(id, _read, _write, ...)        \
+  {                                                                        \
+    .identifier = id, .read = read, .write = write, .req = { __VA_ARGS__ } \
+  }
+// uint16_t identifier
+// READ Callback
+// Write Callback (can be null)
+
+#define ARDEP_UDS_SERVICE_DATA_BY_ID_SERVICES_DEFINE(...) [__VA_ARGS__]
+
+// List of ARDEP_UDS_SERVICE_DATA_BY_ID_DEFINE
+
+#define ARDEP_UDS_SERVICE_CAN_DEFINE(can_bus_node, phys_source_addr,     \
+                                     phys_target_addr, func_source_addr, \
+                                     func_target_addr)                   \
+  {                                                                      \
+    .can_bus = can_bus_node, .config = {                                 \
+      .source_addr = phys_source_addr,                                   \
+      .target_addr = phys_target_addr,                                   \
+      .source_addr_func = func_source_addr,                              \
+      .target_addr_func = func_target_addr,                              \
+    }                                                                    \
   }
 
-  return UDS_OK;
-}
-
-int uds_new_init(struct uds_new_instance_t* inst,
-                 const UDSISOTpCConfig_t* iso_tp_config,
-                 const struct device* can_dev,
-                 void* user_context) {
-  inst->user_context = user_context;
-
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
-  inst->register_data_by_identifier = uds_new_register_runtime_data_identifier;
-  inst->dynamic_registrations = NULL;
-#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
-
-  int ret = iso14229_zephyr_init(&inst->iso14229, iso_tp_config, can_dev, inst);
-  if (ret < 0) {
-    LOG_ERR("Failed to initialize UDS instance");
-    return ret;
+#define ARDEP_UDS_SERVICE_DEFINE(instance_name, can_bus, id_list) \
+  struct uds_service instance_name = {                            \
+    .can = can_bus,                                               \
+    .ids = id_list,                                               \
+    .state =                                                      \
+        {                                                         \
+          .session_id = 0x00,                                     \
+          .security_access_level = 0x00,                          \
+          .authenticated = false,                                 \
+        },                                                        \
   }
-
-  ret = inst->iso14229.set_callback(&inst->iso14229, uds_event_callback);
-  if (ret < 0) {
-    LOG_ERR("Failed to set UDS event callback");
-    return ret;
-  }
-
-  return 0;
-}

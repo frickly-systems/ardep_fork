@@ -82,23 +82,14 @@ struct uds_service {
   }
 
 #define ARDEP_UDS_SERVICE_DATA_BY_ID_SERVICES_DEFINE(...) \
-  COND_CODE_1(IS_EMPTY(__VA_ARGS__), ({}), ({__VA_ARGS__}))
+  COND_CODE_1(IS_EMPTY(__VA_ARGS__), (), ({__VA_ARGS__}))
 
-#define ARDEP_UDS_SERVICE_CAN_DEFINE(can_bus_node, _mode, phys_source_addr, \
-                                     phys_target_addr, func_source_addr,    \
-                                     func_target_addr)                      \
-  {                                                                         \
-    .can_bus = can_bus_node, .mode = _mode, .config = {                     \
-      .source_addr = phys_source_addr,                                      \
-      .target_addr = phys_target_addr,                                      \
-      .source_addr_func = func_source_addr,                                 \
-      .target_addr_func = func_target_addr,                                 \
-    }                                                                       \
-  }
+#define ARDEP_UDS_SERVICE_CAN_DEFINE(can_bus_node, _mode, _config) \
+  { .can_bus = can_bus_node, .mode = _mode, .config = _config }
 
 #define ARDEP_UDS_SERVICE_DEFINE(can_bus, id_list) \
   (struct uds_service) {                           \
-    .can = can_bus, .ids = id_list,                \
+    .can = can_bus,                                \
     .state = {                                     \
       .session_type = 0x00,                        \
       .security_access_level = 0x00,               \

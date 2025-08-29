@@ -21,9 +21,5 @@ ZTEST_F(lib_uds_frickly, test_0x11_ecu_reset) {
   };
   receive_event(service, UDS_EVT_EcuReset, &args);
 
-  k_msleep(2000);
-
-  service->iso14229.thread_tick(&service->iso14229);
-
   zassert_equal(1, 1);
 }

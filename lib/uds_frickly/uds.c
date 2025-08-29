@@ -6,6 +6,8 @@
  */
 #include "zephyr/kernel.h"
 
+#include <zephyr/sys/util_macro.h>
+
 #include <iso14229.h>
 
 enum uds_service_security_level_check_type {
@@ -53,9 +55,15 @@ struct uds_service {
 // struct device* CAN bus
 // UDS Can Configuration
 
-#define ARDEP_UDS_SERVICE_DATA_BY_ID_DEFINE(id, _read, _write, ...)        \
-  {                                                                        \
-    .identifier = id, .read = read, .write = write, .req = { __VA_ARGS__ } \
+#define ARDEP_UDS_SERVICE_DATA_BY_ID_DEFINE(id, _read, _write, ...)            \
+  {                                                                            \
+    .identifier = id, .read = _read, .write = _write,                          \
+    .req = COND_CODE_1(IS_EMPTY(__VA_ARGS__),                                  \
+                       ({.authentication = false,                              \
+                         .security_level = 0,                                  \
+                         .security_level_check =                               \
+                             UDS_SERVICE_SECURITY_LEVEL_CHECK_TYPE_AT_LEAST}), \
+                       ({__VA_ARGS__}))                                        \
   }
 // uint16_t identifier
 // READ Callback

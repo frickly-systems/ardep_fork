@@ -6,4 +6,5 @@
 add_subdirectory_ifdef(CONFIG_ISO14229 iso14229)
 add_subdirectory_ifdef(CONFIG_UDS uds)
 add_subdirectory_ifdef(CONFIG_UDS_NEW uds_new)
+add_subdirectory_ifdef(CONFIG_UDS_FRICKLY uds_frickly)
 add_subdirectory_ifdef(CONFIG_CAN_ROUTER can_router)

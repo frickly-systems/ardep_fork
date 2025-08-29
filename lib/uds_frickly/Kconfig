@@ -1,0 +1,30 @@
+# Copyright (C) Frickly Systems GmbH
+# Copyright (C) MBition GmbH
+#
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig UDS_FRICKLY
+    bool "UDS New"
+    select ISO14229
+    
+if UDS_FRICKLY
+
+module = UDS_FRICKLY
+module-str = UDS new
+source "subsys/logging/Kconfig.template.log_config"
+
+config UDS_FRICKLY_ENABLE_RESET
+    bool "Enable reboot/reset from ECU reset command"
+    default y
+    select REBOOT
+
+config UDS_FRICKLY_RESET_DELAY_MS
+    int "Delay for the default ecu reset handling by this time (minimum of p2 is forced to ensure a response is send)"
+    default 0
+    depends on UDS_FRICKLY_ENABLE_RESET
+
+config UDS_FRICKLY_USE_DYNAMIC_DATA_BY_ID
+    bool "Delay for the default ecu reset handling by this time (minimum of p2 is forced to ensure a response is send)"
+    default y
+
+endif # UDS_FRICKLY

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2023 Intel Corporation
+/**
+ * Copyright (c) Frickly Systems GmbH
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -116,5 +116,3 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_dynamic_array) {
 
   assert_copy_data(expected, sizeof(expected));
 }
-
-#include "test_0x23_read_memory_by_address.h"

@@ -1,4 +1,16 @@
+/**
+ * Copyright (c) Frickly Systems GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
+#include "fixture.h"
+#include "iso14229.h"
+#include "zephyr/ztest_assert.h"
+
+#include <zephyr/ztest.h>
+
+#include <ardep/uds_new.h>
 
 ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_null_address) {
   struct uds_new_instance_t *instance = fixture->instance;

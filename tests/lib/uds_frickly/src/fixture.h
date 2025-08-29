@@ -11,7 +11,7 @@
 #include <iso14229.h>
 
 struct lib_uds_frickly_fixture {
-  struct uds_service service;
+  struct uds_service *service;
 
   UDSISOTpCConfig_t cfg;
   const struct device *can_dev;

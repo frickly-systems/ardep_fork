@@ -13,7 +13,7 @@
 #include <ardep/uds_frickly.h>
 
 ZTEST_F(lib_uds_frickly, test_0x11_ecu_reset) {
-  struct uds_service* service = &fixture->service;
+  struct uds_service* service = fixture->service;
 
   UDSDiagSessCtrlArgs_t args = {
     .type = 0x01,

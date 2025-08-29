@@ -4,6 +4,9 @@
 #include <ardep/iso14229.h>
 #include <iso14229.h>
 
+#define _CAT(a, b) a##b
+#define CAT(a, b) _CAT(a, b)
+
 struct uds_service_state;
 
 typedef UDSErr_t (*uds_service_ecu_reset_callback_t)(
@@ -41,7 +44,7 @@ struct uds_server_service_requirements {
 };
 
 struct uds_service_data_by_id {
-  uint16_t identifier;
+  struct uds_service *const service;
   uds_service_read_data_by_id_callback_t read;
   uds_service_write_data_by_id_callback_t write;
   struct k_mutex *write_lock;
@@ -56,6 +59,7 @@ struct uds_service_state {
 };
 
 struct uds_service {
+  const char *identifier;
   struct uds_service_can can;
   struct uds_service_state state;
   struct k_mutex event_lock;
@@ -66,6 +70,11 @@ struct uds_service {
   void *user_context;
 
   struct uds_service_data_by_id ids[];
+};
+
+#define ARDEP_UPDS_SERVICE_STATIC_DATA_BY_ID_DEFINE(_service, id)                                \
+  STRUCT_SECTION_ITERABLE(uds_service_data_by_id, _uds_data_by_id_#_service->identifier#id)) = { \
+    .service =_service, \
 };
 
 #define ARDEP_UDS_SERVICE_DATA_BY_ID_DEFINE(id, _read, _write, ...)            \
@@ -87,18 +96,22 @@ struct uds_service {
 #define ARDEP_UDS_SERVICE_CAN_DEFINE(can_bus_node, _mode, _config) \
   { .can_bus = can_bus_node, .mode = _mode, .config = _config }
 
-#define ARDEP_UDS_SERVICE_DEFINE(can_bus, id_list) \
-  (struct uds_service) {                           \
-    .can = can_bus, .ids = id_list,                \
-    .state = {                                     \
-      .session_type = 0x00,                        \
-      .security_access_level = 0x00,               \
-      .authenticated = false,                      \
-    },                                             \
+#define ARDEP_UDS_SERVICE_DEFINE(id, can_bus)                      \
+  STRUCT_SECTION_ITERABLE(uds_service, CAT(_uds_service_, id)) = { \
+    .identifier = #id,                                             \
+    .can = can_bus,                                                \
+    .state =                                                       \
+        {                                                          \
+          .session_type = 0x00,                                    \
+          .security_access_level = 0x00,                           \
+          .authenticated = false,                                  \
+        },                                                         \
   }
 
 int ardep_uds_service_init(struct uds_service *service, void *user_context);
 
 int ardep_uds_service_start(struct uds_service *service);
+
+struct uds_service *ardep_uds_service_get_by_id(char *id);
 
 #endif  // APP_ARDEP_UDS_FRICKLY_H

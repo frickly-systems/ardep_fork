@@ -35,14 +35,18 @@ static void *uds_frickly_setup(void) {
   return &fixture;
 }
 
+ARDEP_UDS_SERVICE_DEFINE(
+    test_service,
+    ARDEP_UDS_SERVICE_CAN_DEFINE(DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus)),
+                                 CAN_MODE_NORMAL,
+                                 cfg));
+
+#ARDEP_UPDS_SERVICE_STATIC_DATA_BY_ID_DEFINE(id)
+
 static void uds_frickly_before(void *f) {
   struct lib_uds_frickly_fixture *fixture = f;
-  struct uds_service *service = &fixture->service;
-
-  *service = ARDEP_UDS_SERVICE_DEFINE(
-      ARDEP_UDS_SERVICE_CAN_DEFINE(fixture->can_dev, CAN_MODE_NORMAL,
-                                   fixture->cfg),
-      ARDEP_UDS_SERVICE_DATA_BY_ID_SERVICES_DEFINE());
+  fixture->service = ardep_uds_service_get_by_id("test_service");
+  struct uds_service *service = fixture->service;
 
   FFF_RESET_HISTORY();
 

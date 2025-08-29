@@ -7,8 +7,7 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(uds_frickly, CONFIG_UDS_FRICKLY_LOG_LEVEL);
 
-#include "zephyr/kernel.h"
-
+#include <zephyr/kernel.h>
 #include <zephyr/sys/util_macro.h>
 
 #include <ardep/iso14229.h>
@@ -112,4 +111,13 @@ int ardep_uds_service_start(struct uds_service *service) {
     LOG_ERR("Failed to start CAN bus: %d", ret);
   }
   return ret;
+}
+
+struct uds_service *ardep_uds_service_get_by_id(char *id) {
+  STRUCT_SECTION_FOREACH (uds_service, service) {
+    if (id == service->identifier || strcmp(service->identifier, id) == 0) {
+      return service;
+    }
+  }
+  return NULL;
 }

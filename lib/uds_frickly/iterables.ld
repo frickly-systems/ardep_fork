@@ -5,4 +5,5 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-ITERABLE_SECTION_ROM(uds_new_registration_t, 4)
+/* ITERABLE_SECTION_ROM(uds_service_data_by_id, 4) */
+ITERABLE_SECTION_RAM(uds_service, 4)

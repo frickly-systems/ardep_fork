@@ -14,6 +14,17 @@ LOG_MODULE_REGISTER(uds_frickly, CONFIG_UDS_FRICKLY_LOG_LEVEL);
 #include <ardep/iso14229.h>
 #include <iso14229.h>
 
+struct uds_service_state;
+
+typedef UDSErr_t (*uds_service_ecu_reset_callback_t)(
+    const struct uds_service_state *const state,
+    const UDSECUResetArgs_t *args,
+    void *user_context);
+
+struct uds_service_custom_callbacks {
+  uds_service_ecu_reset_callback_t ecu_reset;
+};
+
 enum uds_service_security_level_check_type {
   UDS_SERVICE_SECURITY_LEVEL_CHECK_TYPE_EQUAL,
   UDS_SERVICE_SECURITY_LEVEL_CHECK_TYPE_AT_LEAST,
@@ -57,6 +68,7 @@ struct uds_service {
   struct uds_service_can can;
   struct uds_service_state state;
   struct k_mutex event_lock;
+  struct uds_service_custom_callbacks callbacks;
 
   struct iso14229_zephyr_instance iso14229;
 
@@ -72,6 +84,11 @@ static UDSErr_t _handle_diag_sess_ctrl_event(struct uds_service *service,
   k_mutex_unlock(&service->event_lock);
   return UDS_OK;
 }
+
+UDSErr_t uds_service_ecu_reset_callback_default(
+    const struct uds_service_state *const state,
+    const UDSECUResetArgs_t *args,
+    void *user_context) {}
 
 static UDSErr_t _uds_callback(struct iso14229_zephyr_instance *inst,
                               UDSEvent_t event,
@@ -182,15 +199,23 @@ int ardep_uds_service_start(struct uds_service *service) {
     }                                                                       \
   }
 
-#define ARDEP_UDS_SERVICE_DEFINE(instance_name, can_bus, id_list) \
-  struct uds_service instance_name = {                            \
-    .can = can_bus,                                               \
-    .ids = id_list,                                               \
-    .state =                                                      \
-        {                                                         \
-          .session_id = 0x00,                                     \
-          .security_access_level = 0x00,                          \
-          .authenticated = false,                                 \
-        },                                                        \
-    .lock = Z_MUTEX_INITIALIZER(instance_name.lock),              \
+#define ARDEP_UDS_CALLBACK_ECU_RESET ecu_reset
+
+#define ARDEP_UDS_SERVICE_CALLBACKS_DEFINE(type, callback) .type = callback
+
+#define ARDEP_UDS_SERVICE_CALLBACKS_STRUCT_DEFINE(...) \
+  {}
+
+#define ARDEP_UDS_SERVICE_DEFINE(instance_name, can_bus, _callbacks, id_list) \
+  struct uds_service instance_name = {                                        \
+    .can = can_bus,                                                           \
+    .ids = id_list,                                                           \
+    .callbacks = _callbacks,                                                  \
+    .state =                                                                  \
+        {                                                                     \
+          .session_id = 0x00,                                                 \
+          .security_access_level = 0x00,                                      \
+          .authenticated = false,                                             \
+        },                                                                    \
+    .lock = Z_MUTEX_INITIALIZER(instance_name.lock),                          \
   }

@@ -23,7 +23,7 @@ enum uds_service_security_level_check_type {
 
 struct uds_service_can {
   struct device *can_bus;
-  struct UDSISOTpCConfig_t config;
+  UDSISOTpCConfig_t config;
   uint8_t mode;
 };
 

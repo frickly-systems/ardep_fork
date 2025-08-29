@@ -15,11 +15,13 @@
 ZTEST_F(lib_uds_frickly, test_0x11_ecu_reset) {
   struct uds_service* service = &fixture->service;
 
-  UDSECUResetArgs_t args = {
-    .type = 1,
-    .powerDownTimeMillis = 100,
+  UDSDiagSessCtrlArgs_t args = {
+    .type = 0x01,
+    .p2_ms = 100,
+    .p2_star_ms = 5000,
   };
-  receive_event(service, UDS_EVT_EcuReset, &args);
+  int ret = receive_event(service, UDS_EVT_DiagSessCtrl, &args);
+  zassert_ok(ret);
 
-  zassert_equal(1, 1);
+  zassert_equal(service->state.session_type, 0x01);
 }

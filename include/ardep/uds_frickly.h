@@ -89,7 +89,7 @@ struct uds_service {
 
 #define ARDEP_UDS_SERVICE_DEFINE(can_bus, id_list) \
   (struct uds_service) {                           \
-    .can = can_bus,                                \
+    .can = can_bus, .ids = id_list,                \
     .state = {                                     \
       .session_type = 0x00,                        \
       .security_access_level = 0x00,               \

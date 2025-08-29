@@ -54,6 +54,7 @@ struct uds_service_data_by_id {
   uint16_t identifier;
   uds_service_read_data_by_id_callback_t read;
   uds_service_write_data_by_id_callback_t write;
+  struct k_mutex *write_lock;
   struct uds_server_service_requirements req;
 };
 
@@ -199,23 +200,23 @@ int ardep_uds_service_start(struct uds_service *service) {
     }                                                                       \
   }
 
-#define ARDEP_UDS_CALLBACK_ECU_RESET ecu_reset
+// #define ARDEP_UDS_CALLBACK_ECU_RESET .ecu_reset
 
-#define ARDEP_UDS_SERVICE_CALLBACKS_DEFINE(type, callback) .type = callback
+// #define ARDEP_UDS_SERVICE_CALLBACKS_DEFINE(...) \
+//   COND_CODE_1(IS_EMPTY(__VA_ARGS__), ({}), ({__VA_ARGS__}))
 
-#define ARDEP_UDS_SERVICE_CALLBACKS_STRUCT_DEFINE(...) \
-  COND_CODE_1(IS_EMPTY(__VA_ARGS__), ({}), ({__VA_ARGS__}))
+// #define ARDEP_UDS_SERVICE_CALLBACKS_STRUCT_DEFINE \
+//   ARDEP_UDS_SERVICE_CALLBACKS_DEFINE
 
-#define ARDEP_UDS_SERVICE_DEFINE(instance_name, can_bus, _callbacks, id_list) \
-  struct uds_service instance_name = {                                        \
-    .can = can_bus,                                                           \
-    .ids = id_list,                                                           \
-    .callbacks = _callbacks,                                                  \
-    .state =                                                                  \
-        {                                                                     \
-          .session_id = 0x00,                                                 \
-          .security_access_level = 0x00,                                      \
-          .authenticated = false,                                             \
-        },                                                                    \
-    .lock = Z_MUTEX_INITIALIZER(instance_name.lock),                          \
+#define ARDEP_UDS_SERVICE_DEFINE(instance_name, can_bus, id_list) \
+  struct uds_service instance_name = {                            \
+    .can = can_bus,                                               \
+    .ids = id_list,                                               \
+    .state =                                                      \
+        {                                                         \
+          .session_id = 0x00,                                     \
+          .security_access_level = 0x00,                          \
+          .authenticated = false,                                 \
+        },                                                        \
+    .lock = Z_MUTEX_INITIALIZER(instance_name.lock),              \
   }

@@ -204,7 +204,7 @@ int ardep_uds_service_start(struct uds_service *service) {
 #define ARDEP_UDS_SERVICE_CALLBACKS_DEFINE(type, callback) .type = callback
 
 #define ARDEP_UDS_SERVICE_CALLBACKS_STRUCT_DEFINE(...) \
-  {}
+  COND_CODE_1(IS_EMPTY(__VA_ARGS__), ({}), ({__VA_ARGS__}))
 
 #define ARDEP_UDS_SERVICE_DEFINE(instance_name, can_bus, _callbacks, id_list) \
   struct uds_service instance_name = {                                        \

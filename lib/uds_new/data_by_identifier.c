@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "ardep/uds_new.h"
 #include "iso14229.h"
 
 #include <zephyr/logging/log.h>
@@ -20,7 +21,10 @@ LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
   (reg->data_identifier.num_of_elem * reg->data_identifier.len_elem)
 
 UDSErr_t _uds_new_data_identifier_static_read(
-    void* data, size_t* len, struct uds_new_registration_t* reg) {
+    void* data,
+    size_t* len,
+    struct uds_new_registration_t* reg,
+    const struct uds_new_state* const state) {
   if (*len < DATA_LEN_IN_BYTES(reg)) {
     LOG_WRN("Buffer too small to read Data Identifier 0x%04X",
             reg->data_identifier.data_id);
@@ -43,7 +47,10 @@ UDSErr_t _uds_new_data_identifier_static_read(
 }
 
 UDSErr_t _uds_new_data_identifier_static_write(
-    const void* data, size_t len, struct uds_new_registration_t* reg) {
+    const void* data,
+    size_t len,
+    struct uds_new_registration_t* reg,
+    const struct uds_new_state* const state) {
   if (len != DATA_LEN_IN_BYTES(reg)) {
     LOG_WRN("Wrong length to write Data to Identifier 0x%04X",
             reg->data_identifier.data_id);
@@ -86,7 +93,7 @@ static UDSErr_t uds_new_try_read_from_identifier(
 
   uint8_t read_buf[DATA_LEN_IN_BYTES(reg)];
   size_t len = sizeof(read_buf);
-  reg->data_identifier.read(read_buf, &len, reg);
+  reg->data_identifier.read(read_buf, &len, reg, &instance->state);
   return args->copy(&instance->iso14229.server, read_buf, len);
 }
 
@@ -133,7 +140,8 @@ static UDSErr_t uds_new_try_write_to_identifier(
     return UDS_NRC_RequestOutOfRange;
   }
 
-  return reg->data_identifier.write(args->data, args->len, reg);
+  return reg->data_identifier.write(args->data, args->len, reg,
+                                    &instance->state);
 }
 
 UDSErr_t uds_new_handle_write_data_by_identifier(

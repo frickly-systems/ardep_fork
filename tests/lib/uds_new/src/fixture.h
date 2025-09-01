@@ -28,6 +28,10 @@ extern const uint16_t by_id_data2_default[3];
 extern uint16_t by_id_data2[3];
 extern const uint16_t by_id_data2_id;
 
+extern const uint16_t by_id_data3_default[3];
+extern uint16_t by_id_data3[3];
+extern const uint16_t by_id_data3_id;
+
 __attribute__((unused)) extern uint16_t by_id_data_no_rw[4];
 extern const uint16_t by_id_data_no_rw_id;
 

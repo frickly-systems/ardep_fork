@@ -51,9 +51,14 @@ typedef int (*register_data_by_identifier_fn)(struct uds_new_instance_t* inst,
                                               bool can_write);
 #endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 
+struct uds_new_state {
+  uint8_t diag_session_type;
+};
+
 struct uds_new_instance_t {
   struct iso14229_zephyr_instance iso14229;
   struct uds_new_registration_t* static_registrations;
+  struct uds_new_state state;
   void* user_context;
 
 #ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
@@ -70,6 +75,17 @@ int uds_new_init(struct uds_new_instance_t* inst,
 #ifdef CONFIG_UDS_NEW_ENABLE_RESET
 
 #endif  // CONFIG_UDS_NEW_ENABLE_RESET
+
+enum uds_new_state_level {
+  UDS_NEW_STATE_LEVEL_EQUAL,
+  UDS_NEW_STATE_LEVEL_LESS_OR_EQUAL,
+  UDS_NEW_STATE_LEVEL_GREATER_OR_EQUAL,
+};
+
+struct uds_new_state_requirements {
+  enum uds_new_state_level session_type_level;
+  uint8_t session_type;
+};
 
 /**
  * @brief opaque data. used internally
@@ -93,20 +109,23 @@ struct uds_new_registration_t {
       uint16_t data_id;
       size_t num_of_elem;
       size_t len_elem;
+      struct uds_new_state_requirements state_requirements;
       UDSErr_t (*read)(void* data,
                        size_t* len,
-                       struct uds_new_registration_t*
-                           reg);  // where data is the output and len
-                                  // is the maximum size of the output
-                                  // and must be written to be the real
-                                  // length; return value is an error
-                                  // or UDS_OK
+                       struct uds_new_registration_t* reg,
+                       const struct uds_new_state* const
+                           state);  // where data is the output and len
+                                    // is the maximum size of the output
+                                    // and must be written to be the real
+                                    // length; return value is an error
+                                    // or UDS_OK
       UDSErr_t (*write)(const void* data,
                         size_t len,
-                        struct uds_new_registration_t*
-                            reg);  // where data is the new data, len is
-                                   // the length of the written data and
-                                   // return value is an error or UDS_OK
+                        struct uds_new_registration_t* reg,
+                        const struct uds_new_state* const
+                            state);  // where data is the new data, len is
+                                     // the length of the written data and
+                                     // return value is an error or UDS_OK
     } data_identifier;
   };
 
@@ -114,11 +133,33 @@ struct uds_new_registration_t {
 };
 
 UDSErr_t _uds_new_data_identifier_static_read(
-    void* data, size_t* len, struct uds_new_registration_t* reg);
+    void* data,
+    size_t* len,
+    struct uds_new_registration_t* reg,
+    const struct uds_new_state* const state);
 UDSErr_t _uds_new_data_identifier_static_write(
-    const void* data, size_t len, struct uds_new_registration_t* reg);
+    const void* data,
+    size_t len,
+    struct uds_new_registration_t* reg,
+    const struct uds_new_state* const state);
 
 // clang-format off
+
+#define UDS_NEW_STATE_REQUIREMENTS_NONE \
+  ((struct uds_new_state_requirements) \
+    { \
+      .session_type_level = UDS_NEW_STATE_LEVEL_GREATER_OR_EQUAL, \
+      .session_type = 0 \
+    }\
+  )
+
+#define UDS_NEW_STATE_DIAG_SESSION_STATE_REQUIREMENTS(level, type) \
+  .session_type_level = (level), \
+  .session_type = (type)
+
+  
+#define UDS_NEW_STATE_DIAG_SESSION_REQUIREMENTS(...) \
+  ((struct uds_new_state_requirements) { __VA_ARGS__ })
 
 /**
  * @brief Register a static data identifier for the data at @p addr.
@@ -130,35 +171,36 @@ UDSErr_t _uds_new_data_identifier_static_write(
  * To not convert the data to big endian before sending, pass 1 as len_elem and
  * the size of the data in bytes to len.
  *
- * @param name         User identifier.
- * @param _instance    uds_new instance that owns the reference.
- * @param _data_id     Identifier for the data at @p addr.
- * @param addr         Memory address where the data is found.
- * @param _num_of_elem number of elements at @p addr.
- * @param len_elem     Length of each element in bytes ad @p addr. These amount of
- * byte are converted to be each
+ * @param _instance           uds_new instance that owns the reference.
+ * @param _data_id            Identifier for the data at @p addr.
+ * @param addr                Memory address where the data is found.
+ * @param _num_of_elem        number of elements at @p addr.
+ * @param len_elem            Length of each element in bytes ad @p addr.
+ *                            These amount of
+ * @param writable            Whether the data can be written to.
+ * @param _state_requirements Requirements to read/write the data
  */
-#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(    \
-  _instance,                                           \
-  _data_id,                                                  \
-  addr,                                                      \
-  _num_of_elem,                                                      \
-  _len_elem,                                                 \
-  writable                                                   \
-  )                                                          \
-  STRUCT_SECTION_ITERABLE(uds_new_registration_t, id##_data_id) = {  \
-    .instance = _instance,                                   \
-    .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,      \
-    .user_data = addr,                                       \
-    .can_write = writable,                                   \
-    .data_identifier =                                       \
-        {                                                    \
-          .data_id = _data_id,                               \
-          .num_of_elem = _num_of_elem,                      \
-          .len_elem = _len_elem,                             \
-          .read = _uds_new_data_identifier_static_read,      \
-          .write = _uds_new_data_identifier_static_write,    \
-        },                                                   \
+#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                \
+  _instance,                                                        \
+  _data_id,                                                         \
+  addr,                                                             \
+  _num_of_elem,                                                     \
+  _len_elem,                                                        \
+  writable,                                                         \
+  _state_requirements)                                              \
+  STRUCT_SECTION_ITERABLE(uds_new_registration_t, id##_data_id) = { \
+    .instance = _instance,                                          \
+    .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,             \
+    .user_data = addr,                                              \
+    .can_write = writable,                                          \
+    .data_identifier = {                                            \
+      .data_id = _data_id,                                          \
+      .num_of_elem = _num_of_elem,                                  \
+      .len_elem = _len_elem,                                        \
+      .state_requirements = _state_requirements,                    \
+      .read = _uds_new_data_identifier_static_read,                 \
+      .write = _uds_new_data_identifier_static_write,               \
+    },                                                              \
   };
 
 /**
@@ -167,23 +209,26 @@ UDSErr_t _uds_new_data_identifier_static_write(
  * This macro registers a static data identifier, associating a name and id
  * with a variable so it can be read by the <read_data_by_identifier> command.
  *
- * @param name      User identifier.
- * @param _instance uds_new instance that owns the reference.
- * @param _data_id  Identifier for the data at @p addr.
+ * For other parameters see <UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM>
+ *
  * @param variable  Variable to associate with the data identifier.
  */
-#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(_instance, _data_id, \
-                                                variable,\
-  writable                                                   \
-                                              )                  \
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                               \
-  _instance,                                                               \
-  _data_id,                                                                \
-  &variable,                                                               \
-  1,                                                                       \
-  sizeof(variable),                                                         \
-  writable                                                   \
-)
+#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(        \
+  _instance,                                            \
+  _data_id,                                             \
+  variable,                                             \
+  writable,                                             \
+  _state_requirements                                   \
+)                                                       \
+  UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(          \
+  _instance,                                            \
+  _data_id,                                             \
+  &variable,                                            \
+  1,                                                    \
+  sizeof(variable),                                     \
+  writable,                                             \
+  _state_requirements                                   \
+  )
 
 
 /**
@@ -195,23 +240,24 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                               \
  * 
  * Every element of the array is converted to Big Endian format before transmit
  *
- * @param name      User identifier.
- * @param _instance uds_new instance that owns the reference.
- * @param _data_id  Identifier for the data at @p addr.
+ * For other parameters see <UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM>
+ *
  * @param array     Array to associate with the data identifier.
  */
-#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(      \
-     _instance, _data_id, array,\
-  writable                                                   \
-  )                       \
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                \
-  _instance,                                                \
-  _data_id,                                                 \
-  &array[0],                                                \
-  ARRAY_SIZE(array),                                        \
-  sizeof(array[0]),                                          \
-  writable                                                   \
-)
+#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(  \
+  _instance, _data_id, array,                           \
+  writable,                                             \
+  _state_requirements                                   \
+)                                                       \
+  UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(          \
+    _instance,                                          \
+    _data_id,                                           \
+    &array[0],                                          \
+    ARRAY_SIZE(array),                                  \
+    sizeof(array[0]),                                   \
+    writable,                                           \
+    _state_requirements                                 \
+  )
 // clang-format on
 
 #endif  // ARDEP_UDS_NEW_H

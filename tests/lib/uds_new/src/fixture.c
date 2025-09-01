@@ -24,6 +24,10 @@ const uint16_t by_id_data2_default[3] = {0x1234, 0x5678, 0x9ABC};
 uint16_t by_id_data2[3];
 const uint16_t by_id_data2_id = 0x2468;
 
+const uint16_t by_id_data3_default[3] = {0xFFEE, 0xDDCC, 0xBBAA};
+uint16_t by_id_data3[3];
+const uint16_t by_id_data3_id = 0x369C;
+
 __attribute__((unused)) uint16_t by_id_data_no_rw[4] = {0xB1, 0x6B, 0x00, 0xB5};
 const uint16_t by_id_data_no_rw_id = 0xBAAD;
 
@@ -38,16 +42,28 @@ struct uds_new_instance_t fixture_uds_instance;
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
                                         by_id_data1_id,
                                         by_id_data1,
-                                        true);
+                                        true,
+                                        UDS_NEW_STATE_REQUIREMENTS_NONE);
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(&fixture_uds_instance,
                                               by_id_data2_id,
                                               by_id_data2,
-                                              true);
+                                              true,
+                                              UDS_NEW_STATE_REQUIREMENTS_NONE);
 
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(&fixture_uds_instance,
                                               by_id_data_no_rw_id,
                                               by_id_data_no_rw,
-                                              false);
+                                              false,
+                                              UDS_NEW_STATE_REQUIREMENTS_NONE);
+
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(
+    &fixture_uds_instance,
+    by_id_data3_id,
+    by_id_data3,
+    false,
+    UDS_NEW_STATE_DIAG_SESSION_REQUIREMENTS(
+        UDS_NEW_STATE_DIAG_SESSION_STATE_REQUIREMENTS(
+            UDS_NEW_STATE_LEVEL_GREATER_OR_EQUAL, 1)));
 
 static const UDSISOTpCConfig_t cfg = {
   // Hardware Addresses

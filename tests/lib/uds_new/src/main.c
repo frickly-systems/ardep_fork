@@ -117,6 +117,20 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_dynamic_array) {
   assert_copy_data(expected, sizeof(expected));
 }
 
+ZTEST_F(lib_uds_new, test_0x22_fails_when_state_requirements_do_not_match) {
+  struct uds_new_instance_t *instance = fixture->instance;
+
+  UDSRDBIArgs_t args = {
+    .dataId = by_id_data3_id,
+    .copy = copy,
+  };
+
+  int ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &args);
+  zassert_equal(ret, UDS_NRC_ConditionsNotCorrect);
+
+  zassert_equal(copy_fake.call_count, 0);
+}
+
 ZTEST_F(lib_uds_new, test_0x2E_write_by_id_fails_when_id_unknown) {
   struct uds_new_instance_t *instance = fixture->instance;
 

@@ -18,11 +18,12 @@ UDSErr_t uds_new_handle_read_data_by_identifier(
 UDSErr_t uds_new_handle_write_data_by_identifier(
     struct uds_new_instance_t* instance, UDSWDBIArgs_t* args);
 
-int uds_new_register_runtime_data_identifier(struct uds_new_instance_t* inst,
-                                             uint16_t data_id,
-                                             void* addr,
-                                             size_t num_of_elem,
-                                             size_t len_elem,
-                                             bool can_write);
+int uds_new_register_runtime_data_identifier(
+    struct uds_new_instance_t* inst,
+    uint16_t data_id,
+    uds_new_data_id_custom_read_fn read,
+    uds_new_data_id_custom_write_fn write,
+    struct uds_new_state_requirements state_requirements,
+    void* user_data);
 
 #endif  // ARDEP_LIB_UDS_NEW_DATA_BY_IDENTIFIER_H

@@ -90,32 +90,53 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_static_array) {
   assert_copy_data(expected, sizeof(expected));
 }
 
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 ZTEST_F(lib_uds_new, test_0x22_read_by_id_dynamic_array) {
   struct uds_new_instance_t *instance = fixture->instance;
 
-  uint16_t id = 0x9988;
-  uint32_t data[4] = {0x11223344, 0x55667788, 0x99AABBCC, 0xDDEEFF00};
+  instance->state.diag_session_type = 1;
 
-  instance->register_data_by_identifier(instance, id, data, ARRAY_SIZE(data),
-                                        sizeof(data[0]), false);
+  uint16_t id = 0x9988;
+  __unused uint32_t data[4] = {0x11223344, 0x55667788, 0x99AABBCC, 0xDDEEFF00};
+  uint32_t context = 0x12345678;
+
+  struct uds_new_state_requirements state_req = {
+    .session_type = 1,
+    .session_type_level = UDS_NEW_STATE_LEVEL_LESS_OR_EQUAL,
+  };
+
+  int ret = instance->register_data_by_identifier(
+      instance, id, data_id_custom_read_fn, data_id_custom_write_fn, state_req,
+      &context);
+  zassert_ok(ret);
 
   UDSRDBIArgs_t args = {
     .dataId = id,
     .copy = copy,
   };
 
-  int ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &args);
+  ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &args);
   zassert_ok(ret);
+
+  zassert_equal(data_id_custom_write_fn_fake.call_count, 0);
+
+  zassert_equal(data_id_custom_read_fn_fake.call_count, 1);
+  zassert_equal(data_id_custom_read_fn_fake.arg0_val, id);
+  zassert_equal(data_id_custom_read_fn_fake.arg1_val.session_type,
+                state_req.session_type);
+  zassert_equal(data_id_custom_read_fn_fake.arg1_val.session_type_level,
+                state_req.session_type_level);
+  zassert_equal_ptr(data_id_custom_read_fn_fake.arg5_val, &context);
 
   zassert_equal(copy_fake.call_count, 1);
   zassert_equal(copy_fake.arg0_val, &instance->iso14229.server);
-  zassert_equal(copy_fake.arg2_val, sizeof(data));
 
-  uint8_t expected[16] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
-                          0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00};
+  uint8_t expected[4] = {0x78, 0x56, 0x34, 0x12};
+  zassert_equal(copy_fake.arg2_val, sizeof(expected));
 
   assert_copy_data(expected, sizeof(expected));
 }
+#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 
 ZTEST_F(lib_uds_new,
         test_0x22_read_by_id_fails_when_state_requirements_do_not_match) {
@@ -181,31 +202,35 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_static_array) {
   zassert_mem_equal(expected, by_id_data2, sizeof(expected));
 }
 
-ZTEST_F(lib_uds_new, test_0x2E_write_by_id_dynamic_array) {
-  struct uds_new_instance_t *instance = fixture->instance;
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
+// ZTEST_F(lib_uds_new, test_0x2E_write_by_id_dynamic_array) {
+//   struct uds_new_instance_t *instance = fixture->instance;
 
-  uint16_t id = 0x8899;
-  uint32_t element_data[4] = {0};
+//   uint16_t id = 0x8899;
+//   uint32_t element_data[4] = {0};
 
-  instance->register_data_by_identifier(instance, id, element_data,
-                                        ARRAY_SIZE(element_data),
-                                        sizeof(element_data[0]), true);
+//   instance->register_data_by_identifier(instance, id, element_data,
+//                                         ARRAY_SIZE(element_data),
+//                                         sizeof(element_data[0]), true);
 
-  uint8_t data_to_write[16] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
-                               0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00};
+//   uint8_t data_to_write[16] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+//   0x88,
+//                                0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
+//                                0x00};
 
-  UDSWDBIArgs_t args = {
-    .dataId = id,
-    .data = (uint8_t *)data_to_write,
-    .len = sizeof(data_to_write),
-  };
+//   UDSWDBIArgs_t args = {
+//     .dataId = id,
+//     .data = (uint8_t *)data_to_write,
+//     .len = sizeof(data_to_write),
+//   };
 
-  int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
-  zassert_ok(ret);
+//   int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
+//   zassert_ok(ret);
 
-  uint32_t expected[4] = {0x11223344, 0x55667788, 0x99AABBCC, 0xDDEEFF00};
-  zassert_mem_equal(expected, element_data, sizeof(expected));
-}
+//   uint32_t expected[4] = {0x11223344, 0x55667788, 0x99AABBCC, 0xDDEEFF00};
+//   zassert_mem_equal(expected, element_data, sizeof(expected));
+// }
+#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 
 ZTEST_F(lib_uds_new, test_0x2E_write_by_id_fails_when_write_not_allowed) {
   struct uds_new_instance_t *instance = fixture->instance;

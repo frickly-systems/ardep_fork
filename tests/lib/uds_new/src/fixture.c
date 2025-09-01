@@ -37,6 +37,32 @@ DEFINE_FFF_GLOBALS;
 
 DEFINE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 
+typedef UDSErr_t (*uds_new_data_id_custom_read_fn)(
+    uint16_t data_id,
+    const struct uds_new_state_requirements state_requirements,
+    const struct uds_new_state state,
+    void *read_buf,
+    size_t *read_buf_len,
+    void *user_data);  // where read_buf is the output and read_buf_len
+
+DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
+                       data_id_custom_read_fn,
+                       uint16_t,
+                       const struct uds_new_state_requirements,
+                       const struct uds_new_state,
+                       void *,
+                       size_t *,
+                       void *);
+
+DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
+                       data_id_custom_write_fn,
+                       uint16_t,
+                       const struct uds_new_state_requirements,
+                       const struct uds_new_state,
+                       const void *const,
+                       size_t,
+                       void *);
+
 struct uds_new_instance_t fixture_uds_instance;
 
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
@@ -93,6 +119,21 @@ static uint8_t custom_copy(UDSServer_t *server,
   return 0;
 }
 
+static UDSErr_t custom_data_id_custom_read_fn(
+    uint16_t id,
+    const struct uds_new_state_requirements req,
+    const struct uds_new_state state,
+    void *read_buf,
+    size_t *buf_len,
+    void *user_data) {
+  uint32_t context = *(uint32_t *)user_data;
+  uint32_t *read = (uint32_t *)read_buf;
+
+  *read = context;
+  *buf_len = 4;
+  return 0;
+}
+
 static void *uds_new_setup(void) {
   memset(&fixture_uds_instance, 0, sizeof(fixture_uds_instance));
 
@@ -113,9 +154,12 @@ static void uds_new_before(void *f) {
   struct uds_new_instance_t *uds_instance = fixture->instance;
 
   RESET_FAKE(copy);
+  RESET_FAKE(data_id_custom_read_fn);
+  RESET_FAKE(data_id_custom_write_fn);
   FFF_RESET_HISTORY();
 
   copy_fake.custom_fake = custom_copy;
+  data_id_custom_read_fn_fake.custom_fake = custom_data_id_custom_read_fn;
 
   int ret = uds_new_init(uds_instance, &cfg, dev, NULL);
   assert(ret == 0);

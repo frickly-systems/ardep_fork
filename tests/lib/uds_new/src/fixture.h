@@ -11,6 +11,23 @@
 #include <iso14229.h>
 
 DECLARE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
+DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
+                        data_id_custom_read_fn,
+                        uint16_t,
+                        const struct uds_new_state_requirements,
+                        const struct uds_new_state,
+                        void *,
+                        size_t *,
+                        void *);
+
+DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
+                        data_id_custom_write_fn,
+                        uint16_t,
+                        const struct uds_new_state_requirements,
+                        const struct uds_new_state,
+                        const void *const,
+                        size_t,
+                        void *);
 
 struct lib_uds_new_fixture {
   UDSISOTpCConfig_t cfg;

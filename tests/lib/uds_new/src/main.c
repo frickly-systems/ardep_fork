@@ -117,7 +117,8 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_dynamic_array) {
   assert_copy_data(expected, sizeof(expected));
 }
 
-ZTEST_F(lib_uds_new, test_0x22_fails_when_state_requirements_do_not_match) {
+ZTEST_F(lib_uds_new,
+        test_0x22_read_by_id_fails_when_state_requirements_do_not_match) {
   struct uds_new_instance_t *instance = fixture->instance;
 
   UDSRDBIArgs_t args = {
@@ -219,4 +220,19 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_fails_when_write_not_allowed) {
 
   int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
+}
+
+ZTEST_F(lib_uds_new,
+        test_0x2E_write_by_id_fails_when_state_requirements_do_not_match) {
+  struct uds_new_instance_t *instance = fixture->instance;
+
+  uint8_t data[6] = {0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE};
+  UDSWDBIArgs_t args = {
+    .dataId = by_id_data3_id,
+    .data = data,
+    .len = sizeof(data),
+  };
+
+  int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
+  zassert_equal(ret, UDS_NRC_ConditionsNotCorrect);
 }

@@ -20,6 +20,34 @@ LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 #define DATA_LEN_IN_BYTES(reg) \
   (reg->data_identifier.num_of_elem * reg->data_identifier.len_elem)
 
+static bool uds_new_requirement_is_met(uint8_t current,
+                                       uint8_t expected,
+                                       enum uds_new_state_level level) {
+  switch (level) {
+    case UDS_NEW_STATE_LEVEL_EQUAL:
+      return current == expected;
+    case UDS_NEW_STATE_LEVEL_LESS_OR_EQUAL:
+      return current <= expected;
+    case UDS_NEW_STATE_LEVEL_GREATER_OR_EQUAL:
+      return current >= expected;
+  }
+
+  LOG_WRN("Invalid level to check requirements: %d", level);
+  return false;
+}
+
+static UDSErr_t uds_new_check_data_id_state_requirements(
+    const struct uds_new_state_requirements* const req,
+    const struct uds_new_state* const state) {
+  if (!uds_new_requirement_is_met(state->diag_session_type, req->session_type,
+                                  req->session_type_level)) {
+    LOG_WRN("Requirements not met: Diag Session type");
+    return UDS_NRC_ConditionsNotCorrect;
+  }
+
+  return UDS_OK;
+}
+
 UDSErr_t _uds_new_data_identifier_static_read(
     void* data,
     size_t* len,
@@ -91,6 +119,14 @@ static UDSErr_t uds_new_try_read_from_identifier(
     return UDS_FAIL;
   }
 
+  UDSErr_t ret = uds_new_check_data_id_state_requirements(
+      &reg->data_identifier.state_requirements, &instance->state);
+  if (ret != UDS_OK) {
+    LOG_WRN("State requirements not met to read Data Identifier 0x%04X",
+            reg->data_identifier.data_id);
+    return ret;
+  }
+
   uint8_t read_buf[DATA_LEN_IN_BYTES(reg)];
   size_t len = sizeof(read_buf);
   reg->data_identifier.read(read_buf, &len, reg, &instance->state);
@@ -138,6 +174,14 @@ static UDSErr_t uds_new_try_write_to_identifier(
   if (!reg->can_write) {
     LOG_WRN("Data Identifier 0x%04X cannot be written", args->dataId);
     return UDS_NRC_RequestOutOfRange;
+  }
+
+  UDSErr_t ret = uds_new_check_data_id_state_requirements(
+      &reg->data_identifier.state_requirements, &instance->state);
+  if (ret != UDS_OK) {
+    LOG_WRN("State requirements not met to write Data Identifier 0x%04X",
+            reg->data_identifier.data_id);
+    return ret;
   }
 
   return reg->data_identifier.write(args->data, args->len, reg,

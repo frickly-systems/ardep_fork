@@ -56,7 +56,6 @@ typedef int (*register_data_by_identifier_fn)(struct uds_new_instance_t* inst,
                                               void* addr,
                                               size_t num_of_elem,
                                               size_t len_elem,
-                                              bool can_read,
                                               bool can_write);
 #endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 

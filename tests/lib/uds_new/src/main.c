@@ -97,7 +97,7 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_dynamic_array) {
   uint32_t data[4] = {0x11223344, 0x55667788, 0x99AABBCC, 0xDDEEFF00};
 
   instance->register_data_by_identifier(instance, id, data, ARRAY_SIZE(data),
-                                        sizeof(data[0]), true, false);
+                                        sizeof(data[0]), false);
 
   UDSRDBIArgs_t args = {
     .dataId = id,
@@ -118,7 +118,7 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_dynamic_array) {
 }
 
 ZTEST_F(lib_uds_new, test_0x2E_write_by_id_fails_when_id_unknown) {
-  struct uds_new_instance_t *instance = &fixture->instance;
+  struct uds_new_instance_t *instance = fixture->instance;
 
   uint8_t data[2] = {0xBE, 0xEF};
   UDSWDBIArgs_t args = {
@@ -132,7 +132,7 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_fails_when_id_unknown) {
 }
 
 ZTEST_F(lib_uds_new, test_0x2E_write_by_id_static_single_element) {
-  struct uds_new_instance_t *instance = &fixture->instance;
+  struct uds_new_instance_t *instance = fixture->instance;
 
   uint8_t data[2] = {0xBE, 0xEF};
   UDSWDBIArgs_t args = {
@@ -150,7 +150,7 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_static_single_element) {
 }
 
 ZTEST_F(lib_uds_new, test_0x2E_write_by_id_static_array) {
-  struct uds_new_instance_t *instance = &fixture->instance;
+  struct uds_new_instance_t *instance = fixture->instance;
 
   uint8_t data[6] = {0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE};
   UDSWDBIArgs_t args = {
@@ -167,14 +167,14 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_static_array) {
 }
 
 ZTEST_F(lib_uds_new, test_0x2E_write_by_id_dynamic_array) {
-  struct uds_new_instance_t *instance = &fixture->instance;
+  struct uds_new_instance_t *instance = fixture->instance;
 
   uint16_t id = 0x8899;
   uint32_t element_data[4] = {0};
 
   instance->register_data_by_identifier(instance, id, element_data,
                                         ARRAY_SIZE(element_data),
-                                        sizeof(element_data[0]), false, true);
+                                        sizeof(element_data[0]), true);
 
   uint8_t data_to_write[16] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
                                0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00};
@@ -193,7 +193,7 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_dynamic_array) {
 }
 
 ZTEST_F(lib_uds_new, test_0x2E_write_by_id_fails_when_write_not_allowed) {
-  struct uds_new_instance_t *instance = &fixture->instance;
+  struct uds_new_instance_t *instance = fixture->instance;
 
   uint8_t data_to_write[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
 

@@ -121,7 +121,7 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_dynamic_array) {
 
   struct uds_new_state_requirements state_req = {
     .session_type = 1,
-    .session_type_level = UDS_NEW_STATE_LEVEL_LESS_OR_EQUAL,
+    .session_type_req = UDS_NEW_STATE_REQ_LESS_OR_EQUAL,
   };
 
   int ret = instance->register_data_by_identifier(
@@ -143,8 +143,8 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_dynamic_array) {
   zassert_equal(data_id_custom_read_fn_fake.arg0_val, id);
   zassert_equal(data_id_custom_read_fn_fake.arg1_val.session_type,
                 state_req.session_type);
-  zassert_equal(data_id_custom_read_fn_fake.arg1_val.session_type_level,
-                state_req.session_type_level);
+  zassert_equal(data_id_custom_read_fn_fake.arg1_val.session_type_req,
+                state_req.session_type_req);
   zassert_equal_ptr(data_id_custom_read_fn_fake.arg5_val, &context);
 
   zassert_equal(copy_fake.call_count, 1);
@@ -248,7 +248,7 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_dynamic_array) {
   uint32_t context = 0x12345678;
   struct uds_new_state_requirements state_req = {
     .session_type = 1,
-    .session_type_level = UDS_NEW_STATE_LEVEL_LESS_OR_EQUAL,
+    .session_type_req = UDS_NEW_STATE_REQ_LESS_OR_EQUAL,
   };
 
   instance->register_data_by_identifier(instance, id, data_id_custom_read_fn,

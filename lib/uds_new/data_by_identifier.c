@@ -20,15 +20,16 @@ LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 #define DATA_LEN_IN_BYTES(reg) \
   (reg->data_identifier.num_of_elem * reg->data_identifier.len_elem)
 
-static bool uds_new_requirement_is_met(uint8_t current,
-                                       uint8_t expected,
-                                       enum uds_new_state_level level) {
+static bool uds_new_requirement_is_met(
+    uint8_t current,
+    uint8_t expected,
+    enum uds_new_state_requirement_type level) {
   switch (level) {
-    case UDS_NEW_STATE_LEVEL_EQUAL:
+    case UDS_NEW_STATE_REQ_EQUAL:
       return current == expected;
-    case UDS_NEW_STATE_LEVEL_LESS_OR_EQUAL:
+    case UDS_NEW_STATE_REQ_LESS_OR_EQUAL:
       return current <= expected;
-    case UDS_NEW_STATE_LEVEL_GREATER_OR_EQUAL:
+    case UDS_NEW_STATE_REQ_GREATER_OR_EQUAL:
       return current >= expected;
   }
 
@@ -40,7 +41,7 @@ static UDSErr_t uds_new_check_data_id_state_requirements(
     const struct uds_new_state_requirements* const req,
     const struct uds_new_state* const state) {
   if (!uds_new_requirement_is_met(state->diag_session_type, req->session_type,
-                                  req->session_type_level)) {
+                                  req->session_type_req)) {
     LOG_WRN("Requirements not met: Diag Session type");
     return UDS_NRC_ConditionsNotCorrect;
   }

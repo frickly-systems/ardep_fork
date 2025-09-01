@@ -87,7 +87,7 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(
     true,
     UDS_NEW_STATE_DIAG_SESSION_REQUIREMENTS(
         UDS_NEW_STATE_DIAG_SESSION_STATE_REQUIREMENTS(
-            UDS_NEW_STATE_LEVEL_GREATER_OR_EQUAL, 1)));
+            UDS_NEW_STATE_REQ_GREATER_OR_EQUAL, 1)));
 
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(&fixture_uds_instance,
                                               by_id_data_no_rw_id,
@@ -102,7 +102,7 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_CUSTOM(
     data_id_custom_read_fn,
     data_id_custom_write_fn,
     UDS_NEW_STATE_DIAG_SESSION_REQUIREMENTS(
-        UDS_NEW_STATE_DIAG_SESSION_STATE_REQUIREMENTS(UDS_NEW_STATE_LEVEL_EQUAL,
+        UDS_NEW_STATE_DIAG_SESSION_STATE_REQUIREMENTS(UDS_NEW_STATE_REQ_EQUAL,
                                                       1)));
 
 static const UDSISOTpCConfig_t cfg = {

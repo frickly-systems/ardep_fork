@@ -83,6 +83,17 @@ typedef UDSErr_t (*uds_new_data_id_custom_write_fn)(
 
 #ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 
+/**
+ * @brief Function to register a new data identifier at runtime
+ *
+ * @param inst Pointer to the UDS server instance
+ * @param data_id ID of the element to register
+ * @param read Custom read function
+ * @param write Custom write function
+ * @param state_requirements State requirements to read/write the data
+ * @param user_data Custom user data passed to the read/write functions
+ *
+ */
 typedef int (*register_data_by_identifier_fn)(
     struct uds_new_instance_t* inst,
     uint16_t data_id,
@@ -92,7 +103,13 @@ typedef int (*register_data_by_identifier_fn)(
     void* user_data);
 #endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 
+/**
+ * @brief Current UDS state
+ */
 struct uds_new_state {
+  /**
+   * @brief Current diagnostic session type
+   */
   uint8_t diag_session_type;
 };
 
@@ -117,14 +134,14 @@ int uds_new_init(struct uds_new_instance_t* inst,
 
 #endif  // CONFIG_UDS_NEW_ENABLE_RESET
 
-enum uds_new_state_level {
-  UDS_NEW_STATE_LEVEL_EQUAL,
-  UDS_NEW_STATE_LEVEL_LESS_OR_EQUAL,
-  UDS_NEW_STATE_LEVEL_GREATER_OR_EQUAL,
+enum uds_new_state_requirement_type {
+  UDS_NEW_STATE_REQ_EQUAL,
+  UDS_NEW_STATE_REQ_LESS_OR_EQUAL,
+  UDS_NEW_STATE_REQ_GREATER_OR_EQUAL,
 };
 
 struct uds_new_state_requirements {
-  enum uds_new_state_level session_type_level;
+  enum uds_new_state_requirement_type session_type_req;
   uint8_t session_type;
 };
 
@@ -203,13 +220,13 @@ UDSErr_t _uds_new_data_identifier_static_write(
 #define UDS_NEW_STATE_REQUIREMENTS_NONE \
   ((struct uds_new_state_requirements) \
     { \
-      .session_type_level = UDS_NEW_STATE_LEVEL_GREATER_OR_EQUAL, \
+      .session_type_req = UDS_NEW_STATE_REQ_GREATER_OR_EQUAL, \
       .session_type = 0 \
     }\
   )
 
 #define UDS_NEW_STATE_DIAG_SESSION_STATE_REQUIREMENTS(level, type) \
-  .session_type_level = (level), \
+  .session_type_req = (level), \
   .session_type = (type)
 
   
@@ -218,21 +235,22 @@ UDSErr_t _uds_new_data_identifier_static_write(
 
 
 /**
- * @brief Register a static data identifier with custom read/write capabilities.
+ * @brief Registers a static data identifier with custom read and write handlers.
  *
- * This macro registers a static data identifier, associating the given id
- * with the provided user_context and read/write functions.
- * 
- * @param _instance           uds_new instance that owns the reference.
- * @param _data_id            Identifier for the data at @p addr.
- * @param user_data           Context passed to in the read/write functions
- * @param _read               Read callback to call when
- *                             <read_data_by_identifier> is invoked.
- *                             Must not be null
- * @param _write              Write callback to call when
-                              <write_data_by_identifier> is invoked.
-                              Set to NULL to make data read-only.
- * @param _state_requirements Requirements to read/write the data
+ * This macro associates a data identifier with user-defined context and
+ * read/write callback functions, allowing flexible handling of data access.
+ *
+ * @param _instance Pointer to the uds_new instance that will own this data
+ *                  identifier.
+ * @param _data_id Unique identifier for the data item.
+ * @param user_data Pointer to user-defined context, passed to the read/write
+ *                  callbacks.
+ * @param _read Function pointer to the read callback, Must not be NULL.
+ * @param _write Function pointer to the write callback.
+ * @param _state_requirements Bitmask or flags specifying the required state(s)
+ *                            for reading or writing the data.
+ *
+ * @note If _write is NULL, the data identifier will be treated as read-only.
  */
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_CUSTOM(             \
   _instance,                                                        \
@@ -264,19 +282,13 @@ UDSErr_t _uds_new_data_identifier_static_write(
  * To not convert the data to big endian before sending, pass 1 as len_elem and
  * the size of the data in bytes to len.
  *
- * @param _instance           uds_new instance that owns the reference.
- * @param _data_id            Identifier for the data at @p addr.
- * @param addr                Memory address where the data is found.
- * @param _num_of_elem        number of elements at @p addr.
- * @param len_elem            Length of each element in bytes ad @p addr.
- *                            These amount of
- * @param _read               Read callback to call when
-*                             <read_data_by_identifier> is invoked.
-                              Must not be null
- * @param _write              Write callback to call when
-                              <write_data_by_identifier> is invoked.
-                              Set to NULL to make data read-only.
- * @param _state_requirements Requirements to read/write the data
+ * @param _instance uds_new instance that owns the reference.
+ * @param _data_id Identifier for the data at @p addr.
+ * @param addr Memory address where the data is found.
+ * @param _num_of_elem number of elements at @p addr.
+ * @param len_elem Length of each element in bytes ad @p addr.
+ * @param writable Set to true, if the data can be written.
+ * @param _state_requirements Requirements to read/write the data.
  */
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM(                \
   _instance,                                                        \
@@ -343,7 +355,9 @@ UDSErr_t _uds_new_data_identifier_static_write(
  * @param array     Array to associate with the data identifier.
  */
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(     \
-  _instance, _data_id, array,                              \
+  _instance,                                               \
+  _data_id,                                                \
+  array,                                                   \
   writable,                                                \
   _state_requirements                                      \
 )                                                          \

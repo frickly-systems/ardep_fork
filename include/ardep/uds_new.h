@@ -42,15 +42,7 @@ typedef int (*set_ecu_reset_callback_fn)(struct uds_new_instance_t* inst,
                                          ecu_reset_callback_t callback);
 
 #ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
-/**
- * @brief Register a data identifier for the data at @p addr.
- *
- * This macro registers a data identifier at runtime, associating an id
- * with a memory address so it can be read by the <read_data_by_identifier>
- * command.
- *
- * See UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_MEM for details.
- */
+
 typedef int (*register_data_by_identifier_fn)(struct uds_new_instance_t* inst,
                                               uint16_t data_id,
                                               void* addr,

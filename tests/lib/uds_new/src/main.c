@@ -90,6 +90,25 @@ ZTEST_F(lib_uds_new, test_0x22_read_by_id_static_array) {
   assert_copy_data(expected, sizeof(expected));
 }
 
+ZTEST_F(lib_uds_new, test_0x22_read_by_id_static_custom) {
+  struct uds_new_instance_t *instance = fixture->instance;
+
+  UDSRDBIArgs_t args = {
+    .dataId = by_id_data_custom_id,
+    .copy = copy,
+  };
+
+  int ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &args);
+  zassert_ok(ret);
+
+  zassert_equal(copy_fake.call_count, 1);
+  zassert_equal(copy_fake.arg0_val, &instance->iso14229.server);
+  zassert_equal(copy_fake.arg2_val, sizeof(by_id_data_custom));
+
+  assert_copy_data((uint8_t *)&by_id_data_custom_default,
+                   sizeof(by_id_data_custom_default));
+}
+
 #ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 ZTEST_F(lib_uds_new, test_0x22_read_by_id_dynamic_array) {
   struct uds_new_instance_t *instance = fixture->instance;
@@ -202,34 +221,57 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_static_array) {
   zassert_mem_equal(expected, by_id_data2, sizeof(expected));
 }
 
+ZTEST_F(lib_uds_new, test_0x2E_write_by_id_static_custom) {
+  struct uds_new_instance_t *instance = fixture->instance;
+
+  uint8_t data[6] = {0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE};
+  UDSWDBIArgs_t args = {
+    .dataId = by_id_data_custom_id,
+    .data = data,
+    .len = sizeof(data),
+  };
+
+  int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
+  zassert_ok(ret);
+
+  zassert_equal(data_id_custom_write_fn_fake.call_count, 1);
+  zassert_equal(data_id_custom_write_fn_fake.arg0_val, by_id_data_custom_id);
+  zassert_equal_ptr(data_id_custom_write_fn_fake.arg3_val, data);
+  zassert_equal(data_id_custom_write_fn_fake.arg4_val, sizeof(data));
+}
+
 #ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
-// ZTEST_F(lib_uds_new, test_0x2E_write_by_id_dynamic_array) {
-//   struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds_new, test_0x2E_write_by_id_dynamic_array) {
+  struct uds_new_instance_t *instance = fixture->instance;
 
-//   uint16_t id = 0x8899;
-//   uint32_t element_data[4] = {0};
+  uint16_t id = 0x8899;
+  uint32_t context = 0x12345678;
+  struct uds_new_state_requirements state_req = {
+    .session_type = 1,
+    .session_type_level = UDS_NEW_STATE_LEVEL_LESS_OR_EQUAL,
+  };
 
-//   instance->register_data_by_identifier(instance, id, element_data,
-//                                         ARRAY_SIZE(element_data),
-//                                         sizeof(element_data[0]), true);
+  instance->register_data_by_identifier(instance, id, data_id_custom_read_fn,
+                                        data_id_custom_write_fn, state_req,
+                                        &context);
 
-//   uint8_t data_to_write[16] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-//   0x88,
-//                                0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
-//                                0x00};
+  uint8_t data_to_write[16] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
+                               0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00};
 
-//   UDSWDBIArgs_t args = {
-//     .dataId = id,
-//     .data = (uint8_t *)data_to_write,
-//     .len = sizeof(data_to_write),
-//   };
+  UDSWDBIArgs_t args = {
+    .dataId = id,
+    .data = (uint8_t *)data_to_write,
+    .len = sizeof(data_to_write),
+  };
 
-//   int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
-//   zassert_ok(ret);
+  int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &args);
+  zassert_ok(ret);
 
-//   uint32_t expected[4] = {0x11223344, 0x55667788, 0x99AABBCC, 0xDDEEFF00};
-//   zassert_mem_equal(expected, element_data, sizeof(expected));
-// }
+  zassert_equal_ptr(data_id_custom_write_fn_fake.arg3_val, &data_to_write[0]);
+  zassert_equal_ptr(data_id_custom_write_fn_fake.arg4_val,
+                    sizeof(data_to_write));
+  zassert_equal_ptr(data_id_custom_write_fn_fake.arg5_val, &context);
+}
 #endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 
 ZTEST_F(lib_uds_new, test_0x2E_write_by_id_fails_when_write_not_allowed) {

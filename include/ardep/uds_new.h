@@ -237,14 +237,14 @@ UDSErr_t _uds_new_data_identifier_static_write(
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_CUSTOM(             \
   _instance,                                                        \
   _data_id,                                                         \
-  user_data,                                                        \
+  _user_data,                                                       \
   _read,                                                            \
   _write,                                                           \
   _state_requirements)                                              \
   STRUCT_SECTION_ITERABLE(uds_new_registration_t, id##_data_id) = { \
     .instance = _instance,                                          \
     .type = UDS_NEW_REGISTRATION_TYPE__CUSTOM,                      \
-    .user_data = user_data,                                         \
+    .user_data = _user_data,                                        \
     .custom = {                                                     \
       .data_id = _data_id,                                          \
       .state_requirements = _state_requirements,                    \

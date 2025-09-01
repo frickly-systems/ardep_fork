@@ -28,6 +28,10 @@ const uint16_t by_id_data3_default[3] = {0xFFEE, 0xDDCC, 0xBBAA};
 uint16_t by_id_data3[3];
 const uint16_t by_id_data3_id = 0x369C;
 
+const uint32_t by_id_data_custom_default = 0x11223344;
+uint32_t by_id_data_custom;
+const uint16_t by_id_data_custom_id = 0x789A;
+
 __attribute__((unused)) uint16_t by_id_data_no_rw[4] = {0xB1, 0x6B, 0x00, 0xB5};
 const uint16_t by_id_data_no_rw_id = 0xBAAD;
 
@@ -91,6 +95,16 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(&fixture_uds_instance,
                                               false,
                                               UDS_NEW_STATE_REQUIREMENTS_NONE);
 
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_CUSTOM(
+    &fixture_uds_instance,
+    by_id_data_custom_id,
+    &by_id_data_custom,
+    data_id_custom_read_fn,
+    data_id_custom_write_fn,
+    UDS_NEW_STATE_DIAG_SESSION_REQUIREMENTS(
+        UDS_NEW_STATE_DIAG_SESSION_STATE_REQUIREMENTS(UDS_NEW_STATE_LEVEL_EQUAL,
+                                                      1)));
+
 static const UDSISOTpCConfig_t cfg = {
   // Hardware Addresses
   .source_addr = 0x7E8,  // Can ID Server (us)
@@ -126,11 +140,19 @@ static UDSErr_t custom_data_id_custom_read_fn(
     void *read_buf,
     size_t *buf_len,
     void *user_data) {
-  uint32_t context = *(uint32_t *)user_data;
-  uint32_t *read = (uint32_t *)read_buf;
+  if (id != by_id_data_custom_id) {
+    uint32_t context = *(uint32_t *)user_data;
+    uint32_t *read = (uint32_t *)read_buf;
 
-  *read = context;
-  *buf_len = 4;
+    *read = context;
+    *buf_len = 4;
+
+    return 0;
+  }
+
+  memcpy(read_buf, &by_id_data_custom_default,
+         sizeof(by_id_data_custom_default));
+  *buf_len = sizeof(by_id_data_custom_default);
   return 0;
 }
 
@@ -171,6 +193,14 @@ static void uds_new_before(void *f) {
 
     if (reg->data_identifier.data_id == by_id_data2_id) {
       memcpy(reg->user_data, &by_id_data2_default, sizeof(by_id_data2_default));
+    }
+
+    if (reg->data_identifier.data_id == by_id_data3_id) {
+      memcpy(reg->user_data, &by_id_data3_default, sizeof(by_id_data3_default));
+    }
+
+    if (reg->data_identifier.data_id == by_id_data_custom_id) {
+      memcpy(reg->user_data, &by_id_data_custom, sizeof(by_id_data_custom));
     }
   }
 

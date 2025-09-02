@@ -12,7 +12,6 @@ zephyr_library_sources(
     uds.c
 )
 
-zephyr_library_sources_ifdef(CONFIG_UDS_NEW_ENABLE_RESET ecu_reset.c)
 
 zephyr_linker_sources(SECTIONS iterables.ld)
 

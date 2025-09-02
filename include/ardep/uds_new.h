@@ -212,6 +212,30 @@ struct uds_new_registration_t {
 };
 
 /**
+ * @brief Default check function for the default ECU Hard Reset handler
+ */
+UDSErr_t uds_new_check_ecu_hard_reset(
+    const struct uds_new_context *const context, bool *apply_action);
+
+/**
+ * @brief Default action function for the default ECU Hard Reset handler
+ */
+UDSErr_t uds_new_action_ecu_hard_reset(struct uds_new_context *const context,
+                                       bool *consume_event);
+
+/**
+ * @brief Default check function for the default ECU Hard Reset handler
+ */
+UDSErr_t uds_new_check_execute_scheduled_reset(
+    const struct uds_new_context *const context, bool *apply_action);
+
+/**
+ * @brief Default action function for the default ECU Hard Reset handler
+ */
+UDSErr_t uds_new_action_execute_scheduled_reset(
+    struct uds_new_context *const context, bool *consume_event);
+
+/**
  * @brief Filter for ECU Reset event handler registrations
  *
  * @param[in] event the event to check against

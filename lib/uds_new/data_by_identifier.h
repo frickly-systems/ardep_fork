@@ -7,23 +7,17 @@
 #ifndef ARDEP_LIB_UDS_NEW_DATA_BY_IDENTIFIER_H
 #define ARDEP_LIB_UDS_NEW_DATA_BY_IDENTIFIER_H
 
+#include "iso14229.h"
+
 #include <ardep/iso14229.h>
 #include <ardep/uds_new.h>
 
 #pragma once
 
 UDSErr_t uds_new_handle_read_data_by_identifier(
-    struct uds_new_instance_t* instance, UDSRDBIArgs_t* args);
+    struct uds_new_instance_t* instance, UDSEvent_t event, void* arg);
 
 UDSErr_t uds_new_handle_write_data_by_identifier(
-    struct uds_new_instance_t* instance, UDSWDBIArgs_t* args);
-
-int uds_new_register_runtime_data_identifier(
-    struct uds_new_instance_t* inst,
-    uint16_t data_id,
-    uds_new_data_id_custom_read_fn read,
-    uds_new_data_id_custom_write_fn write,
-    struct uds_new_state_requirements state_requirements,
-    void* user_data);
+    struct uds_new_instance_t* instance, UDSEvent_t event, void* arg);
 
 #endif  // ARDEP_LIB_UDS_NEW_DATA_BY_IDENTIFIER_H

@@ -16,94 +16,45 @@
 
 #include <iso14229.h>
 
-const uint16_t by_id_data1_default = 5;
-uint16_t by_id_data1;
-const uint16_t by_id_data1_id = 0x1234;
-
-const uint16_t by_id_data2_default[3] = {0x1234, 0x5678, 0x9ABC};
-uint16_t by_id_data2[3];
-const uint16_t by_id_data2_id = 0x2468;
-
-const uint16_t by_id_data3_default[3] = {0xFFEE, 0xDDCC, 0xBBAA};
-uint16_t by_id_data3[3];
-const uint16_t by_id_data3_id = 0x369C;
-
-const uint32_t by_id_data_custom_default = 0x11223344;
-uint32_t by_id_data_custom;
-const uint16_t by_id_data_custom_id = 0x789A;
-
-__attribute__((unused)) uint16_t by_id_data_no_rw[4] = {0xB1, 0x6B, 0x00, 0xB5};
-const uint16_t by_id_data_no_rw_id = 0xBAAD;
-
-const uint16_t by_id_data_unknown_id = 0xDEAD;
-
 DEFINE_FFF_GLOBALS;
 
 DEFINE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 
-typedef UDSErr_t (*uds_new_data_id_custom_read_fn)(
-    uint16_t data_id,
-    const struct uds_new_state_requirements state_requirements,
-    const struct uds_new_state state,
-    void *read_buf,
-    size_t *read_buf_len,
-    void *user_data);  // where read_buf is the output and read_buf_len
+DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
+                       data_id_check_fn,
+                       struct uds_new_context *const,
+                       bool *);
 
 DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
-                       data_id_custom_read_fn,
-                       uint16_t,
-                       const struct uds_new_state_requirements,
-                       const struct uds_new_state,
-                       void *,
-                       size_t *,
-                       void *);
+                       data_id_action_fn,
+                       struct uds_new_context *const,
+                       bool *);
 
-DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
-                       data_id_custom_write_fn,
-                       uint16_t,
-                       const struct uds_new_state_requirements,
-                       const struct uds_new_state,
-                       const void *const,
-                       size_t,
-                       void *);
+#define FFF_FAKES_LIST(FAKE) \
+  FAKE(copy)                 \
+  FAKE(data_id_check_fn)     \
+  FAKE(data_id_action_fn)
 
 struct uds_new_instance_t fixture_uds_instance;
 
+const uint16_t data_id_r = 1;
+uint8_t data_id_r_data[4];
+
+const uint16_t data_id_rw = 2;
+uint8_t data_id_rw_data[4];
+
+const uint16_t data_id_rw_duplicated = 3;
+uint8_t data_id_rw_duplicated_data[4];
+
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
-                                        by_id_data1_id,
-                                        by_id_data1,
-                                        true,
-                                        UDS_NEW_STATE_REQUIREMENTS_NONE);
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(&fixture_uds_instance,
-                                              by_id_data2_id,
-                                              by_id_data2,
-                                              true,
-                                              UDS_NEW_STATE_REQUIREMENTS_NONE);
-
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(
-    &fixture_uds_instance,
-    by_id_data3_id,
-    by_id_data3,
-    true,
-    UDS_NEW_STATE_DIAG_SESSION_REQUIREMENTS(
-        UDS_NEW_STATE_DIAG_SESSION_STATE_REQUIREMENTS(
-            UDS_NEW_STATE_REQ_GREATER_OR_EQUAL, 1)));
-
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_ARRAY(&fixture_uds_instance,
-                                              by_id_data_no_rw_id,
-                                              by_id_data_no_rw,
-                                              false,
-                                              UDS_NEW_STATE_REQUIREMENTS_NONE);
-
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC_CUSTOM(
-    &fixture_uds_instance,
-    by_id_data_custom_id,
-    &by_id_data_custom,
-    data_id_custom_read_fn,
-    data_id_custom_write_fn,
-    UDS_NEW_STATE_DIAG_SESSION_REQUIREMENTS(
-        UDS_NEW_STATE_DIAG_SESSION_STATE_REQUIREMENTS(UDS_NEW_STATE_REQ_EQUAL,
-                                                      1)));
+                                        data_id_r,
+                                        data_id_r_data,
+                                        // read
+                                        data_id_check_fn,
+                                        data_id_action_fn,
+                                        // write
+                                        NULL,
+                                        NULL)
 
 static const UDSISOTpCConfig_t cfg = {
   // Hardware Addresses
@@ -133,29 +84,6 @@ static uint8_t custom_copy(UDSServer_t *server,
   return 0;
 }
 
-static UDSErr_t custom_data_id_custom_read_fn(
-    uint16_t id,
-    const struct uds_new_state_requirements req,
-    const struct uds_new_state state,
-    void *read_buf,
-    size_t *buf_len,
-    void *user_data) {
-  if (id != by_id_data_custom_id) {
-    uint32_t context = *(uint32_t *)user_data;
-    uint32_t *read = (uint32_t *)read_buf;
-
-    *read = context;
-    *buf_len = 4;
-
-    return 0;
-  }
-
-  memcpy(read_buf, &by_id_data_custom_default,
-         sizeof(by_id_data_custom_default));
-  *buf_len = sizeof(by_id_data_custom_default);
-  return 0;
-}
-
 static void *uds_new_setup(void) {
   memset(&fixture_uds_instance, 0, sizeof(fixture_uds_instance));
 
@@ -175,43 +103,23 @@ static void uds_new_before(void *f) {
   const struct device *dev = fixture->can_dev;
   struct uds_new_instance_t *uds_instance = fixture->instance;
 
-  RESET_FAKE(copy);
-  RESET_FAKE(data_id_custom_read_fn);
-  RESET_FAKE(data_id_custom_write_fn);
+  FFF_FAKES_LIST(RESET_FAKE);
   FFF_RESET_HISTORY();
 
   copy_fake.custom_fake = custom_copy;
-  data_id_custom_read_fn_fake.custom_fake = custom_data_id_custom_read_fn;
 
-  int ret = uds_new_init(uds_instance, &cfg, dev, NULL);
+  int ret = uds_new_init(uds_instance, &cfg, dev, fixture);
   assert(ret == 0);
 
   STRUCT_SECTION_FOREACH (uds_new_registration_t, reg) {
-    if (reg->data_identifier.data_id == by_id_data1_id) {
-      memcpy(reg->user_data, &by_id_data1_default, sizeof(by_id_data1_default));
-    }
-
-    if (reg->data_identifier.data_id == by_id_data2_id) {
-      memcpy(reg->user_data, &by_id_data2_default, sizeof(by_id_data2_default));
-    }
-
-    if (reg->data_identifier.data_id == by_id_data3_id) {
-      memcpy(reg->user_data, &by_id_data3_default, sizeof(by_id_data3_default));
-    }
-
-    if (reg->data_identifier.data_id == by_id_data_custom_id) {
-      memcpy(reg->user_data, &by_id_data_custom, sizeof(by_id_data_custom));
-    }
   }
+
+  memset(fixture->fff_args, 0, sizeof(fixture->fff_args));
+  fixture->fff_args_count = 0;
 
   memset(copied_data, 0, sizeof(copied_data));
   copied_len = 0;
 }
-
-typedef UDSErr_t (*uds_callback)(struct iso14229_zephyr_instance *inst,
-                                 UDSEvent_t event,
-                                 void *arg,
-                                 void *user_context);
 
 UDSErr_t receive_event(struct uds_new_instance_t *inst,
                        UDSEvent_t event,

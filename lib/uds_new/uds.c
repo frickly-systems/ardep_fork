@@ -35,10 +35,9 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
       return UDS_NRC_ServiceNotSupported;
 #endif
     }
-    case UDS_EVT_ReadDataByIdent: {
-      UDSRDBIArgs_t* args = arg;
-      return uds_new_handle_read_data_by_identifier(instance, args);
-    }
+    case UDS_EVT_ReadDataByIdent:
+      return uds_new_handle_read_data_by_identifier(instance, event, arg);
+
     case UDS_EVT_ReadMemByAddr: {
       UDSReadMemByAddrArgs_t* args = arg;
       return handle_read_memory_by_address(instance, args);
@@ -46,10 +45,8 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
     case UDS_EVT_CommCtrl:
     case UDS_EVT_SecAccessRequestSeed:
     case UDS_EVT_SecAccessValidateKey:
-    case UDS_EVT_WriteDataByIdent: {
-      UDSWDBIArgs_t* args = arg;
-      return uds_new_handle_write_data_by_identifier(instance, args);
-    }
+    case UDS_EVT_WriteDataByIdent:
+      return uds_new_handle_write_data_by_identifier(instance, event, arg);
     case UDS_EVT_RoutineCtrl:
     case UDS_EVT_RequestDownload:
     case UDS_EVT_RequestUpload:
@@ -75,12 +72,6 @@ int uds_new_init(struct uds_new_instance_t* inst,
                  const struct device* can_dev,
                  void* user_context) {
   inst->user_context = user_context;
-  memset(&inst->state, 0, sizeof(inst->state));
-
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
-  inst->register_data_by_identifier = uds_new_register_runtime_data_identifier;
-  inst->dynamic_registrations = NULL;
-#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 
   int ret = iso14229_zephyr_init(&inst->iso14229, iso_tp_config, can_dev, inst);
   if (ret < 0) {

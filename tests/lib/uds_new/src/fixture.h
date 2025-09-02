@@ -11,52 +11,53 @@
 #include <iso14229.h>
 
 DECLARE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
-DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
-                        data_id_custom_read_fn,
-                        uint16_t,
-                        const struct uds_new_state_requirements,
-                        const struct uds_new_state,
-                        void *,
-                        size_t *,
-                        void *);
 
 DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
-                        data_id_custom_write_fn,
-                        uint16_t,
-                        const struct uds_new_state_requirements,
-                        const struct uds_new_state,
-                        const void *const,
-                        size_t,
-                        void *);
+                        data_id_check_fn,
+                        struct uds_new_context *const,
+                        bool *);
+
+DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
+                        data_id_action_fn,
+                        struct uds_new_context *const,
+                        bool *);
+
+extern const uint16_t data_id_r;
+extern uint8_t data_id_r_data[4];
+
+extern const uint16_t data_id_rw;
+extern uint8_t data_id_rw_data[4];
+
+extern const uint16_t data_id_rw_duplicated;
+extern uint8_t data_id_rw_duplicated_data[4];
+
+enum callback_type {
+  DATA_ID_CHECK,
+  DATA_ID_ACTION,
+};
+
+struct fake_function_args {
+  enum callback_type type;
+  union {
+    struct {
+      const struct uds_new_context *const ctx;
+      bool *result;
+    } data_id_check;
+    struct {
+      struct uds_new_context *const ctx;
+      bool *result;
+    } data_id_action;
+  };
+};
 
 struct lib_uds_new_fixture {
   UDSISOTpCConfig_t cfg;
-
   struct uds_new_instance_t *instance;
-
   const struct device *can_dev;
+
+  struct fake_function_args fff_args[10];
+  size_t fff_args_count;
 };
-
-extern const uint16_t by_id_data1_default;
-extern uint16_t by_id_data1;
-extern const uint16_t by_id_data1_id;
-
-extern const uint16_t by_id_data2_default[3];
-extern uint16_t by_id_data2[3];
-extern const uint16_t by_id_data2_id;
-
-extern const uint16_t by_id_data3_default[3];
-extern uint16_t by_id_data3[3];
-extern const uint16_t by_id_data3_id;
-
-extern const uint32_t by_id_data_custom_default;
-extern uint32_t by_id_data_custom;
-extern const uint16_t by_id_data_custom_id;
-
-__attribute__((unused)) extern uint16_t by_id_data_no_rw[4];
-extern const uint16_t by_id_data_no_rw_id;
-
-extern const uint16_t by_id_data_unknown_id;
 
 /**
  * @brief Receive an event from iso14229

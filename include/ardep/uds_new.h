@@ -157,8 +157,6 @@ int uds_new_init(struct uds_new_instance_t *inst,
 
 enum uds_new_registration_type_t {
   UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,
-  UDS_NEW_REGISTRATION_TYPE__CUSTOM,
-  UDS_NEW_REGISTRATION_TYPE__DID,
 };
 
 /**

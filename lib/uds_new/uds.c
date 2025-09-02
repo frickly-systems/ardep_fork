@@ -16,6 +16,7 @@ LOG_MODULE_REGISTER(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 #include <ardep/uds_new.h>
 #include <iso14229.h>
 
+// Wraps the logic to check and execute action on the event
 UDSErr_t _uds_new_check_and_act_on_event(struct uds_new_instance_t* instance,
                                          struct uds_new_registration_t* reg,
                                          uds_new_check_fn check,
@@ -24,11 +25,12 @@ UDSErr_t _uds_new_check_and_act_on_event(struct uds_new_instance_t* instance,
                                          void* arg,
                                          bool* found_at_least_one_match,
                                          bool* consume_event) {
-  struct uds_new_context context = {.instance = instance,
-                                    .registration = reg,
-                                    .event = event,
-                                    .arg = arg,
-                                    .additional_param = NULL};
+  struct uds_new_context context = {
+    .instance = instance,
+    .registration = reg,
+    .event = event,
+    .arg = arg,
+  };
   UDSErr_t ret = UDS_OK;
 
   bool apply_action = false;
@@ -58,6 +60,7 @@ UDSErr_t _uds_new_check_and_act_on_event(struct uds_new_instance_t* instance,
   return UDS_OK;
 }
 
+// Iterates over event handlers to apply the actions for the event
 UDSErr_t uds_new_handle_event(struct uds_new_instance_t* instance,
                               UDSEvent_t event,
                               void* arg,
@@ -65,6 +68,7 @@ UDSErr_t uds_new_handle_event(struct uds_new_instance_t* instance,
                               uds_new_get_action_fn get_action) {
   bool found_at_least_one_match = false;
 
+  // We start with static registrations
   STRUCT_SECTION_FOREACH (uds_new_registration_t, reg) {
     bool consume_event = true;
     int ret = _uds_new_check_and_act_on_event(
@@ -75,6 +79,7 @@ UDSErr_t uds_new_handle_event(struct uds_new_instance_t* instance,
     }
   }
 
+  // Optional dynamic registrations
 #ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
   struct uds_new_registration_t* reg = instance->dynamic_registrations;
   while (reg != NULL) {
@@ -97,6 +102,7 @@ UDSErr_t uds_new_handle_event(struct uds_new_instance_t* instance,
   return UDS_PositiveResponse;
 }
 
+// Callback registers on the iso14229 lib to receive UDS events
 UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
                             UDSEvent_t event,
                             void* arg,
@@ -153,6 +159,8 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
 }
 
 #ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+// Registration function to dynamically register new handlers at runtime
+// (Heap allocated)
 static int uds_new_register_event_handler(
     struct uds_new_instance_t* inst,
     struct uds_new_registration_t registration) {

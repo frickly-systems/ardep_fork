@@ -42,12 +42,26 @@ typedef UDSErr_t (*ecu_reset_callback_t)(struct uds_new_instance_t *inst,
 typedef int (*set_ecu_reset_callback_fn)(struct uds_new_instance_t *inst,
                                          ecu_reset_callback_t callback);
 
+/**
+ * @brief Context provided to Event handlers on an event
+ */
 struct uds_new_context {
+  /**
+   * @brief The instance the event was generated on
+   */
   struct uds_new_instance_t *const instance;
+  /**
+   * @brief The registration instance to handle the event
+   */
   struct uds_new_registration_t *const registration;
+  /**
+   * @brief The event type
+   */
   UDSEvent_t event;
+  /**
+   * @brief Arguments associated with the event
+   */
   void *arg;
-  void *additional_param;
 };
 
 /**
@@ -56,7 +70,7 @@ struct uds_new_context {
  *
  * @param[in] context The context of this UDS Event
  * @param[out] apply_action set to `true` when an associated action should be
- *                          applied to this event
+ *                          applied to this event.
  * @returns UDS_PositiveResponse on success
  * @returns UDS_NRC_* on failure. This NRC is returned to the UDS client
  */
@@ -71,16 +85,31 @@ typedef UDSErr_t (*uds_new_check_fn)(
  *
  * @param[in,out] context The context of this UDS Event
  * @param[out] consume_event Set to `false` if the event should not be consumed
- *                           by this action
+ *                           by this action or to `true` to consume it.
+ *                           This should always be set.
  * @returns UDS_PositiveResponse on success
  * @returns UDS_NRC_* on failure. This NRC is returned to the UDS client
  */
 typedef UDSErr_t (*uds_new_action_fn)(struct uds_new_context *const context,
                                       bool *consume_event);
 
+/**
+ * @brief Function to get the associated check function for a registration
+ *
+ * @param[in] reg Pointer to the registration instance
+ * @returns The associated check function
+ * @returns NULL if no function is associated
+ */
 typedef uds_new_check_fn (*uds_new_get_check_fn)(
     const struct uds_new_registration_t *const reg);
 
+/**
+ * @brief Function to get the associated action function for a registration
+ *
+ * @param[in] reg Pointer to the registration instance
+ * @returns The associated check function
+ * @returns NULL if no function is associated
+ */
 typedef uds_new_action_fn (*uds_new_get_action_fn)(
     const struct uds_new_registration_t *const reg);
 
@@ -126,22 +155,29 @@ int uds_new_init(struct uds_new_instance_t *inst,
                  const struct device *can_dev,
                  void *user_context);
 
-/**
- * @brief opaque data. used internally
- */
-struct uds_new_registration_t;
-
 enum uds_new_registration_type_t {
   UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,
   UDS_NEW_REGISTRATION_TYPE__CUSTOM,
   UDS_NEW_REGISTRATION_TYPE__DID,
 };
 
+/**
+ * @brief Registration information for an UDS Event handler
+ */
 struct uds_new_registration_t {
+  /**
+   * @brief Instance the UDS Event handler is registered to
+   */
   struct uds_new_instance_t *instance;
 
+  /**
+   * @brief Type of event handler
+   */
   enum uds_new_registration_type_t type;
 
+  /**
+   * @brief Event Handler specific context or user data
+   */
   void *user_data;
 
   union {
@@ -152,7 +188,12 @@ struct uds_new_registration_t {
     } data_identifier;
   };
 
-  struct uds_new_registration_t *next;  // only used for dynamic registrations
+  /**
+   * @brief Pointer to the next dynamic registration
+   *
+   * @note: Only used for dynamic registration
+   */
+  struct uds_new_registration_t *next;
 };
 
 // clang-format off
@@ -160,6 +201,20 @@ struct uds_new_registration_t {
 #define _UDS_CAT(a, b) a##b
 #define _UDS_CAT_EXPAND(a, b) _UDS_CAT(a, b)
 
+/**
+ * @brief Register a new static data identifier
+ * 
+ * @param _instance Pointer to associated the UDS server instance
+ * @param _data_id The data identifier to register the handler for
+ * @param data_ptr Custom context oder data the handle the event
+ * @param _read_check Check if the `_read` action should be executed.
+ * @param _read Execute a read for the event
+ * @param _write_check Check if the `_write` action should be executed.
+ * @param _write Execute a write for the event
+ * 
+ * @note: @p _write_check and @p _write are optional. Set to NULL for read-only
+ *        data identifier
+ */
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(                      \
   _instance,                                                          \
   _data_id,                                                           \

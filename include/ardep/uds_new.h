@@ -165,14 +165,24 @@ enum uds_new_registration_type_t {
  */
 struct uds_new_registration_t {
   /**
-   * @brief Instance the UDS Event handler is registered to
+   * @brief Instance the UDS Event handler is registered to.
    */
   struct uds_new_instance_t *instance;
 
   /**
-   * @brief Type of event handler
+   * @brief Type of event handler.
    */
   enum uds_new_registration_type_t type;
+
+  /**
+   * @brief Filter function to determine if the event can be handled by this
+   * registration type
+   *
+   * We need to filter before any "check" functions because those reside
+   * inside the unnamed union member. Thus accessing the wrong view on the data
+   * can lead to incorrect data and behavior.
+   */
+  bool (*applies_to_event)(UDSEvent_t event);
 
   /**
    * @brief Event Handler specific context or user data
@@ -201,6 +211,22 @@ struct uds_new_registration_t {
   struct uds_new_registration_t *next;
 };
 
+/**
+ * @brief Filter for ECU Reset event handler registrations
+ *
+ * @param[in] event the event to check against
+ * @returns true if the `event` can be handled
+ * @returns false otherwise
+ */
+bool uds_new_filter_for_ecu_reset_event(UDSEvent_t event);
+
+/**
+ * @brief Filter for Read/Write Data by ID event handler registrations
+ *
+ * see @fn uds_new_filter_for_ecu_reset_event for details
+ */
+bool uds_new_filter_for_data_by_id_event(UDSEvent_t event);
+
 // clang-format off
 
 #define _UDS_CAT(a, b) a##b
@@ -208,17 +234,17 @@ struct uds_new_registration_t {
 
 
 /**
- * @brief Register a new ecu reset event handler.
+ * @brief Register a new ecu reset event handler
  * 
- * @param _instance Pointer to associated the UDS server instance.
- * @param _context Optional context provided by the user.
+ * @param _instance Pointer to associated the UDS server instance
+ * @param _context Optional context provided by the user
  * @param _reset_type type of reset as defined in ISO 14229-1 10.3.2.1
- * @param _ecu_reset_check Check if the `_ecu_reset` action should be executed.
- * @param _ecu_reset Execute the `_ecu_reset` action for the event.
+ * @param _ecu_reset_check Check if the `_ecu_reset` action should be executed
+ * @param _ecu_reset Execute the `_ecu_reset` action for the event
  * @param _do_scheduled_reset_check Check if the `_do_scheduled_reset` action
- *        should be executed.
+ *        should be executed
  * @param _do_scheduled_reset Execute the `_do_scheduled_reset` action for the
- *        event.
+ *        event
  */
 #define UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                  \
   _instance,                                                                 \
@@ -240,6 +266,7 @@ struct uds_new_registration_t {
         _UDS_CAT_EXPAND(__uds_new_registration_id, _data_id)) = {            \
     .instance = _instance,                                                   \
     .type = UDS_NEW_REGISTRATION_TYPE__ECU_RESET,                            \
+    .applies_to_event = uds_new_filter_for_ecu_reset_event,                  \
     .user_data = _context,                                                   \
     .ecu_reset = {                                                           \
       .type = _reset_type,                                                   \
@@ -303,6 +330,7 @@ struct uds_new_registration_t {
         _UDS_CAT_EXPAND(__uds_new_registration_id, _data_id)) = {     \
     .instance = _instance,                                            \
     .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,               \
+    .applies_to_event = uds_new_filter_for_data_by_id_event,          \
     .user_data = data_ptr,                                            \
     .data_identifier = {                                              \
       .user_context = _context,                                       \

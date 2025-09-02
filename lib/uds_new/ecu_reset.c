@@ -15,6 +15,10 @@ LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 #include <ardep/uds_new.h>
 #include <iso14229.h>
 
+bool uds_new_filter_for_ecu_reset_event(UDSEvent_t event) {
+  return event == UDS_EVT_DoScheduledReset || event == UDS_EVT_EcuReset;
+}
+
 uds_new_check_fn uds_new_get_check_for_ecu_reset(
     const struct uds_new_registration_t* const reg) {
   return reg->ecu_reset.ecu_reset.check;
@@ -33,7 +37,6 @@ uds_new_action_fn uds_new_get_action_for_execute_scheduled_reset(
   return reg->ecu_reset.execute_scheduled_reset.action;
 }
 
-#include <zephyr/sys/reboot.h>
 UDSErr_t uds_new_check_ecu_hard_reset(
     const struct uds_new_context* const context, bool* apply_action) {
   UDSECUResetArgs_t* args = context->arg;

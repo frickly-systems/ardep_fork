@@ -33,8 +33,6 @@ uds_new_action_fn uds_new_get_action_for_execute_scheduled_reset(
   return reg->ecu_reset.execute_scheduled_reset.action;
 }
 
-#ifdef CONFIG_UDS_NEW_ENABLE_HARD_RESET
-
 #include <zephyr/sys/reboot.h>
 UDSErr_t uds_new_check_ecu_hard_reset(
     const struct uds_new_context* const context, bool* apply_action) {
@@ -77,5 +75,3 @@ UDSErr_t uds_new_action_execute_scheduled_reset(
   LOG_ERR("Error rebooting from ECU hard reset!");
   return UDS_NRC_ConditionsNotCorrect;
 }
-
-#endif  // CONFIG_UDS_NEW_ENABLE_HARD_RESET

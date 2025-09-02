@@ -7,8 +7,37 @@
 
 #include <ardep/uds_new.h>
 
+UDSErr_t custom_check_for_0x11_return_subfunc_not_sup(
+    const struct uds_new_context *const context, bool *apply_action) {
+  if (context->registration->type == UDS_NEW_REGISTRATION_TYPE__ECU_RESET &&
+      context->event == UDS_EVT_EcuReset) {
+    UDSECUResetArgs_t *args = context->arg;
+    if (args->type == ECU_RESET_KEY_OFF_ON) {
+      *apply_action = true;
+    }
+  }
+  return UDS_OK;
+}
+
+UDSErr_t custom_action_for_0x11_return_subfunc_not_sup(
+    struct uds_new_context *const context, bool *consume_event) {
+  if (context->registration->type == UDS_NEW_REGISTRATION_TYPE__ECU_RESET &&
+      context->event == UDS_EVT_EcuReset) {
+    UDSECUResetArgs_t *args = context->arg;
+    if (args->type == ECU_RESET_KEY_OFF_ON) {
+      *consume_event = true;
+    }
+  }
+  return UDS_OK;
+}
+
 ZTEST_F(lib_uds_new, test_0x11_ecu_reset_return_subfunc_not_sup) {
   struct uds_new_instance_t *instance = fixture->instance;
+
+  data_id_check_fn_fake.custom_fake =
+      custom_check_for_0x11_return_subfunc_not_sup;
+  data_id_action_fn_fake.custom_fake =
+      custom_action_for_0x11_return_subfunc_not_sup;
 
   UDSECUResetArgs_t arg = {
     .type = ECU_RESET_HARD,

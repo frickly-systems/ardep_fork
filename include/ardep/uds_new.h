@@ -183,6 +183,7 @@ struct uds_new_registration_t {
       uint16_t data_id;
       struct uds_new_actor read;
       struct uds_new_actor write;
+      void *user_context;
     } data_identifier;
   };
 
@@ -209,6 +210,7 @@ struct uds_new_registration_t {
  * @param _read Execute a read for the event
  * @param _write_check Check if the `_write` action should be executed.
  * @param _write Execute a write for the event
+ * @param _context Optional context provided by the user
  * 
  * @note: @p _write_check and @p _write are optional. Set to NULL for read-only
  *        data identifier
@@ -220,7 +222,8 @@ struct uds_new_registration_t {
   _read_check,                                                        \
   _read,                                                              \
   _write_check,                                                       \
-  _write                                                              \
+  _write,                                                             \
+  _context                                                            \
 )                                                                     \
   _Static_assert(_read_check != NULL, "read_check cannot be NULL");   \
   _Static_assert(_read != NULL, "read action cannot be NULL");        \
@@ -230,6 +233,7 @@ struct uds_new_registration_t {
     .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,               \
     .user_data = data_ptr,                                            \
     .data_identifier = {                                              \
+      .user_context = _context,                                       \
       .data_id = _data_id,                                            \
       .read = {                                                       \
         .check = _read_check,                                         \

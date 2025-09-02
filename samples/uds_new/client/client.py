@@ -47,9 +47,19 @@ def write_read_memory(client: Client):
     client.change_session(DiagnosticSessionControl.Session.defaultSession)
 
 
-def read_data_by_identifier(client: Client):
-    data = client.read_data_by_identifier([0x1234])
-    print(f"Reading data from identifier 0x1234: {data.service_data.values[0x1234]}")
+def read_write_data_by_identifier(client: Client):
+
+    data = client.read_data_by_identifier([0x0100])
+    print(f"Reading data from identifier 0x0100: {data.service_data.values[0x0100]}")
+
+    data = client.read_data_by_identifier_first([0x0050])
+    print(f"Reading data from identifier 0x0050: {data}")
+
+    data = client.write_data_by_identifier(0x0050, 0x1234)
+    print(f"Written data to identifier 0x0050: 0x1234")
+
+    data = client.read_data_by_identifier_first([0x0050])
+    print(f"Reading data from identifier 0x0050: {data}")
 
 
 def ecu_reset(client: Client):
@@ -70,6 +80,22 @@ class MyCustomCodec(udsoncan.DidCodec):
         return 2  # encoded payload is 2 byte long.
 
 
+class StringCodec(udsoncan.DidCodec):
+    def encode(self, val):
+        encoded = val.encode("ascii") if isinstance(val, str) else val
+        # Ensure the data is exactly 15 bytes long, terminated with null byte
+        if len(encoded) >= 15:
+            return encoded[:14] + b"\x00"
+        else:
+            return encoded + b"\x00" * (15 - len(encoded))
+
+    def decode(self, payload):
+        return payload.decode("ascii", errors="ignore").rstrip("\x00")
+
+    def __len__(self):
+        return 15  # "Hello from UDS" + null terminator = 15 bytes
+
+
 def main(args: Namespace):
     can = args.can
 
@@ -79,7 +105,8 @@ def main(args: Namespace):
     config = dict(udsoncan.configs.default_client_config)
     config["data_identifiers"] = {
         "default": ">H",  # Default codec is a struct.pack/unpack string. 16bits little endian
-        0x1234: MyCustomCodec,
+        0x0050: MyCustomCodec,
+        0x0100: StringCodec,
     }
 
     with Client(conn, config=config, request_timeout=2) as client:
@@ -104,13 +131,15 @@ def main(args: Namespace):
         #     )
 
         try:
-            read_data_by_identifier(client)
+            read_write_data_by_identifier(client)
 
         except NegativeResponseException as e:
             print(
                 f"Server refused our request for service {e.response.service.get_name()} "
                 f'with code "{e.response.code_name}" (0x{e.response.code:02x})'
             )
+        except (InvalidResponseException, UnexpectedResponseException) as e:
+            print(f"Server sent an invalid payload : {e.response.original_payload}")
 
 
 if __name__ == "__main__":

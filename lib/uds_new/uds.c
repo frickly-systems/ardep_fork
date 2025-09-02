@@ -110,7 +110,6 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
   struct uds_new_instance_t* instance = user_context;
 
   switch (event) {
-    case UDS_EVT_Err:
     case UDS_EVT_DiagSessCtrl:
       break;
     case UDS_EVT_EcuReset: {
@@ -131,13 +130,15 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
       UDSReadMemByAddrArgs_t* args = arg;
       return handle_read_memory_by_address(instance, args);
     }
-    case UDS_EVT_CommCtrl:
-    case UDS_EVT_SecAccessRequestSeed:
-    case UDS_EVT_SecAccessValidateKey:
     case UDS_EVT_WriteDataByIdent:
       return uds_new_handle_event(
           instance, event, arg, uds_new_get_check_for_write_data_by_identifier,
           uds_new_get_action_for_write_data_by_identifier);
+    case UDS_EVT_Err:
+    case UDS_EVT_CommCtrl:
+    case UDS_EVT_SecAccessRequestSeed:
+    case UDS_EVT_WriteMemByAddr:
+    case UDS_EVT_SecAccessValidateKey:
     case UDS_EVT_RoutineCtrl:
     case UDS_EVT_RequestDownload:
     case UDS_EVT_RequestUpload:

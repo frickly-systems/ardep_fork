@@ -28,7 +28,8 @@ extern uint8_t data_id_r_data[4];
 extern const uint16_t data_id_rw;
 extern uint8_t data_id_rw_data[4];
 
-extern const uint16_t data_id_rw_duplicated;
+extern const uint16_t data_id_rw_duplicated1;
+extern const uint16_t data_id_rw_duplicated2;
 extern uint8_t data_id_rw_duplicated_data[4];
 
 enum callback_type {

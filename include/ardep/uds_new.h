@@ -30,9 +30,9 @@ enum ecu_reset_type {
  * @param user_context User-defined context pointer as passed to \ref
  * uds_new_init()
  */
-typedef UDSErr_t (*ecu_reset_callback_t)(struct uds_new_instance_t* inst,
+typedef UDSErr_t (*ecu_reset_callback_t)(struct uds_new_instance_t *inst,
                                          enum ecu_reset_type reset_type,
-                                         void* user_context);
+                                         void *user_context);
 
 /**
  * Set the ECU reset callback function for custom callbacks
@@ -41,15 +41,15 @@ typedef UDSErr_t (*ecu_reset_callback_t)(struct uds_new_instance_t* inst,
  * @param callback Pointer to the callback function to set
  * @return 0 on success, negative error code on failure
  */
-typedef int (*set_ecu_reset_callback_fn)(struct uds_new_instance_t* inst,
+typedef int (*set_ecu_reset_callback_fn)(struct uds_new_instance_t *inst,
                                          ecu_reset_callback_t callback);
 
 struct uds_new_context {
-  struct uds_new_instance_t* const instance;
-  struct uds_new_registration_t* const registration;
+  struct uds_new_instance_t *const instance;
+  struct uds_new_registration_t *const registration;
   UDSEvent_t event;
-  void* arg;
-  void* additional_param;
+  void *arg;
+  void *additional_param;
 };
 
 /**
@@ -62,8 +62,8 @@ struct uds_new_context {
  * @returns UDS_PositiveResponse on success
  * @returns UDS_NRC_* on failure. This NRC is returned to the UDS client
  */
-typedef UDSErr_t (*uds_new_check_fn)(const struct uds_new_context* context,
-                                     bool* apply_action);
+typedef UDSErr_t (*uds_new_check_fn)(struct uds_new_context *const context,
+                                     bool *apply_action);
 
 /**
  * @brief Callback to act on an matching UDS Event
@@ -77,8 +77,8 @@ typedef UDSErr_t (*uds_new_check_fn)(const struct uds_new_context* context,
  * @returns UDS_PositiveResponse on success
  * @returns UDS_NRC_* on failure. This NRC is returned to the UDS client
  */
-typedef UDSErr_t (*uds_new_action_fn)(struct uds_new_context* const context,
-                                      bool* consume_event);
+typedef UDSErr_t (*uds_new_action_fn)(struct uds_new_context *const context,
+                                      bool *consume_event);
 
 /**
  * Associates a check with an action
@@ -101,7 +101,7 @@ struct uds_new_actor {
  * @param user_data Custom user data passed to the read/write functions
  *
  */
-typedef int (*register_data_by_identifier_fn)(struct uds_new_instance_t* inst,
+typedef int (*register_data_by_identifier_fn)(struct uds_new_instance_t *inst,
                                               uint16_t data_id,
                                               struct uds_new_actor read,
                                               struct uds_new_actor write);
@@ -113,19 +113,19 @@ struct uds_new_state {
 
 struct uds_new_instance_t {
   struct iso14229_zephyr_instance iso14229;
-  struct uds_new_registration_t* static_registrations;
-  void* user_context;
+  struct uds_new_registration_t *static_registrations;
+  void *user_context;
 
 #ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
-  struct uds_new_registration_t* dynamic_registrations;
+  struct uds_new_registration_t *dynamic_registrations;
   register_data_by_identifier_fn register_data_by_identifier;
 #endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
 };
 
-int uds_new_init(struct uds_new_instance_t* inst,
-                 const UDSISOTpCConfig_t* iso_tp_config,
-                 const struct device* can_dev,
-                 void* user_context);
+int uds_new_init(struct uds_new_instance_t *inst,
+                 const UDSISOTpCConfig_t *iso_tp_config,
+                 const struct device *can_dev,
+                 void *user_context);
 
 enum uds_new_state_requirement_type {
   UDS_NEW_STATE_REQ_EQUAL,
@@ -150,11 +150,11 @@ enum uds_new_registration_type_t {
 };
 
 struct uds_new_registration_t {
-  struct uds_new_instance_t* instance;
+  struct uds_new_instance_t *instance;
 
   enum uds_new_registration_type_t type;
 
-  void* user_data;
+  void *user_data;
 
   union {
     struct {
@@ -164,18 +164,13 @@ struct uds_new_registration_t {
     } data_identifier;
   };
 
-  struct uds_new_registration_t* next;  // only used for dynamic registrations
+  struct uds_new_registration_t *next;  // only used for dynamic registrations
 };
 
 // clang-format off
-// 
-#define UDS_NEW_UNPACK_CONTEXT(context) \
-  const struct uds_new_registration_t *registration = context->registration; \
-  const struct uds_new_instance_t *instance = context->instance; \
-  UDSEvent_t event = context->event; \
-  /* Create an 'args' variable with the correct type of the arguments depending on the event */
 
-
+#define _UDS_CAT(a, b) a##b
+#define _UDS_CAT_EXPAND(a, b) _UDS_CAT(a, b)
 
 #define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(                      \
   _instance,                                                          \
@@ -186,7 +181,8 @@ struct uds_new_registration_t {
   _write_check,                                                       \
   _write                                                              \
 )                                                                     \
-  STRUCT_SECTION_ITERABLE(uds_new_registration_t, id##_data_id) = {   \
+  STRUCT_SECTION_ITERABLE(uds_new_registration_t,                     \
+        _UDS_CAT_EXPAND(__uds_new_registration_id, _data_id)) = {     \
     .instance = _instance,                                            \
     .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,               \
     .user_data = data_ptr,                                            \

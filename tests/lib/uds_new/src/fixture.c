@@ -43,7 +43,8 @@ uint8_t data_id_r_data[4];
 const uint16_t data_id_rw = 2;
 uint8_t data_id_rw_data[4];
 
-const uint16_t data_id_rw_duplicated = 3;
+const uint16_t data_id_rw_duplicated1 = 3;
+const uint16_t data_id_rw_duplicated2 = 3;
 uint8_t data_id_rw_duplicated_data[4];
 
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
@@ -55,6 +56,27 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
                                         // write
                                         NULL,
                                         NULL)
+
+// Duplicated Registratin for the same data ID
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
+                                        data_id_rw_duplicated1,
+                                        data_id_rw_duplicated_data,
+                                        // read
+                                        data_id_check_fn,
+                                        data_id_action_fn,
+                                        // write
+                                        data_id_check_fn,
+                                        data_id_action_fn)
+
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
+                                        data_id_rw_duplicated2,
+                                        data_id_rw_duplicated_data,
+                                        // read
+                                        data_id_check_fn,
+                                        data_id_action_fn,
+                                        // write
+                                        data_id_check_fn,
+                                        data_id_action_fn)
 
 static const UDSISOTpCConfig_t cfg = {
   // Hardware Addresses

@@ -6,7 +6,6 @@
 
 #include "ardep/uds_new.h"
 #include "fixture.h"
-#include "zephyr/sys/util.h"
 
 #include <string.h>
 
@@ -22,7 +21,7 @@ DEFINE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 
 DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
                        data_id_check_fn,
-                       struct uds_new_context *const,
+                       const struct uds_new_context *const,
                        bool *);
 
 DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
@@ -36,6 +35,11 @@ DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
   FAKE(data_id_action_fn)
 
 struct uds_new_instance_t fixture_uds_instance;
+
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+bool test_dynamic_registration_check_invoked;
+bool test_dynamic_registration_action_invoked;
+#endif  // # CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
 
 const uint16_t data_id_r = 1;
 uint8_t data_id_r_data[4];
@@ -56,6 +60,16 @@ UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
                                         // write
                                         NULL,
                                         NULL)
+
+UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
+                                        data_id_rw,
+                                        data_id_rw_data,
+                                        // read
+                                        data_id_check_fn,
+                                        data_id_action_fn,
+                                        // write
+                                        data_id_check_fn,
+                                        data_id_action_fn)
 
 // Duplicated Registratin for the same data ID
 UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
@@ -136,8 +150,8 @@ static void uds_new_before(void *f) {
   STRUCT_SECTION_FOREACH (uds_new_registration_t, reg) {
   }
 
-  memset(fixture->fff_args, 0, sizeof(fixture->fff_args));
-  fixture->fff_args_count = 0;
+  test_dynamic_registration_check_invoked = false;
+  test_dynamic_registration_action_invoked = false;
 
   memset(copied_data, 0, sizeof(copied_data));
   copied_len = 0;

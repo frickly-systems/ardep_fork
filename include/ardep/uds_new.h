@@ -7,8 +7,6 @@
 #include <iso14229.h>
 
 struct uds_new_instance_t;
-struct uds_new_state_requirements;
-struct uds_new_state;
 struct uds_new_registration_t;
 
 enum ecu_reset_type {
@@ -62,8 +60,8 @@ struct uds_new_context {
  * @returns UDS_PositiveResponse on success
  * @returns UDS_NRC_* on failure. This NRC is returned to the UDS client
  */
-typedef UDSErr_t (*uds_new_check_fn)(struct uds_new_context *const context,
-                                     bool *apply_action);
+typedef UDSErr_t (*uds_new_check_fn)(
+    const struct uds_new_context *const context, bool *apply_action);
 
 /**
  * @brief Callback to act on an matching UDS Event
@@ -81,62 +79,46 @@ typedef UDSErr_t (*uds_new_action_fn)(struct uds_new_context *const context,
                                       bool *consume_event);
 
 /**
- * Associates a check with an action
+ * @brief Associates a check with an action
  */
 struct uds_new_actor {
   uds_new_check_fn check;
   uds_new_action_fn action;
 };
 
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
 
 /**
  * @brief Function to register a new data identifier at runtime
  *
- * @param inst Pointer to the UDS server instance
- * @param data_id ID of the element to register
- * @param read Custom read function
- * @param write Custom write function
- * @param state_requirements State requirements to read/write the data
- * @param user_data Custom user data passed to the read/write functions
+ * @param inst Pointer to the UDS server instance.
+ * @param registration The registration information for the new data identifier.
+ *
+ * @returns 0 on success
+ * @returns <0 on failure
  *
  */
-typedef int (*register_data_by_identifier_fn)(struct uds_new_instance_t *inst,
-                                              uint16_t data_id,
-                                              struct uds_new_actor read,
-                                              struct uds_new_actor write);
-#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
+typedef int (*register_event_handler_fn)(
+    struct uds_new_instance_t *inst,
+    struct uds_new_registration_t registration);
 
-struct uds_new_state {
-  uint8_t diag_session_type;
-};
+#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
 
 struct uds_new_instance_t {
   struct iso14229_zephyr_instance iso14229;
   struct uds_new_registration_t *static_registrations;
   void *user_context;
 
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
   struct uds_new_registration_t *dynamic_registrations;
-  register_data_by_identifier_fn register_data_by_identifier;
-#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_DATA_BY_ID
+  register_event_handler_fn register_event_handler;
+#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
 };
 
 int uds_new_init(struct uds_new_instance_t *inst,
                  const UDSISOTpCConfig_t *iso_tp_config,
                  const struct device *can_dev,
                  void *user_context);
-
-enum uds_new_state_requirement_type {
-  UDS_NEW_STATE_REQ_EQUAL,
-  UDS_NEW_STATE_REQ_LESS_OR_EQUAL,
-  UDS_NEW_STATE_REQ_GREATER_OR_EQUAL,
-};
-
-struct uds_new_state_requirements {
-  enum uds_new_state_requirement_type session_type_req;
-  uint8_t session_type;
-};
 
 /**
  * @brief opaque data. used internally
@@ -181,6 +163,8 @@ struct uds_new_registration_t {
   _write_check,                                                       \
   _write                                                              \
 )                                                                     \
+  _Static_assert(_read_check != NULL, "read_check cannot be NULL");   \
+  _Static_assert(_read != NULL, "read action cannot be NULL");        \
   STRUCT_SECTION_ITERABLE(uds_new_registration_t,                     \
         _UDS_CAT_EXPAND(__uds_new_registration_id, _data_id)) = {     \
     .instance = _instance,                                            \

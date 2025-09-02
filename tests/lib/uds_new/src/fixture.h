@@ -14,7 +14,7 @@ DECLARE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 
 DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
                         data_id_check_fn,
-                        struct uds_new_context *const,
+                        const struct uds_new_context *const,
                         bool *);
 
 DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
@@ -32,32 +32,15 @@ extern const uint16_t data_id_rw_duplicated1;
 extern const uint16_t data_id_rw_duplicated2;
 extern uint8_t data_id_rw_duplicated_data[4];
 
-enum callback_type {
-  DATA_ID_CHECK,
-  DATA_ID_ACTION,
-};
-
-struct fake_function_args {
-  enum callback_type type;
-  union {
-    struct {
-      const struct uds_new_context *const ctx;
-      bool *result;
-    } data_id_check;
-    struct {
-      struct uds_new_context *const ctx;
-      bool *result;
-    } data_id_action;
-  };
-};
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+extern bool test_dynamic_registration_check_invoked;
+extern bool test_dynamic_registration_action_invoked;
+#endif  // # CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
 
 struct lib_uds_new_fixture {
   UDSISOTpCConfig_t cfg;
   struct uds_new_instance_t *instance;
   const struct device *can_dev;
-
-  struct fake_function_args fff_args[10];
-  size_t fff_args_count;
 };
 
 /**

@@ -16,6 +16,48 @@ LOG_MODULE_REGISTER(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 #include <ardep/uds_new.h>
 #include <iso14229.h>
 
+UDSErr_t _uds_new_check_and_act_on_event(struct uds_new_instance_t* instance,
+                                         struct uds_new_registration_t* reg,
+                                         uds_new_check_fn check,
+                                         uds_new_action_fn action,
+                                         UDSEvent_t event,
+                                         void* arg,
+                                         bool* found_at_least_one_match,
+                                         bool* consume_event) {
+  struct uds_new_context context = {.instance = instance,
+                                    .registration = reg,
+                                    .event = event,
+                                    .arg = arg,
+                                    .additional_param = NULL};
+  UDSErr_t ret = UDS_OK;
+
+  bool apply_action = false;
+  if (!check) {
+    *consume_event = false;
+    return ret;
+  }
+  ret = check(&context, &apply_action);
+  if (ret != UDS_OK) {
+    LOG_WRN("Check failed for Registration at addr: %p. Err: %d", reg, ret);
+    *consume_event = false;
+    return ret;
+  }
+
+  if (!apply_action || !action) {
+    *consume_event = false;
+    return ret;
+  }
+
+  ret = action(&context, consume_event);
+  if (ret != UDS_OK) {
+    LOG_WRN("Action failed for Registration at addr: %p. Err: %d", reg, ret);
+    return ret;
+  }
+
+  *found_at_least_one_match = true;
+  return UDS_OK;
+}
+
 UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
                             UDSEvent_t event,
                             void* arg,
@@ -67,11 +109,45 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
   return UDS_NRC_ServiceNotSupported;
 }
 
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+static int uds_new_register_event_handler(
+    struct uds_new_instance_t* inst,
+    struct uds_new_registration_t registration) {
+  registration.instance = inst;
+
+  struct uds_new_registration_t* heap_registration =
+      k_malloc(sizeof(struct uds_new_registration_t));
+  if (heap_registration == NULL) {
+    return -ENOMEM;
+  }
+  *heap_registration = registration;
+
+  if (inst->dynamic_registrations == NULL) {
+    inst->dynamic_registrations = heap_registration;
+    heap_registration->next = NULL;
+  } else {
+    struct uds_new_registration_t* current = inst->dynamic_registrations;
+    while (current->next != NULL) {
+      current = current->next;
+    }
+    current->next = heap_registration;
+    heap_registration->next = NULL;
+  }
+
+  return 0;
+}
+#endif  //  CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+
 int uds_new_init(struct uds_new_instance_t* inst,
                  const UDSISOTpCConfig_t* iso_tp_config,
                  const struct device* can_dev,
                  void* user_context) {
   inst->user_context = user_context;
+
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+  inst->dynamic_registrations = NULL;
+  inst->register_event_handler = uds_new_register_event_handler;
+#endif  //  CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
 
   int ret = iso14229_zephyr_init(&inst->iso14229, iso_tp_config, can_dev, inst);
   if (ret < 0) {

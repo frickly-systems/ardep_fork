@@ -150,7 +150,7 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_both_actions_are_executed) {
   uint32_t data = 0x11223344;
 
   UDSWDBIArgs_t arg = {
-    .dataId = data_id_rw,
+    .dataId = data_id_rw_duplicated1,
     .data = (uint8_t *)&data,
     .len = sizeof(data),
   };
@@ -163,6 +163,54 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_both_actions_are_executed) {
 }
 
 // //////////////////////7
+
+UDSErr_t custom_check_for_0x2E_returns_action_returncode(
+    const struct uds_new_context *const context, bool *apply_action) {
+  if (context->registration->type ==
+          UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER &&
+      context->registration->data_identifier.data_id ==
+          data_id_rw_duplicated1 &&
+      context->event == UDS_EVT_WriteDataByIdent) {
+    *apply_action = true;
+  }
+  return UDS_OK;
+}
+
+UDSErr_t custom_action_for_0x2E_returns_action_returncode(
+    struct uds_new_context *const context, bool *consume_event) {
+  if (context->registration->type ==
+          UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER &&
+      context->registration->data_identifier.data_id ==
+          data_id_rw_duplicated1 &&
+      context->event == UDS_EVT_WriteDataByIdent) {
+    *consume_event = false;
+    return UDS_NRC_GeneralProgrammingFailure;
+  }
+  return UDS_OK;
+}
+
+ZTEST_F(lib_uds_new, test_0x2E_write_by_id_returns_action_returncode) {
+  struct uds_new_instance_t *instance = fixture->instance;
+
+  data_id_check_fn_fake.custom_fake =
+      custom_check_for_0x2E_returns_action_returncode;
+  data_id_action_fn_fake.custom_fake =
+      custom_action_for_0x2E_returns_action_returncode;
+
+  uint32_t data = 0x11223344;
+
+  UDSWDBIArgs_t arg = {
+    .dataId = data_id_rw,
+    .data = (uint8_t *)&data,
+    .len = sizeof(data),
+  };
+
+  int ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &arg);
+  zassert_equal(ret, UDS_NRC_GeneralProgrammingFailure);
+
+  zassert_true(data_id_check_fn_fake.call_count >= 1);
+  zassert_equal(data_id_action_fn_fake.call_count, 1);
+}
 
 // //////////////////////7
 #ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
@@ -222,32 +270,35 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_dynamic_registration) {
   zassert_true(test_dynamic_registration_action_invoked);
 }
 
-// //////////////////////7
+//////////////////////7
 
-// ZTEST_F(lib_uds_new,
-//         test_0x2E_write_by_id_dynamic_registration_with_no_read_fn_smoke_test)
-//         {
-//   struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(
+    lib_uds_new,
+    test_0x2E_write_by_id_dynamic_registration_with_no_write_fn_smoke_test) {
+  struct uds_new_instance_t *instance = fixture->instance;
 
-//   struct uds_new_registration_t reg;
-//   reg.type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER;
-//   reg.data_identifier.data_id = UDS_UNIQUE_DATA_ID;
-//   reg.data_identifier.read.check = NULL;
-//   reg.data_identifier.read.action = NULL;
-//   reg.data_identifier.write.check = NULL;
-//   reg.data_identifier.write.action = NULL;
+  struct uds_new_registration_t reg;
+  reg.type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER;
+  reg.data_identifier.data_id = UDS_UNIQUE_DATA_ID;
+  reg.data_identifier.read.check = NULL;
+  reg.data_identifier.read.action = NULL;
+  reg.data_identifier.write.check = NULL;
+  reg.data_identifier.write.action = NULL;
 
-//   int ret = instance->register_event_handler(instance, reg);
-//   zassert_ok(ret);
+  int ret = instance->register_event_handler(instance, reg);
+  zassert_ok(ret);
 
-//   UDSWDBIArgs_t arg = {
-//     .dataId = UDS_UNIQUE_DATA_ID,
-//     .copy = copy,
-//   };
+  uint32_t data = 0x11223344;
 
-//   ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &arg);
-//   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
-// }
-// //////////////////////7
+  UDSWDBIArgs_t arg = {
+    .dataId = data_id_rw,
+    .data = (uint8_t *)&data,
+    .len = sizeof(data),
+  };
 
-// #endif  // CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+  ret = receive_event(instance, UDS_EVT_WriteDataByIdent, &arg);
+  zassert_equal(ret, UDS_NRC_RequestOutOfRange);
+}
+//////////////////////7
+
+#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION

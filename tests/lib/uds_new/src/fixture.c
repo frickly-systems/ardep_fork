@@ -111,6 +111,12 @@ void assert_copy_data(const uint8_t *data, uint32_t len) {
   zassert_mem_equal(copied_data, data, len);
 }
 
+UDSErr_t receive_event(struct uds_new_instance_t *inst,
+                       UDSEvent_t event,
+                       void *args) {
+  return inst->iso14229.event_callback(&inst->iso14229, event, args, inst);
+}
+
 static uint8_t custom_copy(UDSServer_t *server,
                            const void *data,
                            uint16_t len) {
@@ -157,10 +163,23 @@ static void uds_new_before(void *f) {
   copied_len = 0;
 }
 
-UDSErr_t receive_event(struct uds_new_instance_t *inst,
-                       UDSEvent_t event,
-                       void *args) {
-  return inst->iso14229.event_callback(&inst->iso14229, event, args, inst);
+static void uds_new_after(void *f) {
+  struct lib_uds_new_fixture *fixture = f;
+
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+  struct uds_new_registration_t *next =
+      fixture->instance->dynamic_registrations;
+
+  // Free all dynamically registered event handler
+  while (next != NULL) {
+    struct uds_new_registration_t *current = next;
+    next = current->next;
+    k_free(current);
+  }
+
+  fixture->instance->dynamic_registrations = NULL;
+#endif
 }
 
-ZTEST_SUITE(lib_uds_new, NULL, uds_new_setup, uds_new_before, NULL, NULL);
+ZTEST_SUITE(
+    lib_uds_new, NULL, uds_new_setup, uds_new_before, uds_new_after, NULL);

@@ -116,7 +116,7 @@ UDSErr_t handle_write_memory_by_address(struct uds_new_instance_t* instance,
     return UDS_NRC_RequestOutOfRange;
   }
 
-  //memmove((void*)mem_addr, args->data, args->memSize);
+  memmove((void*)mem_addr, args->data, args->memSize);
 
   LOG_DBG("Write Memory By Address: Successfully copied %zu bytes to 0x%08lX",
           args->memSize, (unsigned long)mem_addr);

@@ -256,21 +256,10 @@ bool uds_new_filter_for_data_by_id_event(UDSEvent_t event);
 #define _UDS_CAT(a, b) a##b
 #define _UDS_CAT_EXPAND(a, b) _UDS_CAT(a, b)
 
-
-/**
- * @brief Register a new ecu reset event handler
- * 
- * @param _instance Pointer to associated the UDS server instance
- * @param _context Optional context provided by the user
- * @param _reset_type type of reset as defined in ISO 14229-1 10.3.2.1
- * @param _ecu_reset_check Check if the `_ecu_reset` action should be executed
- * @param _ecu_reset Execute the `_ecu_reset` action for the event
- * @param _do_scheduled_reset_check Check if the `_do_scheduled_reset` action
- *        should be executed
- * @param _do_scheduled_reset Execute the `_do_scheduled_reset` action for the
- *        event
- */
-#define UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                  \
+// Internal definition without asserts
+// Otherwise the UDS_NEW_REGISTER_ECU_HARD_RESET_HANDLER macro
+// will generate compile time errors
+#define _UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                 \
   _instance,                                                                 \
   _context,                                                                  \
   _reset_type,                                                               \
@@ -279,15 +268,8 @@ bool uds_new_filter_for_data_by_id_event(UDSEvent_t event);
   _do_scheduled_reset_check,                                                 \
   _do_scheduled_reset                                                        \
 )                                                                            \
-  _Static_assert(_ecu_reset_check != NULL,                                   \
-                 "ecu_reset_check cannot be NULL");                          \
-  _Static_assert(_ecu_reset != NULL, "ecu_reset action cannot be NULL");     \
-  _Static_assert(_do_scheduled_reset_check != NULL,                          \
-                 "do_scheduled_reset_check cannot be NULL");                 \
-  _Static_assert(_do_scheduled_reset != NULL,                                \
-                 "do_scheduled_reset_action cannot be NULL");                \
   STRUCT_SECTION_ITERABLE(uds_new_registration_t,                            \
-        _UDS_CAT_EXPAND(__uds_new_registration_id, _data_id)) = {            \
+        _UDS_CAT_EXPAND(__uds_new_registration_id, _reset_type)) = {         \
     .instance = _instance,                                                   \
     .type = UDS_NEW_REGISTRATION_TYPE__ECU_RESET,                            \
     .applies_to_event = uds_new_filter_for_ecu_reset_event,                  \
@@ -305,6 +287,45 @@ bool uds_new_filter_for_data_by_id_event(UDSEvent_t event);
     }                                                                        \
   };
 
+
+/**
+ * @brief Register a new ecu reset event handler
+ * 
+ * @param _instance Pointer to associated the UDS server instance
+ * @param _context Optional context provided by the user
+ * @param _reset_type type of reset as defined in ISO 14229-1 10.3.2.1
+ * @param _ecu_reset_check Check if the `_ecu_reset` action should be executed
+ * @param _ecu_reset Execute the `_ecu_reset` action for the event
+ * @param _do_scheduled_reset_check Check if the `_do_scheduled_reset` action
+ *        should be executed
+ * @param _do_scheduled_reset Execute the `_do_scheduled_reset` action for the
+ *        event
+ */
+#define UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                   \
+  _instance,                                                                  \
+  _context,                                                                   \
+  _reset_type,                                                                \
+  _ecu_reset_check,                                                           \
+  _ecu_reset,                                                                 \
+  _do_scheduled_reset_check,                                                  \
+  _do_scheduled_reset                                                         \
+)                                                                             \
+  _Static_assert(_ecu_reset_check != NULL, "ecu_reset_check cannot be NULL"); \
+  _Static_assert(_ecu_reset != NULL, "ecu_reset action cannot be NULL");      \
+  _Static_assert(_do_scheduled_reset_check != NULL,                           \
+                 "do_scheduled_reset_check cannot be NULL");                  \
+  _Static_assert(_do_scheduled_reset != NULL,                                 \
+                 "do_scheduled_reset_action cannot be NULL");                 \
+_UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                          \
+  _instance,                                                                  \
+  _context,                                                                   \
+  _reset_type,                                                                \
+  _ecu_reset_check,                                                           \
+  _ecu_reset,                                                                 \
+  _do_scheduled_reset_check,                                                  \
+  _do_scheduled_reset                                                         \
+)        
+
 /**
  * @brief Register the default ECU Reset event handler for a hard reset.
  * 
@@ -313,7 +334,7 @@ bool uds_new_filter_for_data_by_id_event(UDSEvent_t event);
 #define UDS_NEW_REGISTER_ECU_HARD_RESET_HANDLER(                             \
   _instance                                                                  \
 )                                                                            \
-  UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                        \
+  _UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                       \
     _instance,                                                               \
     NULL,                                                                    \
     ECU_RESET_HARD,                                                          \

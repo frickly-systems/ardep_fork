@@ -53,7 +53,7 @@ UDSErr_t uds_new_action_ecu_hard_reset(struct uds_new_context* const context,
   UDSECUResetArgs_t* args = context->arg;
 
   // Issue reset just after Confirmation to ECU Reset request
-  args->powerDownTimeMillis = 0;
+  args->powerDownTimeMillis = context->instance->iso14229.server.p2_ms;
   *consume_event = true;
   return UDS_OK;
 }

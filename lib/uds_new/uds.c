@@ -112,15 +112,16 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
   switch (event) {
     case UDS_EVT_DiagSessCtrl:
       break;
-    case UDS_EVT_EcuReset: {
-#ifdef CONFIG_UDS_NEW_ENABLE_RESET
-      UDSECUResetArgs_t* args = arg;
+    case UDS_EVT_EcuReset:
+      return uds_new_handle_event(instance, event, arg,
+                                  uds_new_get_check_for_ecu_reset,
+                                  uds_new_get_action_for_ecu_reset);
 
-      return handle_ecu_reset_event(instance, (enum ecu_reset_type)args->type);
-#else
-      return UDS_NRC_ServiceNotSupported;
-#endif
-    }
+    case UDS_EVT_DoScheduledReset:
+      return uds_new_handle_event(
+          instance, event, arg, uds_new_get_check_for_execute_scheduled_reset,
+          uds_new_get_action_for_execute_scheduled_reset);
+
     case UDS_EVT_ReadDataByIdent:
       return uds_new_handle_event(
           instance, event, arg, uds_new_get_check_for_read_data_by_identifier,
@@ -145,7 +146,6 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
     case UDS_EVT_TransferData:
     case UDS_EVT_RequestTransferExit:
     case UDS_EVT_SessionTimeout:
-    case UDS_EVT_DoScheduledReset:
     case UDS_EVT_RequestFileTransfer:
     case UDS_EVT_Custom:
     case UDS_EVT_Poll:

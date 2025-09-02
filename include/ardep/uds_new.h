@@ -156,6 +156,7 @@ int uds_new_init(struct uds_new_instance_t *inst,
                  void *user_context);
 
 enum uds_new_registration_type_t {
+  UDS_NEW_REGISTRATION_TYPE__ECU_RESET,
   UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,
 };
 
@@ -180,6 +181,11 @@ struct uds_new_registration_t {
 
   union {
     struct {
+      struct uds_new_actor ecu_reset;
+      struct uds_new_actor execute_scheduled_reset;
+      uint8_t type;
+    } ecu_reset;
+    struct {
       uint16_t data_id;
       struct uds_new_actor read;
       struct uds_new_actor write;
@@ -199,6 +205,72 @@ struct uds_new_registration_t {
 
 #define _UDS_CAT(a, b) a##b
 #define _UDS_CAT_EXPAND(a, b) _UDS_CAT(a, b)
+
+
+/**
+ * @brief Register a new ecu reset event handler.
+ * 
+ * @param _instance Pointer to associated the UDS server instance.
+ * @param _context Optional context provided by the user.
+ * @param _reset_type type of reset as defined in ISO 14229-1 10.3.2.1
+ * @param _ecu_reset_check Check if the `_ecu_reset` action should be executed.
+ * @param _ecu_reset Execute the `_ecu_reset` action for the event.
+ * @param _do_scheduled_reset_check Check if the `_do_scheduled_reset` action
+ *        should be executed.
+ * @param _do_scheduled_reset Execute the `_do_scheduled_reset` action for the
+ *        event.
+ */
+#define UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                  \
+  _instance,                                                                 \
+  _context,                                                                  \
+  _reset_type,                                                               \
+  _ecu_reset_check,                                                          \
+  _ecu_reset,                                                                \
+  _do_scheduled_reset_check,                                                 \
+  _do_scheduled_reset                                                        \
+)                                                                            \
+  _Static_assert(_ecu_reset_check != NULL,                                   \
+                 "ecu_reset_check cannot be NULL");                          \
+  _Static_assert(_ecu_reset != NULL, "ecu_reset action cannot be NULL");     \
+  _Static_assert(_do_scheduled_reset_check != NULL,                          \
+                 "do_scheduled_reset_check cannot be NULL");                 \
+  _Static_assert(_do_scheduled_reset != NULL,                                \
+                 "do_scheduled_reset_action cannot be NULL");                \
+  STRUCT_SECTION_ITERABLE(uds_new_registration_t,                            \
+        _UDS_CAT_EXPAND(__uds_new_registration_id, _data_id)) = {            \
+    .instance = _instance,                                                   \
+    .type = UDS_NEW_REGISTRATION_TYPE__ECU_RESET,                            \
+    .user_data = _context,                                                   \
+    .ecu_reset = {                                                           \
+      .type = _reset_type,                                                   \
+      .ecu_reset = {                                                         \
+        .check = _ecu_reset_check,                                           \
+        .action = _ecu_reset,                                                \
+      },                                                                     \
+      .execute_scheduled_reset = {                                           \
+        .check = _do_scheduled_reset_check,                                  \
+        .action = _do_scheduled_reset,                                       \
+      }                                                                      \
+    }                                                                        \
+  };
+
+/**
+ * @brief Register the default ECU Reset event handler for a hard reset.
+ * 
+ * @param _instance Pointer to associated the UDS server instance.
+ */
+#define UDS_NEW_REGISTER_ECU_HARD_RESET_HANDLER(                             \
+  _instance                                                                  \
+)                                                                            \
+  UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                        \
+    _instance,                                                               \
+    NULL,                                                                    \
+    ECU_RESET_HARD,                                                          \
+    uds_new_check_ecu_hard_reset,                                            \
+    uds_new_action_ecu_hard_reset,                                           \
+    uds_new_check_execute_scheduled_reset,                                   \
+    uds_new_action_execute_scheduled_reset                                   \
+  )
 
 /**
  * @brief Register a new static data identifier

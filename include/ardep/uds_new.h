@@ -78,6 +78,12 @@ typedef UDSErr_t (*uds_new_check_fn)(
 typedef UDSErr_t (*uds_new_action_fn)(struct uds_new_context *const context,
                                       bool *consume_event);
 
+typedef uds_new_check_fn (*uds_new_get_check_fn)(
+    const struct uds_new_registration_t *const reg);
+
+typedef uds_new_action_fn (*uds_new_get_action_fn)(
+    const struct uds_new_registration_t *const reg);
+
 /**
  * @brief Associates a check with an action
  */

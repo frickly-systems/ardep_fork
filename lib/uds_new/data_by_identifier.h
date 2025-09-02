@@ -14,10 +14,14 @@
 
 #pragma once
 
-UDSErr_t uds_new_handle_read_data_by_identifier(
-    struct uds_new_instance_t* instance, UDSEvent_t event, void* arg);
+uds_new_check_fn uds_new_get_check_for_read_data_by_identifier(
+    const struct uds_new_registration_t* const reg);
+uds_new_action_fn uds_new_get_action_for_read_data_by_identifier(
+    const struct uds_new_registration_t* const reg);
 
-UDSErr_t uds_new_handle_write_data_by_identifier(
-    struct uds_new_instance_t* instance, UDSEvent_t event, void* arg);
+uds_new_check_fn uds_new_get_check_for_write_data_by_identifier(
+    const struct uds_new_registration_t* const reg);
+uds_new_action_fn uds_new_get_action_for_write_data_by_identifier(
+    const struct uds_new_registration_t* const reg);
 
 #endif  // ARDEP_LIB_UDS_NEW_DATA_BY_IDENTIFIER_H

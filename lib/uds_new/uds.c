@@ -58,6 +58,45 @@ UDSErr_t _uds_new_check_and_act_on_event(struct uds_new_instance_t* instance,
   return UDS_OK;
 }
 
+UDSErr_t uds_new_handle_event(struct uds_new_instance_t* instance,
+                              UDSEvent_t event,
+                              void* arg,
+                              uds_new_get_check_fn get_check,
+                              uds_new_get_action_fn get_action) {
+  bool found_at_least_one_match = false;
+
+  STRUCT_SECTION_FOREACH (uds_new_registration_t, reg) {
+    bool consume_event = true;
+    int ret = _uds_new_check_and_act_on_event(
+        instance, reg, get_check(reg), get_action(reg), event, arg,
+        &found_at_least_one_match, &consume_event);
+    if (consume_event || ret != UDS_OK) {
+      return ret;
+    }
+  }
+
+#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+  struct uds_new_registration_t* reg = instance->dynamic_registrations;
+  while (reg != NULL) {
+    bool consume_event = false;
+    int ret = _uds_new_check_and_act_on_event(
+        instance, reg, get_check(reg), get_action(reg), event, arg,
+        &found_at_least_one_match, &consume_event);
+    if (consume_event || ret != UDS_OK) {
+      return ret;
+    }
+
+    reg = reg->next;
+  }
+#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+
+  if (!found_at_least_one_match) {
+    return UDS_NRC_RequestOutOfRange;
+  }
+
+  return UDS_PositiveResponse;
+}
+
 UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
                             UDSEvent_t event,
                             void* arg,
@@ -78,7 +117,9 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
 #endif
     }
     case UDS_EVT_ReadDataByIdent:
-      return uds_new_handle_read_data_by_identifier(instance, event, arg);
+      return uds_new_handle_event(
+          instance, event, arg, uds_new_get_check_for_read_data_by_identifier,
+          uds_new_get_action_for_read_data_by_identifier);
 
     case UDS_EVT_ReadMemByAddr: {
       UDSReadMemByAddrArgs_t* args = arg;
@@ -88,7 +129,9 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
     case UDS_EVT_SecAccessRequestSeed:
     case UDS_EVT_SecAccessValidateKey:
     case UDS_EVT_WriteDataByIdent:
-      return uds_new_handle_write_data_by_identifier(instance, event, arg);
+      return uds_new_handle_event(
+          instance, event, arg, uds_new_get_check_for_write_data_by_identifier,
+          uds_new_get_action_for_write_data_by_identifier);
     case UDS_EVT_RoutineCtrl:
     case UDS_EVT_RequestDownload:
     case UDS_EVT_RequestUpload:

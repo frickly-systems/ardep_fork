@@ -10,7 +10,7 @@ LOG_MODULE_REGISTER(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 
 #include "data_by_identifier.h"
 #include "ecu_reset.h"
-#include "read_memory_by_address.h"
+#include "memory_by_address.h"
 
 #include <ardep/iso14229.h>
 #include <ardep/uds_new.h>
@@ -136,9 +136,12 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
           instance, event, arg, uds_new_get_check_for_write_data_by_identifier,
           uds_new_get_action_for_write_data_by_identifier);
     case UDS_EVT_Err:
+    case UDS_EVT_WriteMemByAddr: {
+      UDSWriteMemByAddrArgs_t* args = arg;
+      return handle_write_memory_by_address(instance, args);
+    }
     case UDS_EVT_CommCtrl:
     case UDS_EVT_SecAccessRequestSeed:
-    case UDS_EVT_WriteMemByAddr:
     case UDS_EVT_SecAccessValidateKey:
     case UDS_EVT_RoutineCtrl:
     case UDS_EVT_RequestDownload:

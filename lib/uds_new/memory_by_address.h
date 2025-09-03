@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) Frickly Systems GmbH
+ * Copyright (C) MBition GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef ARDEP_LIB_UDS_NEW_MEMORY_BY_ADDRESS_H
 #define ARDEP_LIB_UDS_NEW_MEMORY_BY_ADDRESS_H
 

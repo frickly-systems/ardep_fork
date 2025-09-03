@@ -165,12 +165,12 @@ enum uds_new_registration_type_t {
  */
 struct uds_new_registration_t {
   /**
-   * @brief Instance the UDS Event handler is registered to.
+   * @brief Instance the UDS Event handler is registered to
    */
   struct uds_new_instance_t *instance;
 
   /**
-   * @brief Type of event handler.
+   * @brief Type of event handler
    */
   enum uds_new_registration_type_t type;
 

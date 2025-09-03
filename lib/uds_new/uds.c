@@ -180,6 +180,7 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
       UDSWriteMemByAddrArgs_t* args = arg;
       return handle_write_memory_by_address(instance, args);
     }
+    case UDS_EVT_Err:
     case UDS_EVT_CommCtrl:
     case UDS_EVT_SecAccessRequestSeed:
     case UDS_EVT_SecAccessValidateKey:

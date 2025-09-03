@@ -164,6 +164,7 @@ int uds_new_init(struct uds_new_instance_t *inst,
 
 enum uds_new_registration_type_t {
   UDS_NEW_REGISTRATION_TYPE__ECU_RESET,
+  UDS_NEW_REGISTRATION_TYPE__MEMORY,
   UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,
 };
 
@@ -329,7 +330,7 @@ bool uds_new_filter_for_memory_by_addr(UDSEvent_t event);
       /* Use a counter to generate unique names for the iterable section */   \
         _UDS_CAT_EXPAND(__uds_new_registration_id_memory_, __COUNTER__)) = {  \
     .instance = _instance,                                                    \
-    .type = UDS_NEW_REGISTRATION_TYPE__ECU_RESET,                             \
+    .type = UDS_NEW_REGISTRATION_TYPE__MEMORY,                                \
     .applies_to_event = uds_new_filter_for_memory_by_addr,                    \
     .user_data = _context,                                                    \
     .memory = {                                                               \

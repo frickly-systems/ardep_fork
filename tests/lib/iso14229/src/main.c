@@ -38,7 +38,7 @@ static const uint8_t uds_mem_data[255] = {
   0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF,
 };
 
-ZTEST_F(lib_iso14229, test_0x10_diag_session_ctrl) {
+ZTEST_F(lib_iso14229, test_0x10_diag_session_ctrl_programming_session) {
   struct iso14229_zephyr_instance *instance = &fixture->instance;
 
   uint8_t request_data[] = {
@@ -66,6 +66,38 @@ ZTEST_F(lib_iso14229, test_0x10_diag_session_ctrl) {
   };
   assert_send_phy_can_frame_array(fixture, 0, response_data);
   zassert_equal(fake_can_send_fake.call_count, 1);
+  zassert_equal(instance->server.sessionType, 0x02);
+}
+
+ZTEST_F(lib_iso14229, test_0x10_diag_session_ctrl_extended_diag_session) {
+  struct iso14229_zephyr_instance *instance = &fixture->instance;
+
+  uint8_t request_data[] = {
+    0x02,  // PCI (single frame, 2 bytes of data)
+    0x10,  // SID (DiagnosticSessionControl)
+    0x03,  // EXTDS (Extended Diagnostic Session)
+  };
+
+  receive_phys_can_frame_array(fixture, request_data);
+  advance_time_and_tick_thread(instance);
+
+  zassert_equal(test_uds_callback_fake.call_count, 1);
+  zassert_equal(test_uds_callback_fake.arg1_val, UDS_EVT_DiagSessCtrl);
+  advance_time_and_tick_thread(instance);
+
+  uint8_t response_data[] = {
+    0x06,                             // PCI   (single frame, 6 bytes of data)
+    0x50,                             // DSCPR (positive response to 0x10)
+    0x03,                             // EXTDS (extended diagnostic session)
+    UDS_CLIENT_DEFAULT_P2_MS >> 8,    // SPREC (p2 upper byte)
+    UDS_CLIENT_DEFAULT_P2_MS & 0xFF,  // SPREC (p2 lower byte)
+    (uint8_t)((UDS_CLIENT_DEFAULT_P2_STAR_MS / 10) >>
+              8),                                   // SPREC (p2* upper byte)
+    (uint8_t)(UDS_CLIENT_DEFAULT_P2_STAR_MS / 10),  // SPREC (p2* lower byte)
+  };
+  assert_send_phy_can_frame_array(fixture, 0, response_data);
+  zassert_equal(fake_can_send_fake.call_count, 1);
+  zassert_equal(instance->server.sessionType, 0x03);
 }
 
 UDSErr_t test_0x10_diag_session_ctrl_not_supported_uds_callback(

@@ -247,6 +247,38 @@ UDSErr_t uds_new_action_execute_scheduled_reset(
     struct uds_new_context *const context, bool *consume_event);
 
 /**
+ * @brief Default check function for the default memory read handler
+ *
+ * Checks RAM and Flash memory for read access
+ */
+UDSErr_t uds_new_check_default_memory_by_addr_read(
+    const struct uds_new_context *const context, bool *apply_action);
+
+/**
+ * @brief Default action function for the default memory read handler
+ *
+ * Reads from RAM and Flash
+ */
+UDSErr_t uds_new_action_default_memory_by_addr_read(
+    struct uds_new_context *const context, bool *consume_event);
+
+/**
+ * @brief Default check function for the default memory write handler
+ *
+ * Checks RAM and Flash memory for write access
+ */
+UDSErr_t uds_new_check_default_memory_by_addr_write(
+    const struct uds_new_context *const context, bool *apply_action);
+
+/**
+ * @brief Default action function for the default memory write handler
+ *
+ * Writes to RAM and Flash
+ */
+UDSErr_t uds_new_action_default_memory_by_addr_write(
+    struct uds_new_context *const context, bool *consume_event);
+
+/**
  * @brief Filter for ECU Reset event handler registrations
  *
  * @param[in] event the event to check against
@@ -291,8 +323,7 @@ bool uds_new_filter_for_memory_by_addr(UDSEvent_t event);
   _read_check,                                                                \
   _read,                                                                      \
   _write_check,                                                               \
-  _write,                                                                     \
-  _filter                                                                     \
+  _write                                                                      \
 )                                                                             \
   STRUCT_SECTION_ITERABLE(uds_new_registration_t,                             \
       /* Use a counter to generate unique names for the iterable section */   \
@@ -318,11 +349,10 @@ bool uds_new_filter_for_memory_by_addr(UDSEvent_t event);
   UDS_NEW_REGISTER_MEMORY_HANDLER(                                            \
     _instance,                                                                \
     NULL,                                                                     \
-    _read_check,                                                              \
-    _read,                                                                    \
-    _write_check,                                                             \
-    _write,                                                                   \
-    _filter                                                                   \
+    uds_new_check_default_memory_by_addr_read,                                \
+    uds_new_action_default_memory_by_addr_read,                               \
+    uds_new_check_default_memory_by_addr_write,                               \
+    uds_new_action_default_memory_by_addr_write                               \
   )
 
 /**

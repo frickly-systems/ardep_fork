@@ -309,7 +309,7 @@ bool uds_new_filter_for_memory_by_addr(UDSEvent_t event);
 
 
 /**
- * @brief Register a new ecu reset event handler
+ * @brief Register a new memory by address event handler
  * 
  * @param _instance Pointer to associated the UDS server instance
  * @param _context Optional context provided by the user
@@ -345,7 +345,10 @@ bool uds_new_filter_for_memory_by_addr(UDSEvent_t event);
     }                                                                         \
   };
 
-  
+/**
+ * @brief Register memory by address event handler with ability to read/write
+ *        to/from flash and ram.
+ */  
 #define UDS_NEW_REGISTER_MEMORY_DEFAULT_HANDLER(_instance)                    \
   UDS_NEW_REGISTER_MEMORY_HANDLER(                                            \
     _instance,                                                                \

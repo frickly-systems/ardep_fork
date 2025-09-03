@@ -10,7 +10,6 @@ LOG_MODULE_REGISTER(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
 
 #include "data_by_identifier.h"
 #include "ecu_reset.h"
-#include "memory_by_address.h"
 
 #include <ardep/iso14229.h>
 #include <ardep/uds_new.h>

@@ -201,6 +201,10 @@ struct uds_new_registration_t {
       struct uds_new_actor write;
       void *user_context;
     } data_identifier;
+    struct {
+      struct uds_new_actor read;
+      struct uds_new_actor write;
+    } memory;
   };
 
   /**
@@ -245,17 +249,74 @@ UDSErr_t uds_new_action_execute_scheduled_reset(
 bool uds_new_filter_for_ecu_reset_event(UDSEvent_t event);
 
 /**
- * @brief Filter for Read/Write Data by ID event handler registrations
+ * @brief Filter for Read/Write data by ID event handler registrations
  *
  * see @fn uds_new_filter_for_ecu_reset_event for details
  */
 bool uds_new_filter_for_data_by_id_event(UDSEvent_t event);
+
+/**
+ * @brief Filter for Read/Write memory by address event handler registrations
+ *
+ * see @fn uds_new_filter_for_ecu_reset_event for details
+ */
+bool uds_new_filter_for_memory_by_addr(UDSEvent_t event);
 
 // clang-format off
 
 #define _UDS_CAT(a, b) a##b
 #define _UDS_CAT_EXPAND(a, b) _UDS_CAT(a, b)
 
+
+/**
+ * @brief Register a new ecu reset event handler
+ * 
+ * @param _instance Pointer to associated the UDS server instance
+ * @param _context Optional context provided by the user
+ * @param _read_check Check if the `_read` action should be executed
+ * @param _read Execute a read for the event
+ * @param _write_check Check if the `_write` action should be executed
+ * @param _write Execute a write for the event
+ */
+#define UDS_NEW_REGISTER_MEMORY_HANDLER(                                      \
+  _instance,                                                                  \
+  _context,                                                                   \
+  _read_check,                                                                \
+  _read,                                                                      \
+  _write_check,                                                               \
+  _write,                                                                     \
+  _filter                                                                     \
+)                                                                             \
+  STRUCT_SECTION_ITERABLE(uds_new_registration_t,                             \
+      /* Use a counter to generate unique names for the iterable section */   \
+        _UDS_CAT_EXPAND(__uds_new_registration_id_memory_, __COUNTER__)) = {  \
+    .instance = _instance,                                                    \
+    .type = UDS_NEW_REGISTRATION_TYPE__ECU_RESET,                             \
+    .applies_to_event = uds_new_filter_for_memory_by_addr,                    \
+    .user_data = _context,                                                    \
+    .memory = {                                                               \
+      .read = {                                                               \
+        .check = _read_check,                                                 \
+        .action = _read,                                                      \
+      },                                                                      \
+      .write = {                                                              \
+        .check = _write_check,                                                \
+        .action = _write,                                                     \
+      },                                                                      \
+    }                                                                         \
+  };
+
+  
+#define UDS_NEW_REGISTER_MEMORY_DEFAULT_HANDLER(_instance)                    \
+  UDS_NEW_REGISTER_MEMORY_HANDLER(                                            \
+    _instance,                                                                \
+    NULL,                                                                     \
+    _read_check,                                                              \
+    _read,                                                                    \
+    _write_check,                                                             \
+    _write,                                                                   \
+    _filter                                                                   \
+  )
 
 /**
  * @brief Register a new ecu reset event handler
@@ -301,7 +362,7 @@ bool uds_new_filter_for_data_by_id_event(UDSEvent_t event);
 /**
  * @brief Register the default ECU Reset event handler for a hard reset.
  * 
- * @param _instance Pointer to associated the UDS server instance.
+ * @param _instance Pointer to associated the UDS server instance
  */
 #define UDS_NEW_REGISTER_ECU_HARD_RESET_HANDLER(                             \
   _instance                                                                  \
@@ -322,9 +383,9 @@ bool uds_new_filter_for_data_by_id_event(UDSEvent_t event);
  * @param _instance Pointer to associated the UDS server instance
  * @param _data_id The data identifier to register the handler for
  * @param data_ptr Custom context oder data the handle the event
- * @param _read_check Check if the `_read` action should be executed.
+ * @param _read_check Check if the `_read` action should be executed
  * @param _read Execute a read for the event
- * @param _write_check Check if the `_write` action should be executed.
+ * @param _write_check Check if the `_write` action should be executed
  * @param _write Execute a write for the event
  * @param _context Optional context provided by the user
  * 

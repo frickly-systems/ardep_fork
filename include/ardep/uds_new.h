@@ -408,7 +408,7 @@ bool uds_new_filter_for_memory_by_addr(UDSEvent_t event);
 #define UDS_NEW_REGISTER_ECU_HARD_RESET_HANDLER(                             \
   _instance                                                                  \
 )                                                                            \
-  _UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                       \
+  UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                        \
     _instance,                                                               \
     NULL,                                                                    \
     ECU_RESET_HARD,                                                          \

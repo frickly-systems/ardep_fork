@@ -256,37 +256,6 @@ bool uds_new_filter_for_data_by_id_event(UDSEvent_t event);
 #define _UDS_CAT(a, b) a##b
 #define _UDS_CAT_EXPAND(a, b) _UDS_CAT(a, b)
 
-// Internal definition without asserts
-// Otherwise the UDS_NEW_REGISTER_ECU_HARD_RESET_HANDLER macro
-// will generate compile time errors
-#define _UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                 \
-  _instance,                                                                 \
-  _context,                                                                  \
-  _reset_type,                                                               \
-  _ecu_reset_check,                                                          \
-  _ecu_reset,                                                                \
-  _do_scheduled_reset_check,                                                 \
-  _do_scheduled_reset                                                        \
-)                                                                            \
-  STRUCT_SECTION_ITERABLE(uds_new_registration_t,                            \
-        _UDS_CAT_EXPAND(__uds_new_registration_id, _reset_type)) = {         \
-    .instance = _instance,                                                   \
-    .type = UDS_NEW_REGISTRATION_TYPE__ECU_RESET,                            \
-    .applies_to_event = uds_new_filter_for_ecu_reset_event,                  \
-    .user_data = _context,                                                   \
-    .ecu_reset = {                                                           \
-      .type = _reset_type,                                                   \
-      .ecu_reset = {                                                         \
-        .check = _ecu_reset_check,                                           \
-        .action = _ecu_reset,                                                \
-      },                                                                     \
-      .execute_scheduled_reset = {                                           \
-        .check = _do_scheduled_reset_check,                                  \
-        .action = _do_scheduled_reset,                                       \
-      }                                                                      \
-    }                                                                        \
-  };
-
 
 /**
  * @brief Register a new ecu reset event handler
@@ -310,21 +279,24 @@ bool uds_new_filter_for_data_by_id_event(UDSEvent_t event);
   _do_scheduled_reset_check,                                                  \
   _do_scheduled_reset                                                         \
 )                                                                             \
-  _Static_assert(_ecu_reset_check != NULL, "ecu_reset_check cannot be NULL"); \
-  _Static_assert(_ecu_reset != NULL, "ecu_reset action cannot be NULL");      \
-  _Static_assert(_do_scheduled_reset_check != NULL,                           \
-                 "do_scheduled_reset_check cannot be NULL");                  \
-  _Static_assert(_do_scheduled_reset != NULL,                                 \
-                 "do_scheduled_reset_action cannot be NULL");                 \
-_UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                          \
-  _instance,                                                                  \
-  _context,                                                                   \
-  _reset_type,                                                                \
-  _ecu_reset_check,                                                           \
-  _ecu_reset,                                                                 \
-  _do_scheduled_reset_check,                                                  \
-  _do_scheduled_reset                                                         \
-)        
+  STRUCT_SECTION_ITERABLE(uds_new_registration_t,                             \
+        _UDS_CAT_EXPAND(__uds_new_registration_id, _reset_type)) = {          \
+    .instance = _instance,                                                    \
+    .type = UDS_NEW_REGISTRATION_TYPE__ECU_RESET,                             \
+    .applies_to_event = uds_new_filter_for_ecu_reset_event,                   \
+    .user_data = _context,                                                    \
+    .ecu_reset = {                                                            \
+      .type = _reset_type,                                                    \
+      .ecu_reset = {                                                          \
+        .check = _ecu_reset_check,                                            \
+        .action = _ecu_reset,                                                 \
+      },                                                                      \
+      .execute_scheduled_reset = {                                            \
+        .check = _do_scheduled_reset_check,                                   \
+        .action = _do_scheduled_reset,                                        \
+      }                                                                       \
+    }                                                                         \
+  };
 
 /**
  * @brief Register the default ECU Reset event handler for a hard reset.
@@ -369,8 +341,6 @@ _UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                          \
   _write,                                                             \
   _context                                                            \
 )                                                                     \
-  _Static_assert(_read_check != NULL, "read_check cannot be NULL");   \
-  _Static_assert(_read != NULL, "read action cannot be NULL");        \
   STRUCT_SECTION_ITERABLE(uds_new_registration_t,                     \
         _UDS_CAT_EXPAND(__uds_new_registration_id, _data_id)) = {     \
     .instance = _instance,                                            \

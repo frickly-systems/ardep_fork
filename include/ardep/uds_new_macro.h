@@ -225,30 +225,6 @@
       s15, s16, s17, s18, s19, s20, s21, s22, s23)                             \
   _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s24)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_25(                      \
-    i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
-    s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25)                     \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_24(                            \
-      i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, \
-      s15, s16, s17, s18, s19, s20, s21, s22, s23, s24)                        \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s25)
-
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_26(                      \
-    i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
-    s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26)                \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_25(                            \
-      i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, \
-      s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25)                   \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s26)
-
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_27(                      \
-    i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
-    s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26, s27)           \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_26(                            \
-      i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, \
-      s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26)              \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s27)
-
 /* Dispatcher */
 #define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_DISPATCH(n, i, c, k, a, \
                                                                ...)           \

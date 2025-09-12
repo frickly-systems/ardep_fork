@@ -3,8 +3,21 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+menuconfig UDS_LEGACY
+    bool "UDS legacy library"
+    depends on CAN
+    depends on ISOTP
 
+    depends on CAN_MAX_FILTER >= 8
 
-module = UDS
-module-str = uds
-source "subsys/logging/Kconfig.template.log_config"
+    depends on BOOTLOADER_MCUBOOT
+    depends on IMG_MANAGER
+    depends on REBOOT
+
+if UDS_LEGACY
+
+    module = UDS_LEGACY
+    module-str = uds_legacy
+    source "subsys/logging/Kconfig.template.log_config"
+
+endif

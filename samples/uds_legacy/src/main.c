@@ -7,8 +7,8 @@
 
 #include <zephyr/kernel.h>
 
-#if !CONFIG_UDS
-#error "This sample requires UDS"
+#ifndef CONFIG_UDS_LEGACY
+#error "This sample requires the UDS_LEGACY config option to be enabled."
 #endif
 
-int main(void) { printk("Hello UDS!\n"); }
+int main(void) { printk("Hello UDS_LEGACY!\n"); }

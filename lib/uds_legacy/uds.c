@@ -8,7 +8,7 @@
 #include <zephyr/canbus/isotp.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(uds, CONFIG_UDS_LOG_LEVEL);
+LOG_MODULE_REGISTER(uds_legacy, CONFIG_UDS_LEGACY_LOG_LEVEL);
 
 #include "uds.h"
 #include "uds_session.h"

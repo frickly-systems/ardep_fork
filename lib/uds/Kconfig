@@ -6,6 +6,7 @@
 menuconfig UDS
     bool "UDS"
     select ISO14229
+    imply REBOOT
 
 if UDS 
 

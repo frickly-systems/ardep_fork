@@ -72,7 +72,7 @@ UDSErr_t uds_check_execute_scheduled_reset(
 UDSErr_t uds_action_execute_scheduled_reset(struct uds_context* const context,
                                             bool* consume_event) {
   LOG_INF("Executing scheduled hard reset now");
-  // Wait for logging to be processed
+  // give logging a chance to be processed
   k_msleep(1);
   sys_reboot(SYS_REBOOT_COLD);
   LOG_ERR("Error rebooting from ECU hard reset!");

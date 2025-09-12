@@ -18,63 +18,46 @@ from udsoncan.client import Client
 from udsoncan.connections import IsoTPSocketConnection
 from udsoncan.exceptions import (
     NegativeResponseException,
-    InvalidResponseException,
-    UnexpectedResponseException,
 )
-from udsoncan.services import DiagnosticSessionControl, RoutineControl, ECUReset
+from udsoncan.services import DiagnosticSessionControl, ECUReset
 from argparse import ArgumentParser, Namespace
 
 import isotp
 import udsoncan
 
 
-def write_read_memory(client: Client):
+def change_session(client: Client):
+    print("Changing to programming session")
     client.change_session(DiagnosticSessionControl.Session.programmingSession)
-    client.write_memory_by_address(
-        udsoncan.MemoryLocation(
-            address=0x12, memorysize=8, address_format=32, memorysize_format=32
-        ),
-        b"\x12\x34\x56\x78\x9a\xbc\xde\xf0",
-    )
-
-    addr = 2
-    print(f"Reading memory address 0x{addr:02x} with size 0x34:")
-    resp = client.read_memory_by_address(
-        udsoncan.MemoryLocation(
-            address=addr, memorysize=0x34, address_format=32, memorysize_format=32
-        )
-    )
-    print(f"read response: {resp}")
-    print(f"  data: {' '.join(f'{b:02x}' for b in resp.data)}")
-
-    client.routine_control(1337, RoutineControl.ControlType.startRoutine)
-    client.request_download(
-        memory_location=udsoncan.MemoryLocation(
-            address=0x12, memorysize=0x34, address_format=32, memorysize_format=32
-        )
-    )
-
-    # ! important: iso14229 uses 1 as the first sequence number: https://github.com/driftregion/iso14229/blob/4a9394163d817b6ec55c3ad5c8e937bd51efeadf/src/server.c#L441
-    client.transfer_data(sequence_number=1, data=b"\x12\x34\x56\x78")
-    client.transfer_data(sequence_number=2, data=b"\x01\x02\x03\x04")
-
-    client.request_transfer_exit()
-    client.change_session(DiagnosticSessionControl.Session.defaultSession)
+    print("\tChange session successful")
 
 
 def read_write_data_by_identifier(client: Client):
+    print("Data By Identifier:")
 
-    data = client.read_data_by_identifier([0x0100])
-    print(f"Reading data from identifier 0x0100: {data.service_data.values[0x0100]}")
+    data_id: int = 0x0100
+    data = client.read_data_by_identifier([data_id])
+    print(
+        f'\tRead data from identifier {data_id:04X}: "{data.service_data.values[data_id]}"\n'
+    )
 
-    data = client.read_data_by_identifier_first([0x0050])
-    print(f"Reading data from identifier 0x0050: {data}")
+    data_id = 0x0050
+    data = client.read_data_by_identifier_first([data_id])
+    print(f"\tReading data from identifier 0x{data_id:04X}: 0x{data:04X}\n")
 
-    data = client.write_data_by_identifier(0x0050, 0x1234)
-    print("Written data to identifier 0x0050: 0x1234")
+    write_data = 0x1234
+    data = client.write_data_by_identifier(data_id, write_data)
+    print(f"\tWritten data to identifier 0x{data_id:04X}: 0x{write_data:04X}")
 
-    data = client.read_data_by_identifier_first([0x0050])
-    print(f"Reading data from identifier 0x0050: {data}")
+    data = client.read_data_by_identifier_first([data_id])
+    print(f"\tReading data from identifier 0x{data_id:04X}: 0x{data:04X}\n")
+
+    write_data = 0xBEEF
+    data = client.write_data_by_identifier(data_id, write_data)
+    print(f"\tWritten data to identifier 0x{data_id:04X}: 0x{write_data:04X}")
+
+    data = client.read_data_by_identifier_first([data_id])
+    print(f"\tReading data from identifier 0x{data_id:04X}: 0x{data:04X}")
 
 
 def ecu_reset(client: Client):
@@ -138,30 +121,11 @@ def main(args: Namespace):
     }
 
     with Client(conn, config=config, request_timeout=2) as client:
-        # try:
-        #     write_read_memory(client)
-
-        # except NegativeResponseException as e:
-        #     print(
-        #         f"Server refused our request for service {e.response.service.get_name()} "
-        #         f'with code "{e.response.code_name}" (0x{e.response.code:02x})'
-        #     )
-        # except (InvalidResponseException, UnexpectedResponseException) as e:
-        #     print(f"Server sent an invalid payload : {e.response.original_payload}")
-
-        # try:
-        #     read_write_data_by_identifier(client)
-
-        # except NegativeResponseException as e:
-        #     print(
-        #         f"Server refused our request for service {e.response.service.get_name()} "
-        #         f'with code "{e.response.code_name}" (0x{e.response.code:02x})'
-        #     )
-        # except (InvalidResponseException, UnexpectedResponseException) as e:
-        #     print(f"Server sent an invalid payload : {e.response.original_payload}")
+        try_run(lambda: change_session(client))
+        try_run(lambda: read_write_data_by_identifier(client))
 
         if reset:
-            try_run(lambda c: ecu_reset(c), client)
+            try_run(lambda: ecu_reset(client))
 
 
 if __name__ == "__main__":

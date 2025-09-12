@@ -144,7 +144,7 @@ UDSErr_t read_mem_by_addr_impl(struct UDSServer *srv,
 }
 
 int main(void) {
-  printk("ARDEP UDS Sample\n");
+  LOG_INF("ARDEP UDS Sample");
 
   UDSISOTpCConfig_t cfg = {
     // Hardwarea Addresses
@@ -160,25 +160,26 @@ int main(void) {
 
   int err;
   if (!device_is_ready(can_dev)) {
-    printk("CAN device not ready\n");
+    LOG_INF("CAN device not ready");
     return -ENODEV;
   }
 
   err = can_set_mode(can_dev, CAN_MODE_NORMAL);
   if (err) {
-    printk("Failed to set CAN mode: %d\n", err);
+    LOG_ERR("Failed to set CAN mode: %d", err);
     return err;
   }
 
   err = can_start(can_dev);
   if (err) {
-    printk(
+    LOG_ERR(
         "Failed to start CAN device: "
-        "%d\n",
+        "%d",
         err);
     return err;
   }
-  printk("CAN device started\n");
+
+  LOG_INF("CAN device started\n");
 
   instance.iso14229.thread_run(&instance.iso14229);
 }

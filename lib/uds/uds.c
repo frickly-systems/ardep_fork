@@ -69,6 +69,9 @@ UDSErr_t _uds_check_and_act_on_event(struct uds_instance_t* instance,
 
 static UDSErr_t default_nrc_when_no_handler_found(UDSEvent_t event) {
   switch (event) {
+    case UDS_EVT_DiagSessCtrl:
+      // We don't require a handler for this event
+      return UDS_PositiveResponse;
     case UDS_EVT_WriteDataByIdent:
     case UDS_EVT_ReadDataByIdent:
     case UDS_EVT_ReadDTCInformation:
@@ -77,7 +80,6 @@ static UDSErr_t default_nrc_when_no_handler_found(UDSEvent_t event) {
     case UDS_EVT_DoScheduledReset:
       return UDS_NRC_SubFunctionNotSupported;
     case UDS_EVT_Err:
-    case UDS_EVT_DiagSessCtrl:
     case UDS_EVT_ReadMemByAddr:
     case UDS_EVT_CommCtrl:
     case UDS_EVT_SecAccessRequestSeed:

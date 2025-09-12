@@ -4,13 +4,13 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#ifndef ARDEP_LIB_UDS_NEW_DATA_BY_IDENTIFIER_H
-#define ARDEP_LIB_UDS_NEW_DATA_BY_IDENTIFIER_H
+#ifndef ARDEP_LIB_UDS_DATA_BY_IDENTIFIER_H
+#define ARDEP_LIB_UDS_DATA_BY_IDENTIFIER_H
 
 #include "iso14229.h"
 
 #include <ardep/iso14229.h>
-#include <ardep/uds_new.h>
+#include <ardep/uds.h>
 
 #pragma once
 
@@ -24,4 +24,4 @@ uds_new_check_fn uds_new_get_check_for_write_data_by_identifier(
 uds_new_action_fn uds_new_get_action_for_write_data_by_identifier(
     const struct uds_new_registration_t* const reg);
 
-#endif  // ARDEP_LIB_UDS_NEW_DATA_BY_IDENTIFIER_H
+#endif  // ARDEP_LIB_UDS_DATA_BY_IDENTIFIER_H

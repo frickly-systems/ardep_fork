@@ -6,12 +6,8 @@
  */
 
 #include "fixture.h"
-#include "iso14229.h"
-#include "zephyr/ztest_assert.h"
 
 #include <zephyr/ztest.h>
-
-#include <ardep/uds_new.h>
 
 UDSErr_t read_dtc_info_0x01_check_fn(
     const struct uds_new_context *const context, bool *apply_action) {

@@ -2,10 +2,10 @@
 # Copyright (C) MBition GmbH
 
 sample:
-  name: uds new example
+  name: uds example
 common:
   build_only: true
   integration_platforms:
     - ardep
 tests:
-  example.uds_new.default: {}
+  example.uds.default: {}

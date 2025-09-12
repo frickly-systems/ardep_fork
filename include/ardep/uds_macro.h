@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ARDEP_UDS_NEW_MACRO_H
-#define ARDEP_UDS_NEW_MACRO_H
+#ifndef ARDEP_UDS_MACRO_H
+#define ARDEP_UDS_MACRO_H
 
 #ifndef _UDS_CAT
 #define _UDS_CAT(a, b) a##b
@@ -459,4 +459,4 @@
 
 // clang-format on
 
-#endif  // ARDEP_UDS_NEW_MACRO_H
+#endif  // ARDEP_UDS_MACRO_H

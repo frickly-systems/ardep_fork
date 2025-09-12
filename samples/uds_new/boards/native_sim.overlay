@@ -1,9 +1,0 @@
-/ {
-    chosen {
-        zephyr,canbus = &can0;
-    };
-};
-
-&can0 {
-    status = "okay";
-};

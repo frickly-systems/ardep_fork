@@ -12,7 +12,7 @@ LOG_MODULE_DECLARE(uds, CONFIG_UDS_LOG_LEVEL);
 #include <zephyr/sys/reboot.h>
 #include <zephyr/sys/util.h>
 
-#include <ardep/uds_new.h>
+#include <ardep/uds.h>
 #include <iso14229.h>
 
 bool uds_new_filter_for_ecu_reset_event(UDSEvent_t event) {

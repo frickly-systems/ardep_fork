@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ARDEP_UDS_NEW_H
-#define ARDEP_UDS_NEW_H
+#ifndef ARDEP_UDS_H
+#define ARDEP_UDS_H
 
 // Forward declaration to avoid include dependency issues
 #include "ardep/iso14229.h"
@@ -341,6 +341,6 @@ bool uds_new_filter_for_memory_by_addr(UDSEvent_t event);
  */
 bool uds_new_filter_for_read_dtc_info_event(UDSEvent_t event);
 
-#include "ardep/uds_new_macro.h"
+#include "ardep/uds_macro.h"
 
-#endif  // ARDEP_UDS_NEW_H
+#endif  // ARDEP_UDS_H

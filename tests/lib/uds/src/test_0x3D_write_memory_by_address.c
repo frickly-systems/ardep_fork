@@ -6,11 +6,8 @@
  */
 
 #include "fixture.h"
-#include "iso14229.h"
 
 #include <zephyr/ztest.h>
-
-#include <ardep/uds_new.h>
 
 ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_null_address) {
   struct uds_new_instance_t *instance = fixture->instance;

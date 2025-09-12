@@ -6,46 +6,7 @@
 menu "ARDEP"
 
     rsource "iso14229/Kconfig"
+    rsource "uds/Kconfig"
+    rsource "can_router/Kconfig"
 
-    config UDS_USE_NEW_LIB
-        bool "Use the new UDS lib implementation"
-        default y
-        help
-            Disable to use the legacy UDS implementation instead.
-
-
-    if ! UDS_USE_NEW_LIB
-    menuconfig UDS
-        bool "UDS"
-        depends on CAN
-        depends on ISOTP
-
-        depends on CAN_MAX_FILTER >= 8
-
-        depends on BOOTLOADER_MCUBOOT
-        depends on IMG_MANAGER
-        depends on REBOOT
-
-        if UDS
-            rsource "uds/Kconfig"
-        endif # UDS
-    endif # ! UDS_USE_NEW_LIB
-    
-    if UDS_USE_NEW_LIB
-        menuconfig UDS
-        bool "UDS"
-        select ISO14229
-
-        rsource "uds_new/Kconfig"
-    endif # UDS_USE_NEW_LIB
-
-    menuconfig CAN_ROUTER
-        bool "Can frame router"
-        depends on CAN
-        help
-            Route can frames from one can device to another using filters
-
-    if CAN_ROUTER
-        rsource "can_router/Kconfig"
-    endif
 endmenu

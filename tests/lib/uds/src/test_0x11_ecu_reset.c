@@ -5,13 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "fixture.h"
-#include "iso14229.h"
-#include "zephyr/ztest_assert.h"
 
-#include <zephyr/fff.h>
 #include <zephyr/ztest.h>
-
-#include <ardep/uds_new.h>
 
 UDSErr_t custom_check_for_0x11_return_subfunc_not_sup(
     const struct uds_new_context *const context, bool *apply_action) {

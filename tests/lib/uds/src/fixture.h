@@ -7,7 +7,7 @@
 #ifndef APP_TESTS_LIB_ISO14229_SRC_FIXTURE_H_
 #define APP_TESTS_LIB_ISO14229_SRC_FIXTURE_H_
 
-#include "ardep/uds_new.h"
+#include "ardep/uds.h"
 
 #include <zephyr/drivers/can.h>
 #include <zephyr/drivers/can/can_fake.h>

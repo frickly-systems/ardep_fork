@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "ardep/uds_new.h"
 #include "fixture.h"
 
 #include <string.h>
@@ -13,8 +12,6 @@
 #include <zephyr/drivers/can.h>
 #include <zephyr/drivers/can/can_fake.h>
 #include <zephyr/ztest.h>
-
-#include <iso14229.h>
 
 DEFINE_FFF_GLOBALS;
 

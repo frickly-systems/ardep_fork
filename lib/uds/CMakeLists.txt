@@ -5,8 +5,8 @@
 
 zephyr_library()
 
-file(GLOB UDS_NEW_SOURCES *.c)
-zephyr_library_sources(${UDS_NEW_SOURCES})
+file(GLOB UDS_SOURCES *.c)
+zephyr_library_sources(${UDS_SOURCES})
 
 zephyr_linker_sources(SECTIONS iterables.ld)
 

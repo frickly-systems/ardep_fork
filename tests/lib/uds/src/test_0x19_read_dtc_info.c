@@ -9,8 +9,8 @@
 
 #include <zephyr/ztest.h>
 
-UDSErr_t read_dtc_info_0x01_check_fn(
-    const struct uds_new_context *const context, bool *apply_action) {
+UDSErr_t read_dtc_info_0x01_check_fn(const struct uds_context *const context,
+                                     bool *apply_action) {
   zassert_equal(context->event, UDS_EVT_ReadDTCInformation);
   UDSRDTCIArgs_t *args = context->arg;
   zassert_not_null(args);
@@ -19,7 +19,7 @@ UDSErr_t read_dtc_info_0x01_check_fn(
   return UDS_OK;
 }
 
-UDSErr_t read_dtc_info_0x01_action_fn(struct uds_new_context *const context,
+UDSErr_t read_dtc_info_0x01_action_fn(struct uds_context *const context,
                                       bool *consume_event) {
   UDSRDTCIArgs_t *args = context->arg;
   zassert_equal(args->type, READ_DTC_INFO_SUBFUNC__NUM_OF_DTC_BY_STATUS_MASK);
@@ -29,8 +29,8 @@ UDSErr_t read_dtc_info_0x01_action_fn(struct uds_new_context *const context,
   return UDS_OK;
 }
 
-ZTEST_F(lib_uds_new, test_0x19_read_dtc_info_0x01_num_of_dtc_by_status_mask) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x19_read_dtc_info_0x01_num_of_dtc_by_status_mask) {
+  struct uds_instance_t *instance = fixture->instance;
 
   UDSRDTCIArgs_t args = {
     .type = READ_DTC_INFO_SUBFUNC__NUM_OF_DTC_BY_STATUS_MASK,
@@ -48,7 +48,7 @@ ZTEST_F(lib_uds_new, test_0x19_read_dtc_info_0x01_num_of_dtc_by_status_mask) {
 }
 
 UDSErr_t read_dtc_info_0x02_nrc_check_fn(
-    const struct uds_new_context *const context, bool *apply_action) {
+    const struct uds_context *const context, bool *apply_action) {
   zassert_equal(context->event, UDS_EVT_ReadDTCInformation);
   UDSRDTCIArgs_t *args = context->arg;
   zassert_not_null(args);
@@ -57,7 +57,7 @@ UDSErr_t read_dtc_info_0x02_nrc_check_fn(
   return UDS_OK;
 }
 
-UDSErr_t read_dtc_info_0x02_nrc_action_fn(struct uds_new_context *const context,
+UDSErr_t read_dtc_info_0x02_nrc_action_fn(struct uds_context *const context,
                                           bool *consume_event) {
   UDSRDTCIArgs_t *args = context->arg;
   zassert_equal(args->type, READ_DTC_INFO_SUBFUNC__DTC_BY_STATUS_MASK);
@@ -65,9 +65,8 @@ UDSErr_t read_dtc_info_0x02_nrc_action_fn(struct uds_new_context *const context,
   return UDS_NRC_RequestOutOfRange;
 }
 
-ZTEST_F(lib_uds_new,
-        test_0x19_read_dtc_info_0x02_dtc_by_status_mask_return_nrc) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x19_read_dtc_info_0x02_dtc_by_status_mask_return_nrc) {
+  struct uds_instance_t *instance = fixture->instance;
 
   UDSRDTCIArgs_t args = {
     .type = READ_DTC_INFO_SUBFUNC__DTC_BY_STATUS_MASK,

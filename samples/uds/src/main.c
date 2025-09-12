@@ -35,7 +35,7 @@ char string[] = "Hello from UDS";
 // Include NULL as string terminator
 uint16_t string_size = sizeof(string);
 
-UDSErr_t read_data_by_id_check(const struct uds_new_context *const context,
+UDSErr_t read_data_by_id_check(const struct uds_context *const context,
                                bool *apply_action) {
   UDSRDBIArgs_t *args = context->arg;
   // Return Ok, when we don't handle this event
@@ -49,7 +49,7 @@ UDSErr_t read_data_by_id_check(const struct uds_new_context *const context,
   return UDS_OK;
 }
 
-UDSErr_t read_data_by_id_action(struct uds_new_context *const context,
+UDSErr_t read_data_by_id_action(struct uds_context *const context,
                                 bool *consume_event) {
   LOG_INF("Reading data id: 0x%02X",
           context->registration->data_identifier.data_id);
@@ -76,7 +76,7 @@ UDSErr_t read_data_by_id_action(struct uds_new_context *const context,
       *(uint16_t *)context->registration->data_identifier.user_context);
 }
 
-UDSErr_t write_data_by_id_check(const struct uds_new_context *const context,
+UDSErr_t write_data_by_id_check(const struct uds_context *const context,
                                 bool *apply_action) {
   UDSRDBIArgs_t *args = context->arg;
   // Return Ok, when we don't handle this event
@@ -90,7 +90,7 @@ UDSErr_t write_data_by_id_check(const struct uds_new_context *const context,
   return UDS_OK;
 }
 
-UDSErr_t write_data_by_id_action(struct uds_new_context *const context,
+UDSErr_t write_data_by_id_action(struct uds_context *const context,
                                  bool *consume_event) {
   UDSWDBIArgs_t *args = context->arg;
 
@@ -106,29 +106,29 @@ UDSErr_t write_data_by_id_action(struct uds_new_context *const context,
   return UDS_PositiveResponse;
 }
 
-struct uds_new_instance_t instance;
+struct uds_instance_t instance;
 
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&instance,
-                                        primitive_type_id,
-                                        &primitive_type,
-                                        read_data_by_id_check,
-                                        read_data_by_id_action,
-                                        write_data_by_id_check,
-                                        write_data_by_id_action,
-                                        &primitive_type_size);
+UDS_REGISTER_DATA_IDENTIFIER_STATIC(&instance,
+                                    primitive_type_id,
+                                    &primitive_type,
+                                    read_data_by_id_check,
+                                    read_data_by_id_action,
+                                    write_data_by_id_check,
+                                    write_data_by_id_action,
+                                    &primitive_type_size);
 
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&instance,
-                                        string_id,
-                                        &string,
-                                        read_data_by_id_check,
-                                        read_data_by_id_action,
-                                        NULL,
-                                        NULL,
-                                        &string_size);
+UDS_REGISTER_DATA_IDENTIFIER_STATIC(&instance,
+                                    string_id,
+                                    &string,
+                                    read_data_by_id_check,
+                                    read_data_by_id_action,
+                                    NULL,
+                                    NULL,
+                                    &string_size);
 
-UDS_NEW_REGISTER_ECU_HARD_RESET_HANDLER(&instance);
+UDS_REGISTER_ECU_HARD_RESET_HANDLER(&instance);
 
-UDS_NEW_REGISTER_MEMORY_DEFAULT_HANDLER(&instance);
+UDS_REGISTER_MEMORY_DEFAULT_HANDLER(&instance);
 
 UDSErr_t read_mem_by_addr_impl(struct UDSServer *srv,
                                const UDSReadMemByAddrArgs_t *read_args,
@@ -157,7 +157,7 @@ int main(void) {
                                            // (us)
   };
 
-  uds_new_init(&instance, &cfg, can_dev, &instance);
+  uds_init(&instance, &cfg, can_dev, &instance);
 
   int err;
   if (!device_is_ready(can_dev)) {

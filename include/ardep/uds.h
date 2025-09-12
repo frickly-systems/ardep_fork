@@ -13,8 +13,8 @@
 
 #include <iso14229.h>
 
-struct uds_new_instance_t;
-struct uds_new_registration_t;
+struct uds_instance_t;
+struct uds_registration_t;
 
 enum ecu_reset_type {
   ECU_RESET__HARD = 1,
@@ -60,9 +60,9 @@ enum read_dtc_info_subfunc {
  * @param inst Pointer to the UDS server instance
  * @param reset_type Type of reset to perform
  * @param user_context User-defined context pointer as passed to \ref
- * uds_new_init()
+ * uds_init()
  */
-typedef UDSErr_t (*ecu_reset_callback_t)(struct uds_new_instance_t *inst,
+typedef UDSErr_t (*ecu_reset_callback_t)(struct uds_instance_t *inst,
                                          enum ecu_reset_type reset_type,
                                          void *user_context);
 
@@ -73,21 +73,21 @@ typedef UDSErr_t (*ecu_reset_callback_t)(struct uds_new_instance_t *inst,
  * @param callback Pointer to the callback function to set
  * @return 0 on success, negative error code on failure
  */
-typedef int (*set_ecu_reset_callback_fn)(struct uds_new_instance_t *inst,
+typedef int (*set_ecu_reset_callback_fn)(struct uds_instance_t *inst,
                                          ecu_reset_callback_t callback);
 
 /**
  * @brief Context provided to Event handlers on an event
  */
-struct uds_new_context {
+struct uds_context {
   /**
    * @brief The instance the event was generated on
    */
-  struct uds_new_instance_t *const instance;
+  struct uds_instance_t *const instance;
   /**
    * @brief The registration instance to handle the event
    */
-  struct uds_new_registration_t *const registration;
+  struct uds_registration_t *const registration;
   /**
    * @brief The event type
    */
@@ -99,7 +99,7 @@ struct uds_new_context {
 };
 
 /**
- * @brief Callback to check whether the associated `uds_new_action_fn`
+ * @brief Callback to check whether the associated `uds_action_fn`
  * should be executed on this event.
  *
  * @param[in] context The context of this UDS Event
@@ -108,14 +108,14 @@ struct uds_new_context {
  * @returns UDS_PositiveResponse on success
  * @returns UDS_NRC_* on failure. This NRC is returned to the UDS client
  */
-typedef UDSErr_t (*uds_new_check_fn)(
-    const struct uds_new_context *const context, bool *apply_action);
+typedef UDSErr_t (*uds_check_fn)(const struct uds_context *const context,
+                                 bool *apply_action);
 
 /**
  * @brief Callback to act on an matching UDS Event
  *
  * When this callback is called, assume that the relevant conditions are met and
- * checked with an associated `uds_new_check_fn` beforehand.
+ * checked with an associated `uds_check_fn` beforehand.
  *
  * @param[in,out] context The context of this UDS Event
  * @param[out] consume_event Set to `false` if the event should not be consumed
@@ -124,8 +124,8 @@ typedef UDSErr_t (*uds_new_check_fn)(
  * @returns UDS_PositiveResponse on success
  * @returns UDS_NRC_* on failure. This NRC is returned to the UDS client
  */
-typedef UDSErr_t (*uds_new_action_fn)(struct uds_new_context *const context,
-                                      bool *consume_event);
+typedef UDSErr_t (*uds_action_fn)(struct uds_context *const context,
+                                  bool *consume_event);
 
 /**
  * @brief Function to get the associated check function for a registration
@@ -134,8 +134,8 @@ typedef UDSErr_t (*uds_new_action_fn)(struct uds_new_context *const context,
  * @returns The associated check function
  * @returns NULL if no function is associated
  */
-typedef uds_new_check_fn (*uds_new_get_check_fn)(
-    const struct uds_new_registration_t *const reg);
+typedef uds_check_fn (*uds_get_check_fn)(
+    const struct uds_registration_t *const reg);
 
 /**
  * @brief Function to get the associated action function for a registration
@@ -144,15 +144,15 @@ typedef uds_new_check_fn (*uds_new_get_check_fn)(
  * @returns The associated check function
  * @returns NULL if no function is associated
  */
-typedef uds_new_action_fn (*uds_new_get_action_fn)(
-    const struct uds_new_registration_t *const reg);
+typedef uds_action_fn (*uds_get_action_fn)(
+    const struct uds_registration_t *const reg);
 
 /**
  * @brief Associates a check with an action
  */
-struct uds_new_actor {
-  uds_new_check_fn check;
-  uds_new_action_fn action;
+struct uds_actor {
+  uds_check_fn check;
+  uds_action_fn action;
 };
 
 #ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
@@ -168,47 +168,46 @@ struct uds_new_actor {
  *
  */
 typedef int (*register_event_handler_fn)(
-    struct uds_new_instance_t *inst,
-    struct uds_new_registration_t registration);
+    struct uds_instance_t *inst, struct uds_registration_t registration);
 
 #endif  // CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 
-struct uds_new_instance_t {
+struct uds_instance_t {
   struct iso14229_zephyr_instance iso14229;
-  struct uds_new_registration_t *static_registrations;
+  struct uds_registration_t *static_registrations;
   void *user_context;
 
 #ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
-  struct uds_new_registration_t *dynamic_registrations;
+  struct uds_registration_t *dynamic_registrations;
   register_event_handler_fn register_event_handler;
 #endif  // CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 };
 
-int uds_new_init(struct uds_new_instance_t *inst,
-                 const UDSISOTpCConfig_t *iso_tp_config,
-                 const struct device *can_dev,
-                 void *user_context);
+int uds_init(struct uds_instance_t *inst,
+             const UDSISOTpCConfig_t *iso_tp_config,
+             const struct device *can_dev,
+             void *user_context);
 
-enum uds_new_registration_type_t {
-  UDS_NEW_REGISTRATION_TYPE__ECU_RESET,
-  UDS_NEW_REGISTRATION_TYPE__MEMORY,
-  UDS_NEW_REGISTRATION_TYPE__READ_DTC_INFO,
-  UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,
+enum uds_registration_type_t {
+  uds_registration_tYPE__ECU_RESET,
+  uds_registration_tYPE__MEMORY,
+  uds_registration_tYPE__READ_DTC_INFO,
+  uds_registration_tYPE__DATA_IDENTIFIER,
 };
 
 /**
  * @brief Registration information for an UDS Event handler
  */
-struct uds_new_registration_t {
+struct uds_registration_t {
   /**
    * @brief Instance the UDS Event handler is registered to
    */
-  struct uds_new_instance_t *instance;
+  struct uds_instance_t *instance;
 
   /**
    * @brief Type of event handler
    */
-  enum uds_new_registration_type_t type;
+  enum uds_registration_type_t type;
 
   /**
    * @brief Filter function to determine if the event can be handled by this
@@ -227,23 +226,23 @@ struct uds_new_registration_t {
 
   union {
     struct {
-      struct uds_new_actor ecu_reset;
-      struct uds_new_actor execute_scheduled_reset;
+      struct uds_actor ecu_reset;
+      struct uds_actor execute_scheduled_reset;
       uint8_t type;
     } ecu_reset;
     struct {
       uint16_t data_id;
-      struct uds_new_actor read;
-      struct uds_new_actor write;
+      struct uds_actor read;
+      struct uds_actor write;
       void *user_context;
     } data_identifier;
     struct {
-      struct uds_new_actor read;
-      struct uds_new_actor write;
+      struct uds_actor read;
+      struct uds_actor write;
     } memory;
     struct {
       uint8_t sub_function;
-      struct uds_new_actor actor;
+      struct uds_actor actor;
     } read_dtc;
   };
 
@@ -252,64 +251,64 @@ struct uds_new_registration_t {
    *
    * @note: Only used for dynamic registration
    */
-  struct uds_new_registration_t *next;
+  struct uds_registration_t *next;
 };
 
 /**
  * @brief Default check function for the default ECU Hard Reset handler
  */
-UDSErr_t uds_new_check_ecu_hard_reset(
-    const struct uds_new_context *const context, bool *apply_action);
+UDSErr_t uds_check_ecu_hard_reset(const struct uds_context *const context,
+                                  bool *apply_action);
 
 /**
  * @brief Default action function for the default ECU Hard Reset handler
  */
-UDSErr_t uds_new_action_ecu_hard_reset(struct uds_new_context *const context,
-                                       bool *consume_event);
+UDSErr_t uds_action_ecu_hard_reset(struct uds_context *const context,
+                                   bool *consume_event);
 
 /**
  * @brief Default check function for the default ECU Hard Reset handler
  */
-UDSErr_t uds_new_check_execute_scheduled_reset(
-    const struct uds_new_context *const context, bool *apply_action);
+UDSErr_t uds_check_execute_scheduled_reset(
+    const struct uds_context *const context, bool *apply_action);
 
 /**
  * @brief Default action function for the default ECU Hard Reset handler
  */
-UDSErr_t uds_new_action_execute_scheduled_reset(
-    struct uds_new_context *const context, bool *consume_event);
+UDSErr_t uds_action_execute_scheduled_reset(struct uds_context *const context,
+                                            bool *consume_event);
 
 /**
  * @brief Default check function for the default memory read handler
  *
  * Checks RAM and Flash memory for read access
  */
-UDSErr_t uds_new_check_default_memory_by_addr_read(
-    const struct uds_new_context *const context, bool *apply_action);
+UDSErr_t uds_check_default_memory_by_addr_read(
+    const struct uds_context *const context, bool *apply_action);
 
 /**
  * @brief Default action function for the default memory read handler
  *
  * Reads from RAM and Flash
  */
-UDSErr_t uds_new_action_default_memory_by_addr_read(
-    struct uds_new_context *const context, bool *consume_event);
+UDSErr_t uds_action_default_memory_by_addr_read(
+    struct uds_context *const context, bool *consume_event);
 
 /**
  * @brief Default check function for the default memory write handler
  *
  * Checks RAM and Flash memory for write access
  */
-UDSErr_t uds_new_check_default_memory_by_addr_write(
-    const struct uds_new_context *const context, bool *apply_action);
+UDSErr_t uds_check_default_memory_by_addr_write(
+    const struct uds_context *const context, bool *apply_action);
 
 /**
  * @brief Default action function for the default memory write handler
  *
  * Writes to RAM and Flash
  */
-UDSErr_t uds_new_action_default_memory_by_addr_write(
-    struct uds_new_context *const context, bool *consume_event);
+UDSErr_t uds_action_default_memory_by_addr_write(
+    struct uds_context *const context, bool *consume_event);
 
 /**
  * @brief Filter for ECU Reset event handler registrations
@@ -318,28 +317,28 @@ UDSErr_t uds_new_action_default_memory_by_addr_write(
  * @returns true if the `event` can be handled
  * @returns false otherwise
  */
-bool uds_new_filter_for_ecu_reset_event(UDSEvent_t event);
+bool uds_filter_for_ecu_reset_event(UDSEvent_t event);
 
 /**
  * @brief Filter for Read/Write data by ID event handler registrations
  *
- * see @fn uds_new_filter_for_ecu_reset_event for details
+ * see @fn uds_filter_for_ecu_reset_event for details
  */
-bool uds_new_filter_for_data_by_id_event(UDSEvent_t event);
+bool uds_filter_for_data_by_id_event(UDSEvent_t event);
 
 /**
  * @brief Filter for Read/Write memory by address event handler registrations
  *
- * see @fn uds_new_filter_for_ecu_reset_event for details
+ * see @fn uds_filter_for_ecu_reset_event for details
  */
-bool uds_new_filter_for_memory_by_addr(UDSEvent_t event);
+bool uds_filter_for_memory_by_addr(UDSEvent_t event);
 
 /**
  * @brief Filter for Read DTC Information event handler registrations
  *
- * see @fn uds_new_filter_for_ecu_reset_event for details
+ * see @fn uds_filter_for_ecu_reset_event for details
  */
-bool uds_new_filter_for_read_dtc_info_event(UDSEvent_t event);
+bool uds_filter_for_read_dtc_info_event(UDSEvent_t event);
 
 #include "ardep/uds_macro.h"
 

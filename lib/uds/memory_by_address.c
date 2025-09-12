@@ -65,30 +65,30 @@ static bool is_memory_address_valid(uintptr_t addr,
 #endif
 }
 
-bool uds_new_filter_for_memory_by_addr(UDSEvent_t event) {
+bool uds_filter_for_memory_by_addr(UDSEvent_t event) {
   return event == UDS_EVT_ReadMemByAddr || event == UDS_EVT_WriteMemByAddr;
 }
 
-uds_new_check_fn uds_new_get_check_for_read_memory_by_addr(
-    const struct uds_new_registration_t* const reg) {
+uds_check_fn uds_get_check_for_read_memory_by_addr(
+    const struct uds_registration_t* const reg) {
   return reg->memory.read.check;
 }
-uds_new_action_fn uds_new_get_action_for_read_memory_by_addr(
-    const struct uds_new_registration_t* const reg) {
+uds_action_fn uds_get_action_for_read_memory_by_addr(
+    const struct uds_registration_t* const reg) {
   return reg->memory.read.action;
 }
 
-uds_new_check_fn uds_new_get_check_for_write_memory_by_addr(
-    const struct uds_new_registration_t* const reg) {
+uds_check_fn uds_get_check_for_write_memory_by_addr(
+    const struct uds_registration_t* const reg) {
   return reg->memory.write.check;
 }
-uds_new_action_fn uds_new_get_action_for_write_memory_by_addr(
-    const struct uds_new_registration_t* const reg) {
+uds_action_fn uds_get_action_for_write_memory_by_addr(
+    const struct uds_registration_t* const reg) {
   return reg->memory.write.action;
 }
 
-UDSErr_t uds_new_check_default_memory_by_addr_read(
-    const struct uds_new_context* const context, bool* apply_action) {
+UDSErr_t uds_check_default_memory_by_addr_read(
+    const struct uds_context* const context, bool* apply_action) {
   UDSReadMemByAddrArgs_t* args = context->arg;
   if (args->memAddr == NULL) {
     LOG_ERR("Read Memory By Address: NULL memory address");
@@ -116,8 +116,8 @@ UDSErr_t uds_new_check_default_memory_by_addr_read(
   return UDS_OK;
 }
 
-UDSErr_t uds_new_action_default_memory_by_addr_read(
-    struct uds_new_context* const context, bool* consume_event) {
+UDSErr_t uds_action_default_memory_by_addr_read(
+    struct uds_context* const context, bool* consume_event) {
   UDSReadMemByAddrArgs_t* args = context->arg;
   uintptr_t mem_addr = (uintptr_t)args->memAddr;
 
@@ -134,8 +134,8 @@ UDSErr_t uds_new_action_default_memory_by_addr_read(
   return UDS_PositiveResponse;
 }
 
-UDSErr_t uds_new_check_default_memory_by_addr_write(
-    const struct uds_new_context* const context, bool* apply_action) {
+UDSErr_t uds_check_default_memory_by_addr_write(
+    const struct uds_context* const context, bool* apply_action) {
   UDSWriteMemByAddrArgs_t* args = context->arg;
   if (args->memAddr == NULL) {
     LOG_ERR("Write Memory By Address: NULL memory address");
@@ -163,8 +163,8 @@ UDSErr_t uds_new_check_default_memory_by_addr_write(
   return UDS_OK;
 }
 
-UDSErr_t uds_new_action_default_memory_by_addr_write(
-    struct uds_new_context* const context, bool* consume_event) {
+UDSErr_t uds_action_default_memory_by_addr_write(
+    struct uds_context* const context, bool* consume_event) {
   UDSWriteMemByAddrArgs_t* args = context->arg;
 
   uintptr_t mem_addr = (uintptr_t)args->memAddr;

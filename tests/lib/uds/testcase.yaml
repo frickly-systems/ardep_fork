@@ -6,5 +6,5 @@ common:
     - nucleo_g474re
 
 tests:
-  lib.uds_new:
+  lib.uds:
     harness: ztest

@@ -21,7 +21,7 @@ menu "ARDEP"
     
 
     rsource "iso14229/Kconfig"
-    rsource "uds_new/Kconfig"
+    rsource "uds/Kconfig"
 
     menuconfig CAN_ROUTER
         bool "Can frame router"

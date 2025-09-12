@@ -19,12 +19,12 @@ DEFINE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 
 DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
                        data_id_check_fn,
-                       const struct uds_new_context *const,
+                       const struct uds_context *const,
                        bool *);
 
 DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
                        data_id_action_fn,
-                       struct uds_new_context *const,
+                       struct uds_context *const,
                        bool *);
 
 #define FFF_FAKES_LIST(FAKE) \
@@ -32,7 +32,7 @@ DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
   FAKE(data_id_check_fn)     \
   FAKE(data_id_action_fn)
 
-struct uds_new_instance_t fixture_uds_instance;
+struct uds_instance_t fixture_uds_instance;
 
 #ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 bool test_dynamic_registration_check_invoked;
@@ -49,67 +49,67 @@ const uint16_t data_id_rw_duplicated1 = 3;
 const uint16_t data_id_rw_duplicated2 = 3;
 uint8_t data_id_rw_duplicated_data[4];
 
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
-                                        data_id_r,
-                                        data_id_r_data,
-                                        // read
-                                        data_id_check_fn,
-                                        data_id_action_fn,
-                                        // write
-                                        NULL,
-                                        NULL,
-                                        NULL)
+UDS_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
+                                    data_id_r,
+                                    data_id_r_data,
+                                    // read
+                                    data_id_check_fn,
+                                    data_id_action_fn,
+                                    // write
+                                    NULL,
+                                    NULL,
+                                    NULL)
 
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
-                                        data_id_rw,
-                                        data_id_rw_data,
-                                        // read
-                                        data_id_check_fn,
-                                        data_id_action_fn,
-                                        // write
-                                        data_id_check_fn,
-                                        data_id_action_fn,
-                                        NULL)
+UDS_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
+                                    data_id_rw,
+                                    data_id_rw_data,
+                                    // read
+                                    data_id_check_fn,
+                                    data_id_action_fn,
+                                    // write
+                                    data_id_check_fn,
+                                    data_id_action_fn,
+                                    NULL)
 
 // Duplicated Registratin for the same data ID
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
-                                        data_id_rw_duplicated1,
-                                        data_id_rw_duplicated_data,
-                                        // read
-                                        data_id_check_fn,
-                                        data_id_action_fn,
-                                        // write
-                                        data_id_check_fn,
-                                        data_id_action_fn,
-                                        NULL)
+UDS_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
+                                    data_id_rw_duplicated1,
+                                    data_id_rw_duplicated_data,
+                                    // read
+                                    data_id_check_fn,
+                                    data_id_action_fn,
+                                    // write
+                                    data_id_check_fn,
+                                    data_id_action_fn,
+                                    NULL)
 
-UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
-                                        data_id_rw_duplicated2,
-                                        data_id_rw_duplicated_data,
-                                        // read
-                                        data_id_check_fn,
-                                        data_id_action_fn,
-                                        // write
-                                        data_id_check_fn,
-                                        data_id_action_fn,
-                                        NULL)
+UDS_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
+                                    data_id_rw_duplicated2,
+                                    data_id_rw_duplicated_data,
+                                    // read
+                                    data_id_check_fn,
+                                    data_id_action_fn,
+                                    // write
+                                    data_id_check_fn,
+                                    data_id_action_fn,
+                                    NULL)
 
-UDS_NEW_REGISTER_ECU_RESET_HANDLER(&fixture_uds_instance,
-                                   NULL,
-                                   ECU_RESET__KEY_OFF_ON,
-                                   // ecu_reset
-                                   data_id_check_fn,
-                                   data_id_action_fn,
-                                   // do_scheduled_reset
-                                   data_id_check_fn,
-                                   data_id_action_fn)
+UDS_REGISTER_ECU_RESET_HANDLER(&fixture_uds_instance,
+                               NULL,
+                               ECU_RESET__KEY_OFF_ON,
+                               // ecu_reset
+                               data_id_check_fn,
+                               data_id_action_fn,
+                               // do_scheduled_reset
+                               data_id_check_fn,
+                               data_id_action_fn)
 
-UDS_NEW_REGISTER_MEMORY_DEFAULT_HANDLER(&fixture_uds_instance)
+UDS_REGISTER_MEMORY_DEFAULT_HANDLER(&fixture_uds_instance)
 
-UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_ALL(&fixture_uds_instance,
-                                           NULL,
-                                           data_id_check_fn,
-                                           data_id_action_fn)
+UDS_REGISTER_READ_DTC_INFO_HANDLER_ALL(&fixture_uds_instance,
+                                       NULL,
+                                       data_id_check_fn,
+                                       data_id_action_fn)
 
 static const UDSISOTpCConfig_t default_cfg = {
   // Hardware Addresses
@@ -130,7 +130,7 @@ void assert_copy_data(const uint8_t *data, uint32_t len) {
   zassert_mem_equal(copied_data, data, len);
 }
 
-UDSErr_t receive_event(struct uds_new_instance_t *inst,
+UDSErr_t receive_event(struct uds_instance_t *inst,
                        UDSEvent_t event,
                        void *args) {
   return inst->iso14229.event_callback(&inst->iso14229, event, args, inst);
@@ -145,10 +145,10 @@ static uint8_t custom_copy(UDSServer_t *server,
   return 0;
 }
 
-static void *uds_new_setup(void) {
+static void *uds_setup(void) {
   memset(&fixture_uds_instance, 0, sizeof(fixture_uds_instance));
 
-  static struct lib_uds_new_fixture fixture = {
+  static struct lib_uds_fixture fixture = {
     .cfg = default_cfg,
     .can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus)),
     .instance = &fixture_uds_instance,
@@ -159,20 +159,20 @@ static void *uds_new_setup(void) {
   return &fixture;
 }
 
-static void uds_new_before(void *f) {
-  struct lib_uds_new_fixture *fixture = f;
+static void uds_before(void *f) {
+  struct lib_uds_fixture *fixture = f;
   const struct device *dev = fixture->can_dev;
-  struct uds_new_instance_t *uds_instance = fixture->instance;
+  struct uds_instance_t *uds_instance = fixture->instance;
 
   FFF_FAKES_LIST(RESET_FAKE);
   FFF_RESET_HISTORY();
 
   copy_fake.custom_fake = custom_copy;
 
-  int ret = uds_new_init(uds_instance, &default_cfg, dev, fixture);
+  int ret = uds_init(uds_instance, &default_cfg, dev, fixture);
   assert(ret == 0);
 
-  STRUCT_SECTION_FOREACH (uds_new_registration_t, reg) {
+  STRUCT_SECTION_FOREACH (uds_registration_t, reg) {
   }
 
   test_dynamic_registration_check_invoked = false;
@@ -182,16 +182,15 @@ static void uds_new_before(void *f) {
   copied_len = 0;
 }
 
-static void uds_new_after(void *f) {
-  struct lib_uds_new_fixture *fixture = f;
+static void uds_after(void *f) {
+  struct lib_uds_fixture *fixture = f;
 
 #ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
-  struct uds_new_registration_t *next =
-      fixture->instance->dynamic_registrations;
+  struct uds_registration_t *next = fixture->instance->dynamic_registrations;
 
   // Free all dynamically registered event handler
   while (next != NULL) {
-    struct uds_new_registration_t *current = next;
+    struct uds_registration_t *current = next;
     next = current->next;
     k_free(current);
   }
@@ -200,5 +199,4 @@ static void uds_new_after(void *f) {
 #endif
 }
 
-ZTEST_SUITE(
-    lib_uds_new, NULL, uds_new_setup, uds_new_before, uds_new_after, NULL);
+ZTEST_SUITE(lib_uds, NULL, uds_setup, uds_before, uds_after, NULL);

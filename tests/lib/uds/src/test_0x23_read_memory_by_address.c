@@ -9,8 +9,8 @@
 
 #include <zephyr/ztest.h>
 
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_null_address) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_null_address) {
+  struct uds_instance_t *instance = fixture->instance;
 
   UDSReadMemByAddrArgs_t args = {
     .memAddr = NULL,
@@ -22,8 +22,8 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_null_address) {
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_zero_size) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_zero_size) {
+  struct uds_instance_t *instance = fixture->instance;
 
   UDSReadMemByAddrArgs_t args = {
     .memAddr = (void *)0x10000,
@@ -37,8 +37,8 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_zero_size) {
 
 #if CONFIG_BOARD_NATIVE_SIM
 
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_valid_memory) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_valid_memory) {
+  struct uds_instance_t *instance = fixture->instance;
 
   const uint8_t local_buffer[16] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
                                     0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
@@ -71,8 +71,8 @@ const static uintptr_t known_flash_start = 0x08000000;  // Flash start
 const static uintptr_t known_flash_end = 0x08080000;    // 512KB Flash
 
 // Test cases for real hardware with known memory layout
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_ram_valid) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_ram_valid) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading from valid RAM location
   UDSReadMemByAddrArgs_t args = {
@@ -89,8 +89,8 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_ram_valid) {
   zassert_equal(copy_fake.arg2_val, 4);
 }
 
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_ram_boundary_end) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_ram_boundary_end) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading from RAM end boundary (should be valid up to end-1)
   UDSReadMemByAddrArgs_t args = {
@@ -106,9 +106,8 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_ram_boundary_end) {
   zassert_equal(copy_fake.arg2_val, 1);
 }
 
-ZTEST_F(lib_uds_new,
-        test_0x23_read_memory_by_address_nucleo_ram_out_of_bounds) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_ram_out_of_bounds) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading after RAM end (should fail)
   UDSReadMemByAddrArgs_t args = {
@@ -121,8 +120,8 @@ ZTEST_F(lib_uds_new,
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_flash_valid) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_flash_valid) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading from valid Flash location
   UDSReadMemByAddrArgs_t args = {
@@ -139,9 +138,8 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_flash_valid) {
   zassert_equal(copy_fake.arg2_val, 4);
 }
 
-ZTEST_F(lib_uds_new,
-        test_0x23_read_memory_by_address_nucleo_flash_boundary_end) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_flash_boundary_end) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading from Flash end boundary (should be valid up to end-1)
   UDSReadMemByAddrArgs_t args = {
@@ -157,9 +155,8 @@ ZTEST_F(lib_uds_new,
   zassert_equal(copy_fake.arg2_val, 1);
 }
 
-ZTEST_F(lib_uds_new,
-        test_0x23_read_memory_by_address_nucleo_flash_out_of_bounds) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_flash_out_of_bounds) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading after Flash end (should fail)
   UDSReadMemByAddrArgs_t args = {
@@ -172,9 +169,8 @@ ZTEST_F(lib_uds_new,
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new,
-        test_0x23_read_memory_by_address_nucleo_invalid_peripheral) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_invalid_peripheral) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading from peripheral region (should fail as not RAM/Flash)
   UDSReadMemByAddrArgs_t args = {
@@ -187,9 +183,8 @@ ZTEST_F(lib_uds_new,
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new,
-        test_0x23_read_memory_by_address_nucleo_invalid_low_memory) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_invalid_low_memory) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading from invalid low memory region
   UDSReadMemByAddrArgs_t args = {
@@ -202,8 +197,8 @@ ZTEST_F(lib_uds_new,
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_ram_overflow) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_ram_overflow) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading that would overflow past RAM end
   UDSReadMemByAddrArgs_t args = {
@@ -216,8 +211,8 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_ram_overflow) {
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_flash_overflow) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_flash_overflow) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading that would overflow past Flash end
   UDSReadMemByAddrArgs_t args = {
@@ -230,8 +225,8 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_flash_overflow) {
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_large_read_ram) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_large_read_ram) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading large amount from RAM (1KB)
   UDSReadMemByAddrArgs_t args = {
@@ -247,8 +242,8 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_large_read_ram) {
   zassert_equal(copy_fake.arg2_val, 1024);
 }
 
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_large_read_flash) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_large_read_flash) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading large amount from Flash (1KB)
   UDSReadMemByAddrArgs_t args = {
@@ -264,8 +259,8 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_large_read_flash) {
   zassert_equal(copy_fake.arg2_val, 1024);
 }
 
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_before_ram) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_before_ram) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading just before RAM
   UDSReadMemByAddrArgs_t args = {
@@ -278,8 +273,8 @@ ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_before_ram) {
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new, test_0x23_read_memory_by_address_nucleo_before_flash) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x23_read_memory_by_address_nucleo_before_flash) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Test reading just before Flash
   UDSReadMemByAddrArgs_t args = {

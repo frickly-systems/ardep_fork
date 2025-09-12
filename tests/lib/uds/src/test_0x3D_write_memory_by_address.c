@@ -9,8 +9,8 @@
 
 #include <zephyr/ztest.h>
 
-ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_null_address) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_null_address) {
+  struct uds_instance_t *instance = fixture->instance;
 
   const uint8_t data[4] = {0xAA, 0xBB, 0xCC, 0xDD};
 
@@ -24,8 +24,8 @@ ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_null_address) {
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_zero_size) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_zero_size) {
+  struct uds_instance_t *instance = fixture->instance;
 
   uint8_t dest[8] = {0};
   const uint8_t data[1] = {0x11};
@@ -42,8 +42,8 @@ ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_zero_size) {
 
 #if CONFIG_BOARD_NATIVE_SIM
 
-ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_valid_memory) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_valid_memory) {
+  struct uds_instance_t *instance = fixture->instance;
 
   uint8_t dest[16] = {0};
   const uint8_t src[16] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
@@ -61,8 +61,8 @@ ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_valid_memory) {
   zassert_mem_equal(dest, src, sizeof(src));
 }
 
-ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_large_buffer) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_large_buffer) {
+  struct uds_instance_t *instance = fixture->instance;
 
   uint8_t dest[2096] = {0};
   uint8_t src[2096];
@@ -95,8 +95,8 @@ const static uintptr_t known_ram_end = 0x20020000;      // 128KB SRAM
 const static uintptr_t known_flash_start = 0x08000000;  // Flash start
 const static uintptr_t known_flash_end = 0x08080000;    // 512KB Flash
 
-ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_nucleo_ram_valid) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_nucleo_ram_valid) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Use a local buffer within RAM for a safe write
   uint8_t dest[8] = {0};
@@ -113,9 +113,8 @@ ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_nucleo_ram_valid) {
   zassert_mem_equal(dest, src, sizeof(src));
 }
 
-ZTEST_F(lib_uds_new,
-        test_0x3D_write_memory_by_address_nucleo_ram_out_of_bounds) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_nucleo_ram_out_of_bounds) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Writing after RAM end (should fail before attempting to write)
   const uint8_t src[1] = {0x11};
@@ -129,9 +128,8 @@ ZTEST_F(lib_uds_new,
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new,
-        test_0x3D_write_memory_by_address_nucleo_flash_not_writeable) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_nucleo_flash_not_writeable) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Any Flash write should be rejected in implementation
   const uint8_t src4[4] = {1, 2, 3, 4};
@@ -154,9 +152,8 @@ ZTEST_F(lib_uds_new,
   zassert_equal(ret2, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new,
-        test_0x3D_write_memory_by_address_nucleo_flash_out_of_bounds) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_nucleo_flash_out_of_bounds) {
+  struct uds_instance_t *instance = fixture->instance;
 
   const uint8_t src[1] = {0x22};
   UDSWriteMemByAddrArgs_t args = {
@@ -169,9 +166,8 @@ ZTEST_F(lib_uds_new,
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new,
-        test_0x3D_write_memory_by_address_nucleo_invalid_peripheral) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_nucleo_invalid_peripheral) {
+  struct uds_instance_t *instance = fixture->instance;
 
   const uint8_t src[4] = {0, 0, 0, 0};
   UDSWriteMemByAddrArgs_t args = {
@@ -184,9 +180,8 @@ ZTEST_F(lib_uds_new,
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new,
-        test_0x3D_write_memory_by_address_nucleo_invalid_low_memory) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_nucleo_invalid_low_memory) {
+  struct uds_instance_t *instance = fixture->instance;
 
   const uint8_t src[4] = {0};
   UDSWriteMemByAddrArgs_t args = {
@@ -199,8 +194,8 @@ ZTEST_F(lib_uds_new,
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_nucleo_large_write_ram) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_nucleo_large_write_ram) {
+  struct uds_instance_t *instance = fixture->instance;
 
   // Large write to a local RAM buffer
   uint8_t dest[1024] = {0};
@@ -218,8 +213,8 @@ ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_nucleo_large_write_ram) {
   zassert_mem_equal(dest, src, sizeof(src));
 }
 
-ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_nucleo_before_ram) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_nucleo_before_ram) {
+  struct uds_instance_t *instance = fixture->instance;
 
   const uint8_t src[4] = {0};
   UDSWriteMemByAddrArgs_t args = {
@@ -232,8 +227,8 @@ ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_nucleo_before_ram) {
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
-ZTEST_F(lib_uds_new, test_0x3D_write_memory_by_address_nucleo_before_flash) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x3D_write_memory_by_address_nucleo_before_flash) {
+  struct uds_instance_t *instance = fixture->instance;
 
   const uint8_t src[4] = {0};
   UDSWriteMemByAddrArgs_t args = {

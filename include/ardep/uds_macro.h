@@ -29,19 +29,19 @@
  * @param _act Execute the event handler for the event
  * @param _subfunc_id The subfunction ID to register the handler for
  */
-#define UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER(                                     \
+#define UDS_REGISTER_READ_DTC_INFO_HANDLER(                                         \
   _instance,                                                                        \
   _context,                                                                         \
   _check,                                                                           \
   _act,                                                                             \
   _subfunc_id                                                                       \
 )                                                                                   \
-  STRUCT_SECTION_ITERABLE(uds_new_registration_t,                                   \
+  STRUCT_SECTION_ITERABLE(uds_registration_t,                                   \
       /* Use a counter to generate unique names for the iterable section */         \
-        _UDS_CAT_EXPAND(__uds_new_registration_id_read_dtc_info, __COUNTER__)) = {  \
+        _UDS_CAT_EXPAND(__uds_registration_id_read_dtc_info, __COUNTER__)) = {  \
     .instance = _instance,                                                          \
-    .type = UDS_NEW_REGISTRATION_TYPE__READ_DTC_INFO,                               \
-    .applies_to_event = uds_new_filter_for_read_dtc_info_event,                     \
+    .type = uds_registration_tYPE__READ_DTC_INFO,                               \
+    .applies_to_event = uds_filter_for_read_dtc_info_event,                     \
     .user_data = _context,                                                          \
     .read_dtc = {                                                                   \
       .sub_function = _subfunc_id,                                                  \
@@ -64,174 +64,172 @@
                      16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
 
 /* Base “apply one” primitive */
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_ONE(_inst, _ctx, _chk, \
-                                                          _act, _sf)         \
-  UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER(_inst, _ctx, _chk, _act, _sf)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_ONE(_inst, _ctx, _chk, _act, \
+                                                      _sf)                     \
+  UDS_REGISTER_READ_DTC_INFO_HANDLER(_inst, _ctx, _chk, _act, _sf)
 
 /* Unrolled fan-out (1..27). Each line ends up at file scope just like the
  * original) */
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s1) \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_ONE(i, c, k, a, s1)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s1) \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_ONE(i, c, k, a, s1)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_2(i, c, k, a, s1, s2) \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s1)           \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s2)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_2(i, c, k, a, s1, s2) \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s1)           \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s2)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_3(i, c, k, a, s1, s2, \
-                                                        s3)                 \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_2(i, c, k, a, s1, s2)       \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s3)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_3(i, c, k, a, s1, s2, s3) \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_2(i, c, k, a, s1, s2)           \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s3)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_4(i, c, k, a, s1, s2, \
-                                                        s3, s4)             \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_3(i, c, k, a, s1, s2, s3)   \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s4)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_4(i, c, k, a, s1, s2, s3, \
+                                                    s4)                     \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_3(i, c, k, a, s1, s2, s3)       \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s4)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_5(i, c, k, a, s1, s2,   \
-                                                        s3, s4, s5)           \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_4(i, c, k, a, s1, s2, s3, s4) \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s5)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_5(i, c, k, a, s1, s2, s3, \
+                                                    s4, s5)                 \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_4(i, c, k, a, s1, s2, s3, s4)   \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s5)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_6(i, c, k, a, s1, s2,   \
-                                                        s3, s4, s5, s6)       \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_5(i, c, k, a, s1, s2, s3, s4, \
-                                                  s5)                         \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s6)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_6(i, c, k, a, s1, s2, s3,   \
+                                                    s4, s5, s6)               \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_5(i, c, k, a, s1, s2, s3, s4, s5) \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s6)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_7(i, c, k, a, s1, s2,   \
-                                                        s3, s4, s5, s6, s7)   \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_6(i, c, k, a, s1, s2, s3, s4, \
-                                                  s5, s6)                     \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s7)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_7(i, c, k, a, s1, s2, s3,   \
+                                                    s4, s5, s6, s7)           \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_6(i, c, k, a, s1, s2, s3, s4, s5, \
+                                              s6)                             \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s7)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_8(                      \
-    i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8)                               \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_7(i, c, k, a, s1, s2, s3, s4, \
-                                                  s5, s6, s7)                 \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s8)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_8(i, c, k, a, s1, s2, s3,   \
+                                                    s4, s5, s6, s7, s8)       \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_7(i, c, k, a, s1, s2, s3, s4, s5, \
+                                              s6, s7)                         \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s8)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_9(                      \
-    i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9)                           \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_8(i, c, k, a, s1, s2, s3, s4, \
-                                                  s5, s6, s7, s8)             \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s9)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_9(i, c, k, a, s1, s2, s3,   \
+                                                    s4, s5, s6, s7, s8, s9)   \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_8(i, c, k, a, s1, s2, s3, s4, s5, \
+                                              s6, s7, s8)                     \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s9)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_10(                     \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_10(                         \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10)                      \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_9(i, c, k, a, s1, s2, s3, s4, \
-                                                  s5, s6, s7, s8, s9)         \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s10)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_9(i, c, k, a, s1, s2, s3, s4, s5, \
+                                              s6, s7, s8, s9)                 \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s10)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_11(                      \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_11(                          \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11)                  \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_10(i, c, k, a, s1, s2, s3, s4, \
-                                                   s5, s6, s7, s8, s9, s10)    \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s11)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_10(i, c, k, a, s1, s2, s3, s4, s5, \
+                                               s6, s7, s8, s9, s10)            \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s11)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_12(          \
-    i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12) \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_11(                \
-      i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11)    \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s12)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_12(                          \
+    i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12)             \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_11(i, c, k, a, s1, s2, s3, s4, s5, \
+                                               s6, s7, s8, s9, s10, s11)       \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s12)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_13(               \
-    i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13) \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_12(                     \
-      i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12)    \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s13)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_13(                          \
+    i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13)        \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_12(i, c, k, a, s1, s2, s3, s4, s5, \
+                                               s6, s7, s8, s9, s10, s11, s12)  \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s13)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_14(                    \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_14(                        \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14) \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_13(                          \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_13(                              \
       i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13)    \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s14)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s14)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_15(                      \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_15(                          \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
     s15)                                                                       \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_14(                            \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_14(                                \
       i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14) \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s15)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s15)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_16(                      \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_16(                          \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
     s15, s16)                                                                  \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_15(i, c, k, a, s1, s2, s3, s4, \
-                                                   s5, s6, s7, s8, s9, s10,    \
-                                                   s11, s12, s13, s14, s15)    \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s16)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_15(i, c, k, a, s1, s2, s3, s4, s5, \
+                                               s6, s7, s8, s9, s10, s11, s12,  \
+                                               s13, s14, s15)                  \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s16)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_17(                      \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_17(                          \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
     s15, s16, s17)                                                             \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_16(                            \
-      i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, \
-      s15, s16)                                                                \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s17)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_16(i, c, k, a, s1, s2, s3, s4, s5, \
+                                               s6, s7, s8, s9, s10, s11, s12,  \
+                                               s13, s14, s15, s16)             \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s17)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_18(                      \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_18(                          \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
     s15, s16, s17, s18)                                                        \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_17(                            \
-      i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, \
-      s15, s16, s17)                                                           \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s18)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_17(i, c, k, a, s1, s2, s3, s4, s5, \
+                                               s6, s7, s8, s9, s10, s11, s12,  \
+                                               s13, s14, s15, s16, s17)        \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s18)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_19(                      \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_19(                          \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
     s15, s16, s17, s18, s19)                                                   \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_18(                            \
-      i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, \
-      s15, s16, s17, s18)                                                      \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s19)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_18(i, c, k, a, s1, s2, s3, s4, s5, \
+                                               s6, s7, s8, s9, s10, s11, s12,  \
+                                               s13, s14, s15, s16, s17, s18)   \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s19)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_20(                      \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_20(                          \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
     s15, s16, s17, s18, s19, s20)                                              \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_19(                            \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_19(                                \
       i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, \
       s15, s16, s17, s18, s19)                                                 \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s20)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s20)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_21(                      \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_21(                          \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
     s15, s16, s17, s18, s19, s20, s21)                                         \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_20(                            \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_20(                                \
       i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, \
       s15, s16, s17, s18, s19, s20)                                            \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s21)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s21)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_22(                      \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_22(                          \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
     s15, s16, s17, s18, s19, s20, s21, s22)                                    \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_21(                            \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_21(                                \
       i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, \
       s15, s16, s17, s18, s19, s20, s21)                                       \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s22)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s22)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_23(                      \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_23(                          \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
     s15, s16, s17, s18, s19, s20, s21, s22, s23)                               \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_22(                            \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_22(                                \
       i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, \
       s15, s16, s17, s18, s19, s20, s21, s22)                                  \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s23)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s23)
 
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_24(                      \
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_24(                          \
     i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,   \
     s15, s16, s17, s18, s19, s20, s21, s22, s23, s24)                          \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_23(                            \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_23(                                \
       i, c, k, a, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, \
       s15, s16, s17, s18, s19, s20, s21, s22, s23)                             \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s24)
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_1(i, c, k, a, s24)
 
 /* Dispatcher */
-#define _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_DISPATCH(n, i, c, k, a, \
-                                                               ...)           \
-  _UDS_CAT_EXPAND(_UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_, n)(         \
-      i, c, k, a, __VA_ARGS__)
+#define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_DISPATCH(n, i, c, k, a, ...) \
+  _UDS_CAT_EXPAND(_UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_, n)(i, c, k, a,   \
+                                                                 __VA_ARGS__)
 
 // clang-format off
+
 
 /**
  * @brief Register a new read dtc information event handler for several subfunction IDs
@@ -242,14 +240,14 @@
  * @param _act Execute the event handler for the event
  * @param ... List of subfunction IDs to register the handler for
  */
-#define UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_MANY(      \
+#define UDS_REGISTER_READ_DTC_INFO_HANDLER_MANY(          \
   _instance,                                              \
   _context,                                               \
   _check,                                                 \
   _act,                                                   \
   ...                                                     \
 )                                                         \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_DISPATCH( \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_DISPATCH(     \
       _UDS_VA_NARGS(__VA_ARGS__),                         \
       _instance,                                          \
       _context,                                           \
@@ -267,13 +265,13 @@
  * @param _check Check if the `_act` action should be executed
  * @param _act Execute the event handler for the event
  */
-#define UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_ALL(         \
+#define UDS_REGISTER_READ_DTC_INFO_HANDLER_ALL(             \
   _instance,                                                \
   _context,                                                 \
   _check,                                                   \
   _act                                                      \
 )                                                           \
-  _UDS_NEW_REGISTER_READ_DTC_INFO_HANDLER_APPLY_DISPATCH(   \
+  _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_DISPATCH(       \
       24,                                                   \
       _instance,                                            \
       _context,                                             \
@@ -300,7 +298,7 @@
  * @param _write_check Check if the `_write` action should be executed
  * @param _write Execute a write for the event
  */
-#define UDS_NEW_REGISTER_MEMORY_HANDLER(                                      \
+#define UDS_REGISTER_MEMORY_HANDLER(                                          \
   _instance,                                                                  \
   _context,                                                                   \
   _read_check,                                                                \
@@ -308,12 +306,12 @@
   _write_check,                                                               \
   _write                                                                      \
 )                                                                             \
-  STRUCT_SECTION_ITERABLE(uds_new_registration_t,                             \
+  STRUCT_SECTION_ITERABLE(uds_registration_t,                             \
       /* Use a counter to generate unique names for the iterable section */   \
-        _UDS_CAT_EXPAND(__uds_new_registration_id_memory_, __COUNTER__)) = {  \
+        _UDS_CAT_EXPAND(__uds_registration_id_memory_, __COUNTER__)) = {  \
     .instance = _instance,                                                    \
-    .type = UDS_NEW_REGISTRATION_TYPE__MEMORY,                                \
-    .applies_to_event = uds_new_filter_for_memory_by_addr,                    \
+    .type = uds_registration_tYPE__MEMORY,                                \
+    .applies_to_event = uds_filter_for_memory_by_addr,                    \
     .user_data = _context,                                                    \
     .memory = {                                                               \
       .read = {                                                               \
@@ -331,14 +329,14 @@
  * @brief Register memory by address event handler with ability to read/write
  *        to/from flash and ram.
  */  
-#define UDS_NEW_REGISTER_MEMORY_DEFAULT_HANDLER(_instance)                    \
-  UDS_NEW_REGISTER_MEMORY_HANDLER(                                            \
+#define UDS_REGISTER_MEMORY_DEFAULT_HANDLER(_instance)                        \
+  UDS_REGISTER_MEMORY_HANDLER(                                                \
     _instance,                                                                \
     NULL,                                                                     \
-    uds_new_check_default_memory_by_addr_read,                                \
-    uds_new_action_default_memory_by_addr_read,                               \
-    uds_new_check_default_memory_by_addr_write,                               \
-    uds_new_action_default_memory_by_addr_write                               \
+    uds_check_default_memory_by_addr_read,                                \
+    uds_action_default_memory_by_addr_read,                               \
+    uds_check_default_memory_by_addr_write,                               \
+    uds_action_default_memory_by_addr_write                               \
   )
 
 // clang-format on
@@ -360,7 +358,7 @@
  * @param _do_scheduled_reset Execute the `_do_scheduled_reset` action for the
  *        event
  */
-#define UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                   \
+#define UDS_REGISTER_ECU_RESET_HANDLER(                                       \
   _instance,                                                                  \
   _context,                                                                   \
   _reset_type,                                                                \
@@ -369,11 +367,11 @@
   _do_scheduled_reset_check,                                                  \
   _do_scheduled_reset                                                         \
 )                                                                             \
-  STRUCT_SECTION_ITERABLE(uds_new_registration_t,                             \
-        _UDS_CAT_EXPAND(__uds_new_registration_id, _reset_type)) = {          \
+  STRUCT_SECTION_ITERABLE(uds_registration_t,                             \
+        _UDS_CAT_EXPAND(__uds_registration_id, _reset_type)) = {          \
     .instance = _instance,                                                    \
-    .type = UDS_NEW_REGISTRATION_TYPE__ECU_RESET,                             \
-    .applies_to_event = uds_new_filter_for_ecu_reset_event,                   \
+    .type = uds_registration_tYPE__ECU_RESET,                             \
+    .applies_to_event = uds_filter_for_ecu_reset_event,                   \
     .user_data = _context,                                                    \
     .ecu_reset = {                                                            \
       .type = _reset_type,                                                    \
@@ -393,17 +391,17 @@
  * 
  * @param _instance Pointer to associated the UDS server instance
  */
-#define UDS_NEW_REGISTER_ECU_HARD_RESET_HANDLER(                             \
+#define UDS_REGISTER_ECU_HARD_RESET_HANDLER(                                 \
   _instance                                                                  \
 )                                                                            \
-  UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                        \
+  UDS_REGISTER_ECU_RESET_HANDLER(                                            \
     _instance,                                                               \
     NULL,                                                                    \
     ECU_RESET__HARD,                                                         \
-    uds_new_check_ecu_hard_reset,                                            \
-    uds_new_action_ecu_hard_reset,                                           \
-    uds_new_check_execute_scheduled_reset,                                   \
-    uds_new_action_execute_scheduled_reset                                   \
+    uds_check_ecu_hard_reset,                                            \
+    uds_action_ecu_hard_reset,                                           \
+    uds_check_execute_scheduled_reset,                                   \
+    uds_action_execute_scheduled_reset                                   \
   )
 
 // clang-format on
@@ -427,7 +425,7 @@
  * @note: @p _write_check and @p _write are optional. Set to NULL for read-only
  *        data identifier
  */
-#define UDS_NEW_REGISTER_DATA_IDENTIFIER_STATIC(                      \
+#define UDS_REGISTER_DATA_IDENTIFIER_STATIC(                          \
   _instance,                                                          \
   _data_id,                                                           \
   data_ptr,                                                           \
@@ -437,11 +435,11 @@
   _write,                                                             \
   _context                                                            \
 )                                                                     \
-  STRUCT_SECTION_ITERABLE(uds_new_registration_t,                     \
-        _UDS_CAT_EXPAND(__uds_new_registration_id, _data_id)) = {     \
+  STRUCT_SECTION_ITERABLE(uds_registration_t,                     \
+        _UDS_CAT_EXPAND(__uds_registration_id, _data_id)) = {     \
     .instance = _instance,                                            \
-    .type = UDS_NEW_REGISTRATION_TYPE__DATA_IDENTIFIER,               \
-    .applies_to_event = uds_new_filter_for_data_by_id_event,          \
+    .type = uds_registration_tYPE__DATA_IDENTIFIER,               \
+    .applies_to_event = uds_filter_for_data_by_id_event,          \
     .user_data = data_ptr,                                            \
     .data_identifier = {                                              \
       .user_context = _context,                                       \

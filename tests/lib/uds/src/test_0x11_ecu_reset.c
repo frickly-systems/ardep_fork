@@ -9,8 +9,8 @@
 #include <zephyr/ztest.h>
 
 UDSErr_t custom_check_for_0x11_return_subfunc_not_sup(
-    const struct uds_new_context *const context, bool *apply_action) {
-  if (context->registration->type == UDS_NEW_REGISTRATION_TYPE__ECU_RESET &&
+    const struct uds_context *const context, bool *apply_action) {
+  if (context->registration->type == uds_registration_tYPE__ECU_RESET &&
       context->event == UDS_EVT_EcuReset) {
     UDSECUResetArgs_t *args = context->arg;
     if (args->type == ECU_RESET__KEY_OFF_ON) {
@@ -21,8 +21,8 @@ UDSErr_t custom_check_for_0x11_return_subfunc_not_sup(
 }
 
 UDSErr_t custom_action_for_0x11_return_subfunc_not_sup(
-    struct uds_new_context *const context, bool *consume_event) {
-  if (context->registration->type == UDS_NEW_REGISTRATION_TYPE__ECU_RESET &&
+    struct uds_context *const context, bool *consume_event) {
+  if (context->registration->type == uds_registration_tYPE__ECU_RESET &&
       context->event == UDS_EVT_EcuReset) {
     UDSECUResetArgs_t *args = context->arg;
     if (args->type == ECU_RESET__KEY_OFF_ON) {
@@ -32,8 +32,8 @@ UDSErr_t custom_action_for_0x11_return_subfunc_not_sup(
   return UDS_OK;
 }
 
-ZTEST_F(lib_uds_new, test_0x11_ecu_reset_return_subfunc_not_sup) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x11_ecu_reset_return_subfunc_not_sup) {
+  struct uds_instance_t *instance = fixture->instance;
 
   data_id_check_fn_fake.custom_fake =
       custom_check_for_0x11_return_subfunc_not_sup;
@@ -52,8 +52,8 @@ ZTEST_F(lib_uds_new, test_0x11_ecu_reset_return_subfunc_not_sup) {
 /////////////////////////////////
 
 UDSErr_t custom_check_for_0x11_ecu_reset_event_works(
-    const struct uds_new_context *const context, bool *apply_action) {
-  if (context->registration->type == UDS_NEW_REGISTRATION_TYPE__ECU_RESET &&
+    const struct uds_context *const context, bool *apply_action) {
+  if (context->registration->type == uds_registration_tYPE__ECU_RESET &&
       context->event == UDS_EVT_EcuReset) {
     UDSECUResetArgs_t *args = context->arg;
     if (args->type == ECU_RESET__KEY_OFF_ON) {
@@ -64,8 +64,8 @@ UDSErr_t custom_check_for_0x11_ecu_reset_event_works(
 }
 
 UDSErr_t custom_action_for_0x11_ecu_reset_event_works(
-    struct uds_new_context *const context, bool *consume_event) {
-  if (context->registration->type == UDS_NEW_REGISTRATION_TYPE__ECU_RESET &&
+    struct uds_context *const context, bool *consume_event) {
+  if (context->registration->type == uds_registration_tYPE__ECU_RESET &&
       context->event == UDS_EVT_EcuReset) {
     UDSECUResetArgs_t *args = context->arg;
     if (args->type == ECU_RESET__KEY_OFF_ON) {
@@ -75,8 +75,8 @@ UDSErr_t custom_action_for_0x11_ecu_reset_event_works(
   return UDS_OK;
 }
 
-ZTEST_F(lib_uds_new, test_0x11_ecu_reset_ecu_reset_event_works) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x11_ecu_reset_ecu_reset_event_works) {
+  struct uds_instance_t *instance = fixture->instance;
 
   data_id_check_fn_fake.custom_fake =
       custom_check_for_0x11_ecu_reset_event_works;
@@ -98,8 +98,8 @@ ZTEST_F(lib_uds_new, test_0x11_ecu_reset_ecu_reset_event_works) {
 /////////////////////////////////
 
 UDSErr_t custom_check_for_0x11_do_scheduled_reset_event_works(
-    const struct uds_new_context *const context, bool *apply_action) {
-  if (context->registration->type == UDS_NEW_REGISTRATION_TYPE__ECU_RESET &&
+    const struct uds_context *const context, bool *apply_action) {
+  if (context->registration->type == uds_registration_tYPE__ECU_RESET &&
       context->event == UDS_EVT_DoScheduledReset) {
     if (*(uint32_t *)context->arg == ECU_RESET__KEY_OFF_ON) {
       *apply_action = true;
@@ -109,8 +109,8 @@ UDSErr_t custom_check_for_0x11_do_scheduled_reset_event_works(
 }
 
 UDSErr_t custom_action_for_0x11_do_scheduled_reset_event_works(
-    struct uds_new_context *const context, bool *consume_event) {
-  if (context->registration->type == UDS_NEW_REGISTRATION_TYPE__ECU_RESET &&
+    struct uds_context *const context, bool *consume_event) {
+  if (context->registration->type == uds_registration_tYPE__ECU_RESET &&
       context->event == UDS_EVT_DoScheduledReset) {
     if (*(uint32_t *)context->arg == ECU_RESET__KEY_OFF_ON) {
       *consume_event = true;
@@ -119,8 +119,8 @@ UDSErr_t custom_action_for_0x11_do_scheduled_reset_event_works(
   return UDS_OK;
 }
 
-ZTEST_F(lib_uds_new, test_0x11_ecu_reset_do_scheduled_reset_event_works) {
-  struct uds_new_instance_t *instance = fixture->instance;
+ZTEST_F(lib_uds, test_0x11_ecu_reset_do_scheduled_reset_event_works) {
+  struct uds_instance_t *instance = fixture->instance;
 
   data_id_check_fn_fake.custom_fake =
       custom_check_for_0x11_do_scheduled_reset_event_works;

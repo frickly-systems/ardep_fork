@@ -20,12 +20,12 @@ DECLARE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 
 DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
                         data_id_check_fn,
-                        const struct uds_new_context *const,
+                        const struct uds_context *const,
                         bool *);
 
 DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
                         data_id_action_fn,
-                        struct uds_new_context *const,
+                        struct uds_context *const,
                         bool *);
 
 extern const uint16_t data_id_r;
@@ -43,16 +43,16 @@ extern bool test_dynamic_registration_check_invoked;
 extern bool test_dynamic_registration_action_invoked;
 #endif  // # CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 
-struct lib_uds_new_fixture {
+struct lib_uds_fixture {
   UDSISOTpCConfig_t cfg;
-  struct uds_new_instance_t *instance;
+  struct uds_instance_t *instance;
   const struct device *can_dev;
 };
 
 /**
  * @brief Receive an event from iso14229
  */
-UDSErr_t receive_event(struct uds_new_instance_t *inst,
+UDSErr_t receive_event(struct uds_instance_t *inst,
                        UDSEvent_t event,
                        void *args);
 

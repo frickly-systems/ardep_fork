@@ -5,8 +5,9 @@
 
 menu "ARDEP"
 
+    rsource "can_router/Kconfig"
     rsource "iso14229/Kconfig"
     rsource "uds/Kconfig"
-    rsource "can_router/Kconfig"
+    rsource "uds_legacy/Kconfig"
 
 endmenu

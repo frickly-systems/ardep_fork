@@ -399,7 +399,7 @@
   UDS_NEW_REGISTER_ECU_RESET_HANDLER(                                        \
     _instance,                                                               \
     NULL,                                                                    \
-    ECU_RESET_HARD,                                                          \
+    ECU_RESET__HARD,                                                         \
     uds_new_check_ecu_hard_reset,                                            \
     uds_new_action_ecu_hard_reset,                                           \
     uds_new_check_execute_scheduled_reset,                                   \

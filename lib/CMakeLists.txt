@@ -6,4 +6,3 @@
 add_subdirectory_ifdef(CONFIG_CAN_ROUTER can_router)
 add_subdirectory_ifdef(CONFIG_ISO14229 iso14229)
 add_subdirectory_ifdef(CONFIG_UDS uds)
-add_subdirectory_ifdef(CONFIG_UDS_LEGACY uds_legacy)

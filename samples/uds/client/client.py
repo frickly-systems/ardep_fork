@@ -1,3 +1,17 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = [
+#    "can-isotp==2.0.3",
+#    "udsoncan==1.21.2",
+# ]
+# ///
+#
+# Copyright (C) Frickly Systems GmbH
+# Copyright (C) MBition GmbH
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
 import struct
 from typing import Any
 from udsoncan.client import Client

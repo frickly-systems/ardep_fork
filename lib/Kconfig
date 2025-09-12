@@ -34,7 +34,6 @@ menu "ARDEP"
     if UDS_USE_NEW_LIB
         menuconfig UDS
         bool "UDS"
-        default y
         select ISO14229
 
         rsource "uds_new/Kconfig"

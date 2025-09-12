@@ -203,16 +203,12 @@
  * @brief Register a new static data identifier
  * 
  * @param _instance Pointer to associated the UDS server instance
- * @param _data_id The data identifier to register the handler for
- * @param data_ptr Custom context oder data the handle the event
- * @param _read_check Check if the `_read` action should be executed
- * @param _read Execute a read for the event
- * @param _write_check Check if the `_write` action should be executed
- * @param _write Execute a write for the event
+ * @param _diag_session_ctrl_check Check if the `_diag_session_ctrl` action should be executed
+ * @param _diag_session_ctrl Execute a read for the event
+ * @param _session_timeout_check Check if the `_session_timeout` action should be executed
+ * @param _session_timeout Execute a write for the event
  * @param _context Optional context provided by the user
  * 
- * @note: @p _write_check and @p _write are optional. Set to NULL for read-only
- *        data identifier
  */
 #define UDS_REGISTER_DIAG_SESSION_CTRL_HANDLER(                                \
   _instance,                                                                   \

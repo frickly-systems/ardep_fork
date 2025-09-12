@@ -4,6 +4,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 menu "ARDEP"
+
+    config UDS_USE_NEW_LIB
+        bool "Use the new UDS lib implementation"
+        default y
+        help
+            Disable to use the legacy UDS implementation instead.
+
+
+    if ! UDS_USE_NEW_LIB
     menuconfig UDS
         bool "UDS"
         depends on CAN
@@ -15,23 +24,19 @@ menu "ARDEP"
         depends on IMG_MANAGER
         depends on REBOOT
 
-    if UDS
-        config UDS_USE_NEW_LIB
-            bool "Use the new UDS lib implementation"
-            default y
-            help
-                Disable to use the legacy UDS implementation instead.
-                
-        if ! UDS_USE_NEW_LIB
+        if UDS
             rsource "uds/Kconfig"
-        endif 
-        
-        if UDS_USE_NEW_LIB
-            rsource "uds_new/Kconfig"
-        endif 
-    endif
+        endif # UDS
+    endif # ! UDS_USE_NEW_LIB
+    
+    if UDS_USE_NEW_LIB
+        menuconfig UDS
+        bool "UDS"
+        default y
 
-    rsource "iso14229/Kconfig"
+        rsource "uds_new/Kconfig"
+        rsource "iso14229/Kconfig"
+    endif # UDS_USE_NEW_LIB
 
     menuconfig CAN_ROUTER
         bool "Can frame router"

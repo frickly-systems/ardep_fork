@@ -6,7 +6,7 @@
 # enable UDS module per default
 
 config UDS
- 	default y
+ 	default n
 
 config CAN
 	default y

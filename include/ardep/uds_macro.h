@@ -16,7 +16,7 @@
 #define _UDS_CAT_EXPAND(a, b) _UDS_CAT(a, b)
 #endif
 
-//////////////// MEMORY BY ADDRESS ///////////////////
+#pragma region MEMORY_BY_ADDRESS
 
 // clang-format off
 
@@ -73,7 +73,9 @@
 
 // clang-format on
 
-//////////////// ECU RESET ///////////////////
+#pragma endregion MEMORY_BY_ADDRESS
+
+#pragma region ECU_RESET
 
 // clang-format off
 
@@ -138,7 +140,9 @@
 
 // clang-format on
 
-//////////////// READ/WRITE BY IDENTIFIER ///////////////////
+#pragma endregion ECU_RESET
+
+#pragma region READ_WRITE_BY_IDENTIFIER
 
 // clang-format off
 
@@ -188,5 +192,56 @@
   };
 
 // clang-format on
+
+#pragma endregion READ_WRITE_BY_IDENTIFIER
+
+#pragma region DIAG_SESSION_CTRL
+
+// clang-format off
+
+/**
+ * @brief Register a new static data identifier
+ * 
+ * @param _instance Pointer to associated the UDS server instance
+ * @param _data_id The data identifier to register the handler for
+ * @param data_ptr Custom context oder data the handle the event
+ * @param _read_check Check if the `_read` action should be executed
+ * @param _read Execute a read for the event
+ * @param _write_check Check if the `_write` action should be executed
+ * @param _write Execute a write for the event
+ * @param _context Optional context provided by the user
+ * 
+ * @note: @p _write_check and @p _write are optional. Set to NULL for read-only
+ *        data identifier
+ */
+#define UDS_REGISTER_DIAG_SESSION_CTRL_HANDLER(                               \
+  _instance,                                                                  \
+  _diag_session_ctrl_check,                                                   \
+  _diag_session_ctrl,                                                         \
+  _session_timeout_check,                                                     \
+  _session_timeout,                                                           \
+  _context                                                                    \
+)                                                                             \
+  STRUCT_SECTION_ITERABLE(uds_registration_t,                                 \
+        _UDS_CAT_EXPAND(__uds_registration_diag_session_id_, __COUNTER__) = { \
+    .instance = _instance,                                                    \
+    .type = UDS_REGISTRATION_TYPE__DIAG_SESSION_CTRL,                         \
+    .applies_to_event = uds_filter_for_diag_session_ctrl_event,               \
+    .user_data = _context,                                                    \
+    .diag_session_ctrl = {                                                    \
+      .diag_sess_ctrl = {                                                     \
+        .check = _diag_session_ctrl_check,                                    \
+        .action = _diag_session_ctrl,                                         \
+      },                                                                      \
+      .session_timeout = {                                                    \
+        .check = _session_timeout_check,                                      \
+        .action = _session_timeout,                                           \
+      },                                                                      \
+    },                                                                        \
+  };
+
+// clang-format on
+
+#pragma endregion DIAG_SESSION_CTRL
 
 #endif  // ARDEP_UDS_MACRO_H

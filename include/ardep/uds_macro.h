@@ -16,7 +16,7 @@
 #define _UDS_CAT_EXPAND(a, b) _UDS_CAT(a, b)
 #endif
 
-#pragma region MEMORY_BY_ADDRESS
+// #region MEMORY_BY_ADDRESS
 
 // clang-format off
 
@@ -73,9 +73,9 @@
 
 // clang-format on
 
-#pragma endregion MEMORY_BY_ADDRESS
+// #endregion MEMORY_BY_ADDRESS
 
-#pragma region ECU_RESET
+// #region ECU_RESET
 
 // clang-format off
 
@@ -140,9 +140,9 @@
 
 // clang-format on
 
-#pragma endregion ECU_RESET
+// #endregion ECU_RESET
 
-#pragma region READ_WRITE_BY_IDENTIFIER
+// #region READ_WRITE_BY_IDENTIFIER
 
 // clang-format off
 
@@ -193,9 +193,9 @@
 
 // clang-format on
 
-#pragma endregion READ_WRITE_BY_IDENTIFIER
+// #endregion READ_WRITE_BY_IDENTIFIER
 
-#pragma region DIAG_SESSION_CTRL
+// #region DIAG_SESSION_CTRL
 
 // clang-format off
 
@@ -214,34 +214,34 @@
  * @note: @p _write_check and @p _write are optional. Set to NULL for read-only
  *        data identifier
  */
-#define UDS_REGISTER_DIAG_SESSION_CTRL_HANDLER(                               \
-  _instance,                                                                  \
-  _diag_session_ctrl_check,                                                   \
-  _diag_session_ctrl,                                                         \
-  _session_timeout_check,                                                     \
-  _session_timeout,                                                           \
-  _context                                                                    \
-)                                                                             \
-  STRUCT_SECTION_ITERABLE(uds_registration_t,                                 \
-        _UDS_CAT_EXPAND(__uds_registration_diag_session_id_, __COUNTER__) = { \
-    .instance = _instance,                                                    \
-    .type = UDS_REGISTRATION_TYPE__DIAG_SESSION_CTRL,                         \
-    .applies_to_event = uds_filter_for_diag_session_ctrl_event,               \
-    .user_data = _context,                                                    \
-    .diag_session_ctrl = {                                                    \
-      .diag_sess_ctrl = {                                                     \
-        .check = _diag_session_ctrl_check,                                    \
-        .action = _diag_session_ctrl,                                         \
-      },                                                                      \
-      .session_timeout = {                                                    \
-        .check = _session_timeout_check,                                      \
-        .action = _session_timeout,                                           \
-      },                                                                      \
-    },                                                                        \
+#define UDS_REGISTER_DIAG_SESSION_CTRL_HANDLER(                                \
+  _instance,                                                                   \
+  _diag_session_ctrl_check,                                                    \
+  _diag_session_ctrl,                                                          \
+  _session_timeout_check,                                                      \
+  _session_timeout,                                                            \
+  _context                                                                     \
+)                                                                              \
+  STRUCT_SECTION_ITERABLE(uds_registration_t,                                  \
+        _UDS_CAT_EXPAND(__uds_registration_diag_session_id_, __COUNTER__)) = { \
+    .instance = _instance,                                                     \
+    .type = UDS_REGISTRATION_TYPE__DIAG_SESSION_CTRL,                          \
+    .applies_to_event = uds_filter_for_diag_session_ctrl_event,                \
+    .user_data = _context,                                                     \
+    .diag_session_ctrl = {                                                     \
+      .diag_sess_ctrl = {                                                      \
+        .check = _diag_session_ctrl_check,                                     \
+        .action = _diag_session_ctrl,                                          \
+      },                                                                       \
+      .session_timeout = {                                                     \
+        .check = _session_timeout_check,                                       \
+        .action = _session_timeout,                                            \
+      },                                                                       \
+    },                                                                         \
   };
 
 // clang-format on
 
-#pragma endregion DIAG_SESSION_CTRL
+// #endregion DIAG_SESSION_CTRL
 
 #endif  // ARDEP_UDS_MACRO_H

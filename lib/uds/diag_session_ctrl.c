@@ -18,18 +18,18 @@ bool uds_filter_for_diag_session_ctrl_event(UDSEvent_t event) {
 
 uds_check_fn uds_get_check_for_diag_session_ctrl(
     const struct uds_registration_t* const reg) {
-  return reg->data_identifier.read.check;
+  return reg->diag_session_ctrl.diag_sess_ctrl.check;
 }
 uds_action_fn uds_get_action_for_diag_session_ctrl(
     const struct uds_registration_t* const reg) {
-  return reg->data_identifier.read.action;
+  return reg->diag_session_ctrl.diag_sess_ctrl.action;
 }
 
 uds_check_fn uds_get_check_for_session_timeout(
     const struct uds_registration_t* const reg) {
-  return reg->data_identifier.write.check;
+  return reg->diag_session_ctrl.session_timeout.check;
 }
 uds_action_fn uds_get_action_for_session_timeout(
     const struct uds_registration_t* const reg) {
-  return reg->data_identifier.write.action;
+  return reg->diag_session_ctrl.session_timeout.action;
 }

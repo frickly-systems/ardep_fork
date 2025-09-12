@@ -6,7 +6,6 @@
 menuconfig UDS_NEW
     bool "UDS New"
     select ISO14229
-    select REBOOT
     
 if UDS_NEW
 

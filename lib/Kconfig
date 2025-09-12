@@ -16,12 +16,22 @@ menu "ARDEP"
         depends on REBOOT
 
     if UDS
-        rsource "uds/Kconfig"
+        config UDS_USE_NEW_LIB
+            bool "Use the new UDS lib implementation"
+            default y
+            help
+                Disable to use the legacy UDS implementation instead.
+                
+        if ! UDS_USE_NEW_LIB
+            rsource "uds/Kconfig"
+        endif 
+        
+        if UDS_USE_NEW_LIB
+            rsource "uds_new/Kconfig"
+        endif 
     endif
-    
 
     rsource "iso14229/Kconfig"
-    rsource "uds_new/Kconfig"
 
     menuconfig CAN_ROUTER
         bool "Can frame router"

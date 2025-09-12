@@ -155,7 +155,7 @@ struct uds_new_actor {
   uds_new_action_fn action;
 };
 
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 
 /**
  * @brief Function to register a new data identifier at runtime
@@ -171,17 +171,17 @@ typedef int (*register_event_handler_fn)(
     struct uds_new_instance_t *inst,
     struct uds_new_registration_t registration);
 
-#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#endif  // CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 
 struct uds_new_instance_t {
   struct iso14229_zephyr_instance iso14229;
   struct uds_new_registration_t *static_registrations;
   void *user_context;
 
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
   struct uds_new_registration_t *dynamic_registrations;
   register_event_handler_fn register_event_handler;
-#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#endif  // CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 };
 
 int uds_new_init(struct uds_new_instance_t *inst,

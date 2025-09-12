@@ -3,18 +3,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-menuconfig UDS_NEW
-    bool "UDS New"
-    select ISO14229
-    
-if UDS_NEW
-
-module = UDS_NEW
-module-str = UDS new
+module = UDS
+module-str = UDS
 source "subsys/logging/Kconfig.template.log_config"
 
-config UDS_NEW_USE_DYNAMIC_REGISTRATION
+config UDS_USE_DYNAMIC_REGISTRATION
     bool "Allow registering new event handlers at runtime"
     default n
-
-endif # UDS_NEW

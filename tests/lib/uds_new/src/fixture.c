@@ -37,10 +37,10 @@ DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
 
 struct uds_new_instance_t fixture_uds_instance;
 
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 bool test_dynamic_registration_check_invoked;
 bool test_dynamic_registration_action_invoked;
-#endif  // # CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#endif  // # CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 
 const uint16_t data_id_r = 1;
 uint8_t data_id_r_data[4];
@@ -188,7 +188,7 @@ static void uds_new_before(void *f) {
 static void uds_new_after(void *f) {
   struct lib_uds_new_fixture *fixture = f;
 
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
   struct uds_new_registration_t *next =
       fixture->instance->dynamic_registrations;
 

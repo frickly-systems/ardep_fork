@@ -5,6 +5,8 @@
 
 menu "ARDEP"
 
+    rsource "iso14229/Kconfig"
+
     config UDS_USE_NEW_LIB
         bool "Use the new UDS lib implementation"
         default y
@@ -33,9 +35,9 @@ menu "ARDEP"
         menuconfig UDS
         bool "UDS"
         default y
+        select ISO14229
 
         rsource "uds_new/Kconfig"
-        rsource "iso14229/Kconfig"
     endif # UDS_USE_NEW_LIB
 
     menuconfig CAN_ROUTER

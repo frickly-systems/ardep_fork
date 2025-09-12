@@ -8,7 +8,7 @@
 #include "memory_by_address.h"
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
+LOG_MODULE_REGISTER(uds, CONFIG_UDS_LOG_LEVEL);
 
 #include "data_by_identifier.h"
 #include "ecu_reset.h"
@@ -123,7 +123,7 @@ UDSErr_t uds_new_handle_event(struct uds_new_instance_t* instance,
   }
 
   // Optional dynamic registrations
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
   struct uds_new_registration_t* reg = instance->dynamic_registrations;
   while (reg != NULL) {
     bool consume_event = false;
@@ -136,7 +136,7 @@ UDSErr_t uds_new_handle_event(struct uds_new_instance_t* instance,
 
     reg = reg->next;
   }
-#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#endif  // CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 
   if (!found_at_least_one_match) {
     return default_nrc_when_no_handler_found(event);
@@ -209,7 +209,7 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
   return UDS_NRC_ServiceNotSupported;
 }
 
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 // Registration function to dynamically register new handlers at runtime
 // (Heap allocated)
 static int uds_new_register_event_handler(
@@ -238,7 +238,7 @@ static int uds_new_register_event_handler(
 
   return 0;
 }
-#endif  //  CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#endif  //  CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 
 int uds_new_init(struct uds_new_instance_t* inst,
                  const UDSISOTpCConfig_t* iso_tp_config,
@@ -246,10 +246,10 @@ int uds_new_init(struct uds_new_instance_t* inst,
                  void* user_context) {
   inst->user_context = user_context;
 
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
   inst->dynamic_registrations = NULL;
   inst->register_event_handler = uds_new_register_event_handler;
-#endif  //  CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#endif  //  CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 
   int ret = iso14229_zephyr_init(&inst->iso14229, iso_tp_config, can_dev, inst);
   if (ret < 0) {

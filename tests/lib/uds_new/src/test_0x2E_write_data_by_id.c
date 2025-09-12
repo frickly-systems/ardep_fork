@@ -219,7 +219,7 @@ ZTEST_F(lib_uds_new, test_0x2E_write_by_id_returns_action_returncode) {
 }
 
 // //////////////////////7
-#ifdef CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 
 #define UDS_UNIQUE_DATA_ID 0xFEEF
 
@@ -309,4 +309,4 @@ ZTEST_F(
 }
 //////////////////////7
 
-#endif  // CONFIG_UDS_NEW_USE_DYNAMIC_REGISTRATION
+#endif  // CONFIG_UDS_USE_DYNAMIC_REGISTRATION

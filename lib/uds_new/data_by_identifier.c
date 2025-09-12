@@ -8,7 +8,7 @@
 #include "ardep/uds_new.h"
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_DECLARE(uds_new, CONFIG_UDS_NEW_LOG_LEVEL);
+LOG_MODULE_DECLARE(uds, CONFIG_UDS_LOG_LEVEL);
 
 #include "data_by_identifier.h"
 

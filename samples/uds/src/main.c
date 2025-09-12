@@ -9,8 +9,6 @@
 
 #include "ardep/uds.h"
 
-#include <errno.h>
-
 #include <zephyr/drivers/can.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
@@ -108,6 +106,8 @@ UDSErr_t write_data_by_id_action(struct uds_context *const context,
 
 struct uds_instance_t instance;
 
+UDS_REGISTER_ECU_HARD_RESET_HANDLER(&instance);
+
 UDS_REGISTER_DATA_IDENTIFIER_STATIC(&instance,
                                     primitive_type_id,
                                     &primitive_type,
@@ -125,8 +125,6 @@ UDS_REGISTER_DATA_IDENTIFIER_STATIC(&instance,
                                     NULL,
                                     NULL,
                                     &string_size);
-
-UDS_REGISTER_ECU_HARD_RESET_HANDLER(&instance);
 
 UDS_REGISTER_MEMORY_DEFAULT_HANDLER(&instance);
 
@@ -146,15 +144,16 @@ UDSErr_t read_mem_by_addr_impl(struct UDSServer *srv,
 }
 
 int main(void) {
+  printk("ARDEP UDS Sample\n");
+
   UDSISOTpCConfig_t cfg = {
     // Hardwarea Addresses
-    .source_addr = 0x7E8,  // Can ID Server (us)
-    .target_addr = 0x7E0,  // Can ID Client (them)
+    .source_addr = 0x7E8,
+    .target_addr = 0x7E0,
 
     // Functional Addresses
-    .source_addr_func = 0x7DF,             // ID Client
-    .target_addr_func = UDS_TP_NOOP_ADDR,  // ID Server
-                                           // (us)
+    .source_addr_func = 0x7DF,
+    .target_addr_func = UDS_TP_NOOP_ADDR,
   };
 
   uds_init(&instance, &cfg, can_dev, &instance);

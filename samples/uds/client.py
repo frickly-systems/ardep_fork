@@ -112,8 +112,20 @@ class StringCodec(udsoncan.DidCodec):
         return 15  # "Hello from UDS" + null terminator = 15 bytes
 
 
+def try_run(runnable):
+    try:
+        runnable()
+
+    except NegativeResponseException as e:
+        print(
+            f"Server refused our request for service {e.response.service.get_name()} "
+            f'with code "{e.response.code_name}" (0x{e.response.code:02x})'
+        )
+
+
 def main(args: Namespace):
-    can = args.can
+    can: str = args.can
+    reset: bool = args.reset
 
     addr = isotp.Address(isotp.AddressingMode.Normal_11bits, rxid=0x7E0, txid=0x7E8)
     conn = IsoTPSocketConnection(can, addr)
@@ -138,24 +150,18 @@ def main(args: Namespace):
         #     print(f"Server sent an invalid payload : {e.response.original_payload}")
 
         # try:
-        #     ecu_reset(client)
+        #     read_write_data_by_identifier(client)
 
         # except NegativeResponseException as e:
         #     print(
         #         f"Server refused our request for service {e.response.service.get_name()} "
         #         f'with code "{e.response.code_name}" (0x{e.response.code:02x})'
         #     )
+        # except (InvalidResponseException, UnexpectedResponseException) as e:
+        #     print(f"Server sent an invalid payload : {e.response.original_payload}")
 
-        try:
-            read_write_data_by_identifier(client)
-
-        except NegativeResponseException as e:
-            print(
-                f"Server refused our request for service {e.response.service.get_name()} "
-                f'with code "{e.response.code_name}" (0x{e.response.code:02x})'
-            )
-        except (InvalidResponseException, UnexpectedResponseException) as e:
-            print(f"Server sent an invalid payload : {e.response.original_payload}")
+        if reset:
+            try_run(lambda c: ecu_reset(c), client)
 
 
 if __name__ == "__main__":
@@ -163,6 +169,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-c", "--can", default="vcan0", help="CAN interface (default: vcan0)"
     )
+    parser.add_argument("-r", "--reset", action="store_true", help="Perform ECU reset")
     parsed_args = parser.parse_args()
 
     main(parsed_args)

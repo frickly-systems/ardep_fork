@@ -162,10 +162,10 @@ int uds_init(struct uds_instance_t *inst,
              void *user_context);
 
 enum uds_registration_type_t {
-  uds_registration_tYPE__ECU_RESET,
-  uds_registration_tYPE__MEMORY,
-  uds_registration_tYPE__READ_DTC_INFO,
-  uds_registration_tYPE__DATA_IDENTIFIER,
+  UDS_REGISTRATION_TYPE__ECU_RESET,
+  UDS_REGISTRATION_TYPE__MEMORY,
+  UDS_REGISTRATION_TYPE__READ_DTC_INFO,
+  UDS_REGISTRATION_TYPE__DATA_IDENTIFIER,
 };
 
 /**

@@ -42,7 +42,7 @@
       /* Use a counter to generate unique names for the iterable section */   \
         _UDS_CAT_EXPAND(__uds_registration_id_memory_, __COUNTER__)) = {  \
     .instance = _instance,                                                    \
-    .type = uds_registration_tYPE__MEMORY,                                \
+    .type = UDS_REGISTRATION_TYPE__MEMORY,                                \
     .applies_to_event = uds_filter_for_memory_by_addr,                    \
     .user_data = _context,                                                    \
     .memory = {                                                               \
@@ -102,7 +102,7 @@
   STRUCT_SECTION_ITERABLE(uds_registration_t,                             \
         _UDS_CAT_EXPAND(__uds_registration_id, _reset_type)) = {          \
     .instance = _instance,                                                    \
-    .type = uds_registration_tYPE__ECU_RESET,                             \
+    .type = UDS_REGISTRATION_TYPE__ECU_RESET,                             \
     .applies_to_event = uds_filter_for_ecu_reset_event,                   \
     .user_data = _context,                                                    \
     .ecu_reset = {                                                            \
@@ -170,7 +170,7 @@
   STRUCT_SECTION_ITERABLE(uds_registration_t,                     \
         _UDS_CAT_EXPAND(__uds_registration_id, _data_id)) = {     \
     .instance = _instance,                                            \
-    .type = uds_registration_tYPE__DATA_IDENTIFIER,               \
+    .type = UDS_REGISTRATION_TYPE__DATA_IDENTIFIER,               \
     .applies_to_event = uds_filter_for_data_by_id_event,          \
     .user_data = data_ptr,                                            \
     .data_identifier = {                                              \

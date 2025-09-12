@@ -26,7 +26,7 @@ ZTEST_F(lib_uds, test_0x22_read_by_id_fails_when_no_action_applies) {
 
 UDSErr_t custom_check_for_0x22_applies_action_when_check_succeeds(
     const struct uds_context *const context, bool *apply_action) {
-  if (context->registration->type == uds_registration_tYPE__DATA_IDENTIFIER &&
+  if (context->registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
       context->registration->data_identifier.data_id == data_id_r &&
       context->event == UDS_EVT_ReadDataByIdent) {
     *apply_action = true;
@@ -56,7 +56,7 @@ ZTEST_F(lib_uds, test_0x22_read_by_id_applies_action_when_check_succeeds) {
 
 UDSErr_t custom_check_for_0x22_consume_event_by_default_on_action(
     const struct uds_context *const context, bool *apply_action) {
-  if (context->registration->type == uds_registration_tYPE__DATA_IDENTIFIER &&
+  if (context->registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
       context->registration->data_identifier.data_id ==
           data_id_rw_duplicated1 &&
       context->event == UDS_EVT_ReadDataByIdent) {
@@ -87,7 +87,7 @@ ZTEST_F(lib_uds, test_0x22_read_by_id_consume_event_by_default_on_action) {
 
 UDSErr_t custom_check_for_0x22_both_actions_are_executed(
     const struct uds_context *const context, bool *apply_action) {
-  if (context->registration->type == uds_registration_tYPE__DATA_IDENTIFIER &&
+  if (context->registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
       context->registration->data_identifier.data_id ==
           data_id_rw_duplicated1 &&
       context->event == UDS_EVT_ReadDataByIdent) {
@@ -98,7 +98,7 @@ UDSErr_t custom_check_for_0x22_both_actions_are_executed(
 
 UDSErr_t custom_action_for_0x22_both_actions_are_executed(
     struct uds_context *const context, bool *consume_event) {
-  if (context->registration->type == uds_registration_tYPE__DATA_IDENTIFIER &&
+  if (context->registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
       context->registration->data_identifier.data_id ==
           data_id_rw_duplicated1 &&
       context->event == UDS_EVT_ReadDataByIdent) {
@@ -130,7 +130,7 @@ ZTEST_F(lib_uds, test_0x22_read_by_id_both_actions_are_executed) {
 //////////////////////7
 UDSErr_t custom_check_for_0x22_returns_action_returncode(
     const struct uds_context *const context, bool *apply_action) {
-  if (context->registration->type == uds_registration_tYPE__DATA_IDENTIFIER &&
+  if (context->registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
       context->registration->data_identifier.data_id == data_id_r &&
       context->event == UDS_EVT_ReadDataByIdent) {
     *apply_action = true;
@@ -140,7 +140,7 @@ UDSErr_t custom_check_for_0x22_returns_action_returncode(
 
 UDSErr_t custom_action_for_0x22_returns_action_returncode(
     struct uds_context *const context, bool *consume_event) {
-  if (context->registration->type == uds_registration_tYPE__DATA_IDENTIFIER &&
+  if (context->registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
       context->registration->data_identifier.data_id == data_id_r &&
       context->event == UDS_EVT_ReadDataByIdent) {
     *consume_event = false;
@@ -178,7 +178,7 @@ ZTEST_F(lib_uds, test_0x22_read_by_id_returns_action_returncode) {
 
 UDSErr_t custom_check_for_0x22_dynamic_registration(
     const struct uds_context *const context, bool *apply_action) {
-  if (context->registration->type == uds_registration_tYPE__DATA_IDENTIFIER &&
+  if (context->registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
       context->registration->data_identifier.data_id == UDS_UNIQUE_DATA_ID &&
       context->event == UDS_EVT_ReadDataByIdent) {
     test_dynamic_registration_check_invoked = true;
@@ -189,7 +189,7 @@ UDSErr_t custom_check_for_0x22_dynamic_registration(
 
 UDSErr_t custom_action_for_0x22_dynamic_registration(
     struct uds_context *const context, bool *consume_event) {
-  if (context->registration->type == uds_registration_tYPE__DATA_IDENTIFIER &&
+  if (context->registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
       context->registration->data_identifier.data_id == UDS_UNIQUE_DATA_ID &&
       context->event == UDS_EVT_ReadDataByIdent) {
     consume_event = false;
@@ -202,7 +202,7 @@ ZTEST_F(lib_uds, test_0x22_read_by_id_dynamic_registration) {
   struct uds_instance_t *instance = fixture->instance;
 
   struct uds_registration_t reg;
-  reg.type = uds_registration_tYPE__DATA_IDENTIFIER;
+  reg.type = UDS_REGISTRATION_TYPE__DATA_IDENTIFIER;
   reg.applies_to_event = uds_filter_for_data_by_id_event;
   reg.data_identifier.data_id = UDS_UNIQUE_DATA_ID;
   reg.data_identifier.read.check = custom_check_for_0x22_dynamic_registration;
@@ -232,7 +232,7 @@ ZTEST_F(lib_uds,
   struct uds_instance_t *instance = fixture->instance;
 
   struct uds_registration_t reg;
-  reg.type = uds_registration_tYPE__DATA_IDENTIFIER;
+  reg.type = UDS_REGISTRATION_TYPE__DATA_IDENTIFIER;
   reg.applies_to_event = uds_filter_for_data_by_id_event;
   reg.data_identifier.data_id = UDS_UNIQUE_DATA_ID;
   reg.data_identifier.read.check = NULL;

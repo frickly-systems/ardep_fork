@@ -195,6 +195,7 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
                               uds_get_check_for_read_dtc_info,
                               uds_get_action_for_read_dtc_info);
     case UDS_EVT_Err:
+    case UDS_EVT_ClearDiagnosticInfo:
     case UDS_EVT_CommCtrl:
     case UDS_EVT_SecAccessRequestSeed:
     case UDS_EVT_SecAccessValidateKey:

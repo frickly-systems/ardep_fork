@@ -16,7 +16,7 @@
 #define _UDS_CAT_EXPAND(a, b) _UDS_CAT(a, b)
 #endif
 
-// #region  READ_DTC_INFORMATION
+// #region READ_DTC_INFORMATION
 
 // clang-format off
 
@@ -36,12 +36,12 @@
   _act,                                                                             \
   _subfunc_id                                                                       \
 )                                                                                   \
-  STRUCT_SECTION_ITERABLE(uds_registration_t,                                   \
+  STRUCT_SECTION_ITERABLE(uds_registration_t,                                       \
       /* Use a counter to generate unique names for the iterable section */         \
-        _UDS_CAT_EXPAND(__uds_registration_id_read_dtc_info, __COUNTER__)) = {  \
+        _UDS_CAT_EXPAND(__uds_registration_id_read_dtc_info, __COUNTER__)) = {      \
     .instance = _instance,                                                          \
-    .type = UDS_REGISTRATION_TYPE__READ_DTC_INFO,                               \
-    .applies_to_event = uds_filter_for_read_dtc_info_event,                     \
+    .type = UDS_REGISTRATION_TYPE__READ_DTC_INFO,                                   \
+    .applies_to_event = uds_filter_for_read_dtc_info_event,                         \
     .user_data = _context,                                                          \
     .read_dtc = {                                                                   \
       .sub_function = _subfunc_id,                                                  \
@@ -54,14 +54,14 @@
 
 // clang-format on
 
-/* Count 1..27 varargs */
+/* Count 1..24 varargs */
 #define _UDS_VA_NARGS_IMPL(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, \
                            _13, _14, _15, _16, _17, _18, _19, _20, _21, _22,  \
-                           _23, _24, _25, _26, _27, N, ...)                   \
+                           _23, _24, N, ...)                                  \
   N
 #define _UDS_VA_NARGS(...)                                                    \
-  _UDS_VA_NARGS_IMPL(__VA_ARGS__, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, \
-                     16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+  _UDS_VA_NARGS_IMPL(__VA_ARGS__, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, \
+                     13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
 
 /* Base “apply one” primitive */
 #define _UDS_REGISTER_READ_DTC_INFO_HANDLER_APPLY_ONE(_inst, _ctx, _chk, _act, \

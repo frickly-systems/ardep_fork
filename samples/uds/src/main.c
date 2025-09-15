@@ -221,7 +221,8 @@ int main(void) {
     return err;
   }
 
-  LOG_INF("CAN device started\n");
+  LOG_INF("CAN device started");
 
-  instance.iso14229.thread_run(&instance.iso14229);
+  instance.iso14229.thread_start(&instance.iso14229);
+  LOG_INF("UDS thread started");
 }

@@ -10,6 +10,7 @@
 
 #include <zephyr/drivers/can.h>
 #include <zephyr/kernel.h>
+#include <zephyr/sys/atomic.h>
 
 #include <iso14229.h>
 
@@ -35,11 +36,18 @@ struct iso14229_zephyr_instance {
 
   void* user_context;
 
+  k_tid_t thread_id;
+  struct k_thread thread_data;
+  K_KERNEL_STACK_MEMBER(thread_stack, 1024);
+  bool thread_running;
+  atomic_t thread_stop_requested;
+  struct k_mutex thread_mutex;
+
   int (*set_callback)(struct iso14229_zephyr_instance* inst,
                       uds_callback callback);
   void (*thread_tick)(struct iso14229_zephyr_instance* inst);
-  // TODO: Start a thread and don't block
-  void (*thread_run)(struct iso14229_zephyr_instance* inst);
+  int (*thread_start)(struct iso14229_zephyr_instance* inst);
+  int (*thread_stop)(struct iso14229_zephyr_instance* inst);
 };
 
 int iso14229_zephyr_init(struct iso14229_zephyr_instance* inst,

@@ -38,7 +38,7 @@ UDSErr_t read_mem_by_address_check(const struct uds_context *const context,
 
   *apply_action = true;
   LOG_INF("Check to read memory at address 0x%08X with size %d successful",
-          args->memAddr, args->memSize);
+          addr, size);
 
   *apply_action = true;
   return UDS_OK;
@@ -50,8 +50,7 @@ UDSErr_t read_mem_by_address_action(struct uds_context *const context,
   uint32_t addr = (uint32_t)(uintptr_t)args->memAddr;
   uint32_t size = args->memSize;
 
-  LOG_INF("Reading memory at address 0x%08X with size %d", args->memAddr,
-          args->memSize);
+  LOG_INF("Reading memory at address 0x%08X with size %d", addr, size);
 
   return args->copy(&context->instance->iso14229.server,
                     &fake_memory[addr - fake_memory_start_addr], size);
@@ -71,7 +70,7 @@ UDSErr_t write_mem_by_address_check(const struct uds_context *const context,
 
   *apply_action = true;
   LOG_INF("Check to write memory at address 0x%08X with size %d successful",
-          args->memAddr, args->memSize);
+          addr, size);
 
   *apply_action = true;
   return UDS_OK;

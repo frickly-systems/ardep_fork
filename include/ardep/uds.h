@@ -236,6 +236,8 @@ struct uds_registration_t {
    * We need to filter before any "check" functions because those reside
    * inside the unnamed union member. Thus accessing the wrong view on the data
    * can lead to incorrect data and behavior.
+   *
+   * @note See e.g. @ref uds_filter_for_diag_session_ctrl_event
    */
   bool (*applies_to_event)(UDSEvent_t event);
 

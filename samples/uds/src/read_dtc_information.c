@@ -55,15 +55,20 @@ UDSErr_t read_dtc_info_action(struct uds_context *const context,
       ret = args->copy(&context->instance->iso14229.server, dtc_records[i].dtc,
                        sizeof(dtc_records[i].dtc));
       if (ret != UDS_OK) {
-        LOG_ERR("Failed to copy DTC: 0x%06X ; Err = %d", dtc_records[i].dtc,
-                ret);
+        uint32_t dtc_value = (dtc_records[i].dtc[0] << 16) |
+                             (dtc_records[i].dtc[1] << 8) |
+                             dtc_records[i].dtc[2];
+        LOG_ERR("Failed to copy DTC: 0x%06X ; Err = %d", dtc_value, ret);
         return ret;
       }
       ret = args->copy(&context->instance->iso14229.server,
                        &dtc_records[i].status, sizeof(dtc_records[i].status));
       if (ret != UDS_OK) {
+        uint32_t dtc_value = (dtc_records[i].dtc[0] << 16) |
+                             (dtc_records[i].dtc[1] << 8) |
+                             dtc_records[i].dtc[2];
         LOG_ERR("Failed to copy DTC status: 0x%06X (status: 0x%02X) ; Err = %d",
-                dtc_records[i].dtc, dtc_records[i].status, ret);
+                dtc_value, dtc_records[i].status, ret);
         return ret;
       }
     }

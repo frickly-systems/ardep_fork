@@ -79,8 +79,14 @@
 
 // clang-format off
 
+
+
 /**
  * @brief Register a new ecu reset event handler
+ * 
+ * @details The `UDS_EVT_DoScheduledReset` event is triggered after the 
+ *          response to the `UDS_EVT_EcuReset` event is send and the wait
+ *          duration has elapsed
  * 
  * @param _instance Pointer to associated the UDS server instance
  * @param _context Optional context provided by the user

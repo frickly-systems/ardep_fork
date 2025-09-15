@@ -26,7 +26,7 @@ int main(void) {
   LOG_INF("ARDEP UDS Sample");
 
   UDSISOTpCConfig_t cfg = {
-    // Hardwarea Addresses
+    // Hardware Addresses
     .source_addr = 0x7E8,
     .target_addr = 0x7E0,
 

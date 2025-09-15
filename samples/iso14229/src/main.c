@@ -42,7 +42,7 @@ UDSErr_t read_mem_by_addr_impl(struct UDSServer *srv,
 
 int main(void) {
   UDSISOTpCConfig_t cfg = {
-    // Hardwarea Addresses
+    // Hardware Addresses
     .source_addr = 0x7E8,  // Can ID Server (us)
     .target_addr = 0x7E0,  // Can ID Client (them)
 

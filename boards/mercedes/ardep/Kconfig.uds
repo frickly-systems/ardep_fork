@@ -6,11 +6,15 @@
 # enable UDS module per default
 
 config UDS
- 	default n
+	default y
+
+config ISO14229
+	default y
 
 config CAN
 	default y
 
+# Disable zephyr iso-tp module as we use an external module
 config ISOTP
 	default n
 

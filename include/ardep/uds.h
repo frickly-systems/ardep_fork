@@ -104,7 +104,7 @@ struct uds_context {
  * @param context The context of this UDS Event
  * @param apply_action set to `true` when an associated action should be
  *                          applied to this event.
- * @returns UDS_PositiveResponse on success
+ * @returns UDS_OK on success
  * @returns UDS_NRC_* on failure. This NRC is returned to the UDS client
  */
 typedef UDSErr_t (*uds_check_fn)(const struct uds_context *const context,
@@ -236,6 +236,8 @@ struct uds_registration_t {
    * We need to filter before any "check" functions because those reside
    * inside the unnamed union member. Thus accessing the wrong view on the data
    * can lead to incorrect data and behavior.
+   *
+   * @note See e.g. @ref uds_filter_for_diag_session_ctrl_event
    */
   bool (*applies_to_event)(UDSEvent_t event);
 

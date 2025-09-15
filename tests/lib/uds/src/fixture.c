@@ -49,60 +49,60 @@ const uint16_t data_id_rw_duplicated1 = 3;
 const uint16_t data_id_rw_duplicated2 = 3;
 uint8_t data_id_rw_duplicated_data[4];
 
-UDS_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
-                                    data_id_r,
-                                    data_id_r_data,
-                                    // read
-                                    data_id_check_fn,
-                                    data_id_action_fn,
-                                    // write
-                                    NULL,
-                                    NULL,
-                                    NULL)
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&fixture_uds_instance,
+                                        data_id_r,
+                                        data_id_r_data,
+                                        // read
+                                        data_id_check_fn,
+                                        data_id_action_fn,
+                                        // write
+                                        NULL,
+                                        NULL,
+                                        NULL)
 
-UDS_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
-                                    data_id_rw,
-                                    data_id_rw_data,
-                                    // read
-                                    data_id_check_fn,
-                                    data_id_action_fn,
-                                    // write
-                                    data_id_check_fn,
-                                    data_id_action_fn,
-                                    NULL)
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&fixture_uds_instance,
+                                        data_id_rw,
+                                        data_id_rw_data,
+                                        // read
+                                        data_id_check_fn,
+                                        data_id_action_fn,
+                                        // write
+                                        data_id_check_fn,
+                                        data_id_action_fn,
+                                        NULL)
 
 // Duplicated Registratin for the same data ID
-UDS_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
-                                    data_id_rw_duplicated1,
-                                    data_id_rw_duplicated_data,
-                                    // read
-                                    data_id_check_fn,
-                                    data_id_action_fn,
-                                    // write
-                                    data_id_check_fn,
-                                    data_id_action_fn,
-                                    NULL)
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&fixture_uds_instance,
+                                        data_id_rw_duplicated1,
+                                        data_id_rw_duplicated_data,
+                                        // read
+                                        data_id_check_fn,
+                                        data_id_action_fn,
+                                        // write
+                                        data_id_check_fn,
+                                        data_id_action_fn,
+                                        NULL)
 
-UDS_REGISTER_DATA_IDENTIFIER_STATIC(&fixture_uds_instance,
-                                    data_id_rw_duplicated2,
-                                    data_id_rw_duplicated_data,
-                                    // read
-                                    data_id_check_fn,
-                                    data_id_action_fn,
-                                    // write
-                                    data_id_check_fn,
-                                    data_id_action_fn,
-                                    NULL)
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&fixture_uds_instance,
+                                        data_id_rw_duplicated2,
+                                        data_id_rw_duplicated_data,
+                                        // read
+                                        data_id_check_fn,
+                                        data_id_action_fn,
+                                        // write
+                                        data_id_check_fn,
+                                        data_id_action_fn,
+                                        NULL)
 
 UDS_REGISTER_ECU_RESET_HANDLER(&fixture_uds_instance,
-                               NULL,
                                ECU_RESET__KEY_OFF_ON,
                                // ecu_reset
                                data_id_check_fn,
                                data_id_action_fn,
                                // do_scheduled_reset
                                data_id_check_fn,
-                               data_id_action_fn)
+                               data_id_action_fn,
+                               NULL)
 
 UDS_REGISTER_MEMORY_DEFAULT_HANDLER(&fixture_uds_instance)
 
@@ -116,9 +116,9 @@ UDS_REGISTER_DIAG_SESSION_CTRL_HANDLER(&fixture_uds_instance,
                                        NULL)
 
 UDS_REGISTER_READ_DTC_INFO_HANDLER_ALL(&fixture_uds_instance,
-                                       NULL,
                                        data_id_check_fn,
-                                       data_id_action_fn)
+                                       data_id_action_fn,
+                                       NULL)
 
 static const UDSISOTpCConfig_t default_cfg = {
   // Hardware Addresses

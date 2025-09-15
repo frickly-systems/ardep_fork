@@ -47,12 +47,13 @@ UDSErr_t read_data_by_id_action(struct uds_context *const context,
 
   if (context->registration->data_identifier.data_id == primitive_type_id) {
     // Convert to MSB-First as defined in ISO 14229
-    *(uint16_t *)temp =
-        sys_cpu_to_be16(*(uint16_t *)context->registration->user_data);
+    *(uint16_t *)temp = sys_cpu_to_be16(
+        *(uint16_t *)context->registration->data_identifier.user_context);
   } else if (context->registration->data_identifier.data_id == string_id) {
     // Transport string as raw data without conversion
-    memcpy(temp, context->registration->user_data,
-           *(uint16_t *)context->registration->data_identifier.user_context);
+    uint16_t size =
+        *(uint16_t *)context->registration->data_identifier.user_context;
+    memcpy(temp, context->registration->data_identifier.data, size);
   }
 
   // Signal this action consumes the event
@@ -81,7 +82,7 @@ UDSErr_t write_data_by_id_action(struct uds_context *const context,
                                  bool *consume_event) {
   UDSWDBIArgs_t *args = context->arg;
 
-  uint16_t *data = context->registration->user_data;
+  uint16_t *data = context->registration->data_identifier.data;
   *data = sys_be16_to_cpu(*(uint16_t *)args->data);
 
   LOG_INF("Written data to id 0x%02X: 0x%04X",
@@ -93,20 +94,20 @@ UDSErr_t write_data_by_id_action(struct uds_context *const context,
   return UDS_PositiveResponse;
 }
 
-UDS_REGISTER_DATA_IDENTIFIER_STATIC(&instance,
-                                    primitive_type_id,
-                                    &primitive_type,
-                                    read_data_by_id_check,
-                                    read_data_by_id_action,
-                                    write_data_by_id_check,
-                                    write_data_by_id_action,
-                                    &primitive_type_size);
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&instance,
+                                        primitive_type_id,
+                                        &primitive_type,
+                                        read_data_by_id_check,
+                                        read_data_by_id_action,
+                                        write_data_by_id_check,
+                                        write_data_by_id_action,
+                                        &primitive_type_size);
 
-UDS_REGISTER_DATA_IDENTIFIER_STATIC(&instance,
-                                    string_id,
-                                    &string,
-                                    read_data_by_id_check,
-                                    read_data_by_id_action,
-                                    NULL,
-                                    NULL,
-                                    &string_size);
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&instance,
+                                        string_id,
+                                        &string,
+                                        read_data_by_id_check,
+                                        read_data_by_id_action,
+                                        NULL,
+                                        NULL,
+                                        &string_size);

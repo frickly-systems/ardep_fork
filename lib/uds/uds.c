@@ -76,10 +76,10 @@ static UDSErr_t default_nrc_when_no_handler_found(UDSEvent_t event) {
       return UDS_PositiveResponse;
     case UDS_EVT_WriteDataByIdent:
     case UDS_EVT_ReadDataByIdent:
-    case UDS_EVT_ReadDTCInformation:
       return UDS_NRC_RequestOutOfRange;
     case UDS_EVT_EcuReset:
     case UDS_EVT_DoScheduledReset:
+    case UDS_EVT_ReadDTCInformation:
       return UDS_NRC_SubFunctionNotSupported;
     case UDS_EVT_Err:
     case UDS_EVT_ReadMemByAddr:

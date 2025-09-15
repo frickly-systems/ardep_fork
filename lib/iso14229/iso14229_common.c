@@ -1,4 +1,10 @@
-// This would be dedicated into a separate library
+/*
+ * Copyright (C) Frickly Systems GmbH
+ * Copyright (C) MBition GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "ardep/iso14229.h"
 
 #include <zephyr/logging/log.h>
@@ -93,13 +99,11 @@ int iso14229_zephyr_init(struct iso14229_zephyr_instance *inst,
   inst->tp.phys_link.user_send_can_arg = (void *)can_dev;
   inst->tp.func_link.user_send_can_arg = (void *)can_dev;
 
-  // Von CAN Nachrichten
   const struct can_filter phys_filter = {
     .id = inst->tp.phys_sa,
     .mask = CAN_STD_ID_MASK,
   };
 
-  // KP woher das kommt?!
   const struct can_filter func_filter = {
     .id = inst->tp.func_sa,
     .mask = CAN_STD_ID_MASK,

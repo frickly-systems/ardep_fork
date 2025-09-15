@@ -5,8 +5,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Use scripts/uds_iso14229_demo_script.py to test
-
 #include "ardep/uds.h"
 #include "ardep/uds_macro.h"
 
@@ -19,7 +17,7 @@
 #include <ardep/uds.h>
 #include <iso14229.h>
 
-LOG_MODULE_REGISTER(iso14229_testing, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(uds_sample, LOG_LEVEL_DBG);
 
 static const struct device *can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
 
@@ -37,7 +35,8 @@ uint16_t string_size = sizeof(string);
 UDSErr_t read_data_by_id_check(const struct uds_context *const context,
                                bool *apply_action) {
   UDSRDBIArgs_t *args = context->arg;
-  // Return Ok, when we don't handle this event
+  // Return Ok, when we don't handle this event but don't set
+  // `apply_action` to true
   if (args->dataId != context->registration->data_identifier.data_id) {
     return UDS_OK;
   }

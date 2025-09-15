@@ -8,7 +8,6 @@
 #ifndef ARDEP_UDS_H
 #define ARDEP_UDS_H
 
-// Forward declaration to avoid include dependency issues
 #include "ardep/iso14229.h"
 
 #include <iso14229.h>
@@ -314,6 +313,7 @@ bool uds_filter_for_memory_by_addr(UDSEvent_t event);
  */
 bool uds_filter_for_diag_session_ctrl_event(UDSEvent_t event);
 
-#include "ardep/uds_macro.h"
+// Include macro declarations after all types are defined
+#include "ardep/uds_macro.h"  // IWYU pragma: keep
 
 #endif  // ARDEP_UDS_H

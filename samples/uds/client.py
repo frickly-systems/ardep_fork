@@ -14,16 +14,16 @@
 
 import struct
 from typing import Any
+from argparse import ArgumentParser, Namespace
+
+import isotp
+import udsoncan
 from udsoncan.client import Client
 from udsoncan.connections import IsoTPSocketConnection
 from udsoncan.exceptions import (
     NegativeResponseException,
 )
 from udsoncan.services import DiagnosticSessionControl, ECUReset
-from argparse import ArgumentParser, Namespace
-
-import isotp
-import udsoncan
 
 
 def change_session(client: Client):

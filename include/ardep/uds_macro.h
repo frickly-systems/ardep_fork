@@ -125,7 +125,7 @@
  * 
  * @param _instance Pointer to associated the UDS server instance
  */
-#define UDS_REGISTER_ECU_HARD_RESET_HANDLER(                                 \
+#define UDS_REGISTER_ECU_DEFAULT_HARD_RESET_HANDLER(                                 \
   _instance                                                                  \
 )                                                                            \
   UDS_REGISTER_ECU_RESET_HANDLER(                                            \

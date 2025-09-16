@@ -11,12 +11,12 @@ config UDS
 config ISO14229
 	default y
 
+choice STD_C
+	default STD_C11 # requirement for external iso14229 module
+endchoice
+
 config CAN
 	default y
-
-# Disable zephyr iso-tp module as we use an external module
-config ISOTP
-	default n
 
 config FLASH
     default y
@@ -32,3 +32,4 @@ config IMG_ERASE_PROGRESSIVELY
 
 config REBOOT
     default y
+

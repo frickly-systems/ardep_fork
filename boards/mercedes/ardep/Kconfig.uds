@@ -9,7 +9,7 @@ config UDS
 	default y
 
 config ISO14229
-	default y
+	default n # Disables minimal UDS support when UDS gets disabled
 
 choice STD_C
 	default STD_C11 # requirement for external iso14229 module

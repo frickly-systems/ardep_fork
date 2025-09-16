@@ -211,10 +211,9 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
     case UDS_EVT_ResponseReceived:
     case UDS_EVT_Idle:
     case UDS_EVT_MAX:
-      break;
+    default:
+      return UDS_NRC_ServiceNotSupported;
   }
-
-  return UDS_NRC_ServiceNotSupported;
 }
 
 #ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION

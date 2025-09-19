@@ -65,10 +65,6 @@ static bool is_memory_address_valid(uintptr_t addr,
 #endif
 }
 
-bool uds_filter_for_memory_by_addr(UDSEvent_t event) {
-  return event == UDS_EVT_ReadMemByAddr || event == UDS_EVT_WriteMemByAddr;
-}
-
 uds_check_fn uds_get_check_for_read_memory_by_addr(
     const struct uds_registration_t* const reg) {
   return reg->memory.read.check;

@@ -22,6 +22,50 @@ LOG_MODULE_REGISTER(uds, CONFIG_UDS_LOG_LEVEL);
 #include <ardep/uds.h>
 #include <iso14229.h>
 
+bool registration_can_handle_event(const struct uds_registration_t* const reg,
+                                   UDSEvent_t event) {
+  switch (event) {
+    case UDS_EVT_Err:
+    case UDS_EVT_DiagSessCtrl:
+    case UDS_EVT_SessionTimeout:
+      return reg->type == UDS_REGISTRATION_TYPE__DIAG_SESSION_CTRL;
+    case UDS_EVT_EcuReset:
+      return reg->type == UDS_REGISTRATION_TYPE__ECU_RESET;
+    case UDS_EVT_ClearDiagnosticInfo:
+      return reg->type == UDS_REGISTRATION_TYPE__CLEAR_DIAG_INFO;
+    case UDS_EVT_ReadDTCInformation:
+      return reg->type == UDS_REGISTRATION_TYPE__READ_DTC_INFO;
+    case UDS_EVT_ReadDataByIdent:
+    case UDS_EVT_WriteDataByIdent:
+    case UDS_EVT_IOControl:
+      return reg->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER;
+    case UDS_EVT_ReadMemByAddr:
+    case UDS_EVT_WriteMemByAddr:
+      return reg->type == UDS_REGISTRATION_TYPE__MEMORY;
+    case UDS_EVT_CommCtrl:
+      return reg->type == UDS_REGISTRATION_TYPE__COMMUNICATION_CONTROL;
+    case UDS_EVT_SecAccessRequestSeed:
+    case UDS_EVT_SecAccessValidateKey:
+      return reg->type == UDS_REGISTRATION_TYPE__SECURITY_ACCESS;
+    case UDS_EVT_RoutineCtrl:
+      return reg->type == UDS_REGISTRATION_TYPE__ROUTINE_CONTROL;
+    case UDS_EVT_RequestDownload:
+    case UDS_EVT_RequestUpload:
+    case UDS_EVT_TransferData:
+    case UDS_EVT_RequestTransferExit:
+    case UDS_EVT_DoScheduledReset:
+    case UDS_EVT_RequestFileTransfer:
+    case UDS_EVT_Custom:
+    case UDS_EVT_Poll:
+    case UDS_EVT_SendComplete:
+    case UDS_EVT_ResponseReceived:
+    case UDS_EVT_Idle:
+    case UDS_EVT_MAX:
+    default:
+      return false;
+  }
+}
+
 // Wraps the logic to check and execute action on the event
 UDSErr_t _uds_check_and_act_on_event(struct uds_instance_t* instance,
                                      struct uds_registration_t* reg,
@@ -39,7 +83,7 @@ UDSErr_t _uds_check_and_act_on_event(struct uds_instance_t* instance,
   };
   UDSErr_t ret = UDS_OK;
 
-  if (!reg->applies_to_event(event)) {
+  if (!registration_can_handle_event(reg, event)) {
     *consume_event = false;
     return UDS_OK;
   }

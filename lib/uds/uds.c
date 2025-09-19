@@ -24,7 +24,7 @@ LOG_MODULE_REGISTER(uds, CONFIG_UDS_LOG_LEVEL);
 #include <iso14229.h>
 
 /**
- * @brief Event handler mapping entry
+ * @brief Associated events with other data required to handle them
  */
 struct uds_event_to_handler_mapping {
   UDSEvent_t event;
@@ -149,38 +149,16 @@ static const struct uds_event_to_handler_mapping event_handler_mappings[] = {
   },
 };
 
-bool registration_can_handle_event(const struct uds_registration_t* const reg,
-                                   UDSEvent_t event) {
-  // Look up the event in the handler mapping table
-  for (size_t i = 0; i < ARRAY_SIZE(event_handler_mappings); i++) {
-    if (event_handler_mappings[i].event == event) {
-      return reg->type == event_handler_mappings[i].registration_type;
-    }
-  }
-
-  // Event not supported by any registration type
-  return false;
-}
-
 // Wraps the logic to check and execute action on the event
 static UDSErr_t uds_check_and_act_on_event(
-    struct uds_instance_t* instance,
-    struct uds_registration_t* reg,
-    UDSEvent_t event,
-    void* arg,
+    struct uds_context* context,
     const struct uds_event_to_handler_mapping* handler,
     bool* found_at_least_one_match,
     bool* consume_event) {
-  struct uds_context context = {
-    .instance = instance,
-    .registration = reg,
-    .server = &instance->iso14229.server,
-    .event = event,
-    .arg = arg,
-  };
+  struct uds_registration_t* reg = context->registration;
   UDSErr_t ret = UDS_OK;
 
-  if (!registration_can_handle_event(reg, event)) {
+  if (reg->type != handler->registration_type) {
     *consume_event = false;
     return UDS_OK;
   }
@@ -191,7 +169,7 @@ static UDSErr_t uds_check_and_act_on_event(
     *consume_event = false;
     return ret;
   }
-  ret = check(&context, &apply_action);
+  ret = check(context, &apply_action);
   if (ret != UDS_OK) {
     LOG_WRN("Check failed for Registration at addr: %p. Err: %d", reg, ret);
     *consume_event = false;
@@ -204,7 +182,7 @@ static UDSErr_t uds_check_and_act_on_event(
     return ret;
   }
 
-  ret = action(&context, consume_event);
+  ret = action(context, consume_event);
   if (ret != UDS_OK) {
     LOG_WRN("Action failed for Registration at addr: %p. Err: %d", reg, ret);
     return ret;
@@ -224,9 +202,17 @@ UDSErr_t uds_handle_event(struct uds_instance_t* instance,
   // We start with static registrations
   STRUCT_SECTION_FOREACH (uds_registration_t, reg) {
     bool consume_event = true;
-    int ret =
-        uds_check_and_act_on_event(instance, reg, event, arg, handler,
-                                   &found_at_least_one_match, &consume_event);
+
+    struct uds_context context = {
+      .instance = instance,
+      .registration = reg,
+      .server = &instance->iso14229.server,
+      .event = event,
+      .arg = arg,
+    };
+
+    int ret = uds_check_and_act_on_event(
+        &context, handler, &found_at_least_one_match, &consume_event);
     if (consume_event || ret != UDS_OK) {
       return ret;
     }
@@ -237,9 +223,17 @@ UDSErr_t uds_handle_event(struct uds_instance_t* instance,
   struct uds_registration_t* reg = instance->dynamic_registrations;
   while (reg != NULL) {
     bool consume_event = false;
-    int ret =
-        uds_check_and_act_on_event(instance, reg, event, arg, handler,
-                                   &found_at_least_one_match, &consume_event);
+
+    struct uds_context context = {
+      .instance = instance,
+      .registration = reg,
+      .server = &instance->iso14229.server,
+      .event = event,
+      .arg = arg,
+    };
+
+    int ret = uds_check_and_act_on_event(
+        &context, handler, &found_at_least_one_match, &consume_event);
     if (consume_event || ret != UDS_OK) {
       return ret;
     }

@@ -30,6 +30,7 @@ bool registration_can_handle_event(const struct uds_registration_t* const reg,
     case UDS_EVT_SessionTimeout:
       return reg->type == UDS_REGISTRATION_TYPE__DIAG_SESSION_CTRL;
     case UDS_EVT_EcuReset:
+    case UDS_EVT_DoScheduledReset:
       return reg->type == UDS_REGISTRATION_TYPE__ECU_RESET;
     case UDS_EVT_ClearDiagnosticInfo:
       return reg->type == UDS_REGISTRATION_TYPE__CLEAR_DIAG_INFO;
@@ -53,7 +54,6 @@ bool registration_can_handle_event(const struct uds_registration_t* const reg,
     case UDS_EVT_RequestUpload:
     case UDS_EVT_TransferData:
     case UDS_EVT_RequestTransferExit:
-    case UDS_EVT_DoScheduledReset:
     case UDS_EVT_RequestFileTransfer:
     case UDS_EVT_Custom:
     case UDS_EVT_Poll:
@@ -78,6 +78,7 @@ UDSErr_t _uds_check_and_act_on_event(struct uds_instance_t* instance,
   struct uds_context context = {
     .instance = instance,
     .registration = reg,
+    .server = &instance->iso14229.server,
     .event = event,
     .arg = arg,
   };

@@ -9,8 +9,7 @@
 #define ARDEP_UDS_H
 
 #include "ardep/iso14229.h"
-
-#include <iso14229.h>
+#include "iso14229.h"
 
 struct uds_instance_t;
 struct uds_registration_t;
@@ -81,28 +80,6 @@ enum uds_routine_control_subfunc {
 };
 
 /**
- * @brief Callback type for ECU reset events
- *
- * @param inst Pointer to the UDS server instance
- * @param reset_type Type of reset to perform
- * @param user_context User-defined context pointer as passed to \ref
- * uds_init()
- */
-typedef UDSErr_t (*ecu_reset_callback_t)(struct uds_instance_t *inst,
-                                         enum uds_ecu_reset_type reset_type,
-                                         void *user_context);
-
-/**
- * Set the ECU reset callback function for custom callbacks
- *
- * @param inst Pointer to the UDS server instance
- * @param callback Pointer to the callback function to set
- * @return 0 on success, negative error code on failure
- */
-typedef int (*set_ecu_reset_callback_fn)(struct uds_instance_t *inst,
-                                         ecu_reset_callback_t callback);
-
-/**
  * @brief Context provided to Event handlers on an event
  */
 struct uds_context {
@@ -114,6 +91,10 @@ struct uds_context {
    * @brief The registration instance to handle the event
    */
   struct uds_registration_t *const registration;
+  /**
+   * @brief Pointer to the server parameter used in copy functions
+   */
+  UDSServer_t *server;
   /**
    * @brief The event type
    */

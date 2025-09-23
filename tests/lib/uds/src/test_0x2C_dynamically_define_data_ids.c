@@ -4,6 +4,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#include "zephyr/logging/log.h"
+LOG_MODULE_REGISTER(uds_test, CONFIG_UDS_LOG_LEVEL);
 
 #include "ardep/uds.h"
 #include "fixture.h"
@@ -149,7 +151,7 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
     .type = 0x01,  // define by data id
     .allDataIds = false,
     .dynamicDataId = 0xFEDC,
-    .subFuncArgs.defineById = {.len = 2, .sources = sources1},
+    .subFuncArgs.defineById = {.len = 1, .sources = sources1},
   };
 
   int ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
@@ -163,6 +165,8 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
     },
   };
 
+  LOG_INF("=-=-=-=-=-=-=-=-=-=-=-");
+
   args.subFuncArgs.defineById.sources = sources2;
   args.subFuncArgs.defineById.len = 1;
 
@@ -173,6 +177,8 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
     .dataId = 0xFEDC,
     .copy = copy,
   };
+
+  LOG_INF("=-=-=-=-=-=-=-=-=-=-=-");
 
   ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &read_arg);
   zassert_ok(ret);

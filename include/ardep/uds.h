@@ -83,6 +83,12 @@ enum uds_routine_control_subfunc {
   UDS_ROUTINE_CONTROL__REQUEST_ROUTINE_RESULTS = 0x03,
 };
 
+enum uds_dynamically_define_data_ids_subfunc {
+  UDS_DYNAMICALLY_DEFINED_DATA_IDS__DEFINE_BY_DATA_ID = 0x01,
+  UDS_DYNAMICALLY_DEFINED_DATA_IDS__DEFINE_BY_MEMORY_ADDRESS = 0x02,
+  UDS_DYNAMICALLY_DEFINED_DATA_IDS__CLEAR = 0x03,
+};
+
 /**
  * @brief Context provided to Event handlers on an event
  */
@@ -246,6 +252,28 @@ enum uds_registration_type_t {
   UDS_REGISTRATION_TYPE__ROUTINE_CONTROL,
   UDS_REGISTRATION_TYPE__SECURITY_ACCESS,
   UDS_REGISTRATION_TYPE__COMMUNICATION_CONTROL,
+  UDS_REGISTRATION_TYPE__DYNAMIC_DEFINE_DATA_IDS,
+};
+
+enum uds_dynamically_defined_data_type {
+  UDS_DYNAMICALLY_DEFINED_DATA_TYPE__ID = 1,
+  UDS_DYNAMICALLY_DEFINED_DATA_TYPE__MEMORY = 2,
+};
+
+struct uds_dynamically_defined_data {
+  sys_snode_t node;
+  enum uds_dynamically_defined_data_type type;
+  union {
+    struct {
+      uint16_t id;
+      uint8_t position;
+      uint8_t size;
+    } id;
+    struct {
+      void *memAddr;
+      size_t memSize;
+    } memory;
+  };
 };
 
 /**
@@ -444,6 +472,29 @@ struct uds_registration_t {
        */
       struct uds_actor actor;
     } communication_control;
+
+    /**
+     * @brief Data for the Dynamically Define Data ID event handler
+     *
+     * Handles *UDS_EVT_DynamicDefineDataId* events
+     */
+    struct {
+      /**
+       * @brief User-defined context pointer
+       */
+      void *user_context;
+
+      /**
+       * @brief list of `struct uds_dynamically_defined_data` to hold the
+       * ordered information on what data to return
+       */
+      sys_slist_t data;
+
+      /**
+       * @brief Actor for *UDS_EVT_CommCtrl* events
+       */
+      struct uds_actor actor;
+    } dynamically_define_data_ids;
   };
 
 #ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
@@ -530,6 +581,20 @@ UDSErr_t uds_check_default_memory_by_addr_write(
  * Writes to RAM and Flash
  */
 UDSErr_t uds_action_default_memory_by_addr_write(
+    struct uds_context *const context, bool *consume_event);
+
+/**
+ * @brief Default check function for the default dynamically define data IDs
+ * handler
+ */
+UDSErr_t uds_check_default_dynamically_define_data_ids(
+    const struct uds_context *const context, bool *apply_action);
+
+/**
+ * @brief Default action function for the default dynamically define data IDs
+ * handler
+ */
+UDSErr_t uds_action_default_dynamically_define_data_ids(
     struct uds_context *const context, bool *consume_event);
 
 // Include macro declarations after all types are defined

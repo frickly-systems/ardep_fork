@@ -141,15 +141,22 @@ UDSErr_t uds_action_default_dynamically_define_data_ids(
       // TODO: Check that identifier exists
       // TODO: Handle append to existing instead of new list
 
-      sys_slist_t* list = k_malloc(sizeof(sys_slist_t));
-      sys_slist_init(list);
+      struct dynamic_registration_id_sll_item* registration_item =
+          k_malloc(sizeof(struct dynamic_registration_id_sll_item));
+      if (registration_item == NULL) {
+        LOG_ERR("Failed to allocate memory for dynamic registration ID item.");
+      }
+      memset(registration_item, 0, sizeof(*registration_item));
 
-      struct uds_registration_t reg = {
+      sys_slist_t* data_list = k_malloc(sizeof(sys_slist_t));
+      sys_slist_init(data_list);
+
+      struct uds_registration_t read_data_by_id_reg = {
         .type = UDS_REGISTRATION_TYPE__DATA_IDENTIFIER,
         .instance = context->instance,
         .unregister_registration_fn = uds_unregister_dynamic_identifier,
         .data_identifier = {
-          .data = list,
+          .data = data_list,
           .data_id = args->dynamicDataId,
           .read =
               {
@@ -169,35 +176,99 @@ UDSErr_t uds_action_default_dynamically_define_data_ids(
           // TODO: undo all previous allocations and return error
           // TODO: free sys_slist_t list
         }
+
         data->type = UDS_DYNAMICALLY_DEFINED_DATA_TYPE__ID;
         data->id.id = id;
         data->id.position = position;
         data->id.size = size;
         data->node = (sys_snode_t){0};
 
-        sys_slist_append(list, &data->node);
+        sys_slist_append(data_list, &data->node);
       }
 
       uint32_t dynamic_id;
       struct uds_registration_t* registration_out;
       int ret = context->instance->register_event_handler(
-          context->instance, reg, &dynamic_id, &registration_out);
+          context->instance, read_data_by_id_reg, &dynamic_id,
+          &registration_out);
       if (ret < 0) {
         LOG_ERR("Failed to register dynamic data identifier. ERR: %d", ret);
         return ret;
       }
 
+      sys_slist_t* identifier_list =
+          &context->registration->dynamically_define_data_ids
+               .dynamic_registration_id_list;
+      registration_item->dynamic_registration_id = dynamic_id;
+
+      sys_slist_append(identifier_list, &registration_item->node);
+
       *consume_event = true;
       return UDS_OK;
     };
     case UDS_DYNAMICALLY_DEFINED_DATA_IDS__DEFINE_BY_MEMORY_ADDRESS: {
+      return UDS_NRC_SubFunctionNotSupported;
     };
     case UDS_DYNAMICALLY_DEFINED_DATA_IDS__CLEAR: {
-      context->instance->dynamic_registrations
-      // TODO: Just unregister the dynamically defined ID and use the unregister
-      // callback to free all list elements
-      // TODO: Just unregister the dynamically defined ID and use the unregister
-      // callback to free all list elements
+      if (args->allDataIds) {
+        sys_snode_t* node;
+        sys_snode_t* next_node;
+        struct dynamic_registration_id_sll_item* item;
+
+        SYS_SLIST_FOR_EACH_NODE_SAFE (
+            &context->registration->dynamically_define_data_ids
+                 .dynamic_registration_id_list,
+            node, next_node) {
+          item = SYS_SLIST_CONTAINER(node, item, node);
+          int ret = context->instance->unregister_event_handler(
+              context->instance, item->dynamic_registration_id);
+          if (ret != 0) {
+            LOG_WRN(
+                "Failed to unregister dynamic registration identifier ID %u. "
+                "ERR: %d",
+                item->dynamic_registration_id, ret);
+          }
+          sys_slist_find_and_remove(
+              &context->registration->dynamically_define_data_ids
+                   .dynamic_registration_id_list,
+              node);
+          k_free(node);
+        }
+      } else {
+        sys_snode_t* node;
+        sys_snode_t* next_node;
+        struct dynamic_registration_id_sll_item* item;
+
+        SYS_SLIST_FOR_EACH_NODE_SAFE (
+            &context->registration->dynamically_define_data_ids
+                 .dynamic_registration_id_list,
+            node, next_node) {
+          item = SYS_SLIST_CONTAINER(node, item, node);
+          if (item->dynamic_registration_id == args->dynamicDataId) {
+            int ret = context->instance->unregister_event_handler(
+                context->instance, item->dynamic_registration_id);
+            if (ret != 0) {
+              LOG_WRN(
+                  "Failed to unregister dynamic registration identifier ID %u. "
+                  "ERR: %d",
+                  item->dynamic_registration_id, ret);
+            }
+            sys_slist_find_and_remove(
+                &context->registration->dynamically_define_data_ids
+                     .dynamic_registration_id_list,
+                node);
+            k_free(node);
+          }
+        }
+      }
+
+      *consume_event = true;
+      return UDS_OK;
+
+      // TODO: Just unregister the dynamically defined ID and use the
+      // unregister callback to free all list elements
+      // TODO: Just unregister the dynamically defined ID and use the
+      // unregister callback to free all list elements
     };
     default:
       return UDS_NRC_SubFunctionNotSupported;

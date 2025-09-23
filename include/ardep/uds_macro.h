@@ -701,9 +701,9 @@
     .type = UDS_REGISTRATION_TYPE__DYNAMIC_DEFINE_DATA_IDS,                    \
     .dynamically_define_data_ids = {                                           \
       .user_context = _user_context,                                           \
-      .data = SYS_SLIST_STATIC_INIT(                                           \
+      .dynamic_registration_id_list = SYS_SLIST_STATIC_INIT(                   \
         &_UDS_CAT_EXPAND(__uds_registration_dyn_data_ids_, __COUNTER__ - 1)    \
-          .dynamically_define_data_ids.data                                    \
+          .dynamically_define_data_ids.dynamic_registration_id_list            \
       ),                                                                       \
       .actor = {                                                               \
         .check = _check,                                                       \

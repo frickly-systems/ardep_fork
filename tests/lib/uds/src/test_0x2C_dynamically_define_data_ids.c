@@ -129,6 +129,68 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id) {
   zassert_ok(ret);
 }
 
+ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
+  struct uds_instance_t *instance = fixture->instance;
+
+  data_id_check_fn_fake.custom_fake =
+      custom_check_for_0x2C_dynamically_define_data;
+  data_id_action_fn_fake.custom_fake =
+      custom_action_for_0x2C_dynamically_define_data;
+
+  UDSDDDI_DBIArgs_t sources1[] = {
+    {
+      .sourceDataId = data_id_r,
+      .position = 1,
+      .size = 2,
+    },
+  };
+
+  UDSDDDIArgs_t args = {
+    .type = 0x01,  // define by data id
+    .allDataIds = false,
+    .dynamicDataId = 0xFEDC,
+    .subFuncArgs.defineById = {.len = 2, .sources = sources1},
+  };
+
+  int ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
+  zassert_ok(ret);
+
+  UDSDDDI_DBIArgs_t sources2[] = {
+    {
+      .sourceDataId = data_id_rw,
+      .position = 2,
+      .size = 1,
+    },
+  };
+
+  args.subFuncArgs.defineById.sources = sources2;
+  args.subFuncArgs.defineById.len = 1;
+
+  ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
+  zassert_ok(ret);
+
+  UDSRDBIArgs_t read_arg = {
+    .dataId = 0xFEDC,
+    .copy = copy,
+  };
+
+  ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &read_arg);
+  zassert_ok(ret);
+
+  uint8_t expected_data[] = {0x22, 0x33, 0x77};
+
+  assert_copy_data(expected_data, sizeof(expected_data));
+
+  UDSDDDIArgs_t remove_args = {
+    .type = 0x03,  // clear dynamic data id
+    .allDataIds = false,
+    .dynamicDataId = 0xFEDC,
+  };
+
+  ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &remove_args);
+  zassert_ok(ret);
+}
+
 // ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_mem) {
 //   struct uds_instance_t *instance = fixture->instance;
 

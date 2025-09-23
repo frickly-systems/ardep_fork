@@ -282,6 +282,11 @@ struct uds_dynamically_defined_data {
   };
 };
 
+struct dynamic_registration_id_sll_item {
+  sys_snode_t node;
+  uint32_t dynamic_registration_id;
+};
+
 /**
  * @brief Registration information for an UDS Event handler
  */
@@ -491,10 +496,10 @@ struct uds_registration_t {
       void *user_context;
 
       /**
-       * @brief list of `struct uds_dynamically_defined_data` to hold the
-       * ordered information on what data to return
+       * @brief list of `struct dynamic_registration_id_sll_item` to hold all
+       * dynamic registration IDs created.
        */
-      sys_slist_t data;
+      sys_slist_t dynamic_registration_id_list;
 
       /**
        * @brief Actor for *UDS_EVT_CommCtrl* events

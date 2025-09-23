@@ -173,10 +173,16 @@ static const UDSISOTpCConfig_t default_cfg = {
 static uint8_t copied_data[4096];
 static uint32_t copied_len;
 
-void assert_copy_data(const uint8_t *data, uint32_t len) {
-  zassert_equal(copied_len, len, "Expected length %u, but got %u", len,
+void assert_copy_data_offset(const uint8_t *data,
+                             uint32_t len,
+                             uint32_t offset) {
+  zassert_equal(copied_len, len + offset, "Expected length %u, but got %u", len,
                 copied_len);
-  zassert_mem_equal(copied_data, data, len);
+  zassert_mem_equal(copied_data + offset, data, len);
+}
+
+void assert_copy_data(const uint8_t *data, uint32_t len) {
+  assert_copy_data_offset(data, len, 0);
 }
 
 UDSErr_t receive_event(struct uds_instance_t *inst,
@@ -188,8 +194,8 @@ UDSErr_t receive_event(struct uds_instance_t *inst,
 static uint8_t custom_copy(UDSServer_t *server,
                            const void *data,
                            uint16_t len) {
-  copied_len = len;
-  memcpy(copied_data, data, len);
+  memcpy(copied_data + copied_len, data, len);
+  copied_len += len;
 
   return 0;
 }

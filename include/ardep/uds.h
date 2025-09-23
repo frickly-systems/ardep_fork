@@ -186,16 +186,22 @@ struct uds_actor {
  *
  * @param inst Pointer to the UDS server instance.
  * @param registration The registration information for the new event handler.
- * @param dynamic_id_out Pointer to store the assigned unique ID for this registration.
+ * @param dynamic_id_out Pointer to store the assigned unique ID for this
+ * registration.
+ * @param registration_out Optional pointer to return a pointer to the allocated
+ * registration object. Can be NULL if not needed.
  *
  * @returns 0 on success
- * @returns -ENOSPC if no free ID is available (all IDs from 1 to UINT32_MAX are taken)
+ * @returns -ENOSPC if no free ID is available (all IDs from 1 to UINT32_MAX are
+ * taken)
  * @returns <0 on other failures
  *
  */
-typedef int (*register_event_handler_fn)(struct uds_instance_t *inst,
-                                         struct uds_registration_t registration,
-                                         uint32_t *dynamic_id_out);
+typedef int (*register_event_handler_fn)(
+    struct uds_instance_t *inst,
+    struct uds_registration_t registration,
+    uint32_t *dynamic_id_out,
+    struct uds_registration_t **registration_out);
 
 /**
  * @brief Function to unregister a dynamically registered event handler at
@@ -510,7 +516,7 @@ struct uds_registration_t {
   /**
    * @brief Unique ID of this dynamic registration
    */
-  uint32_t dynamic_id;
+  uint32_t dynamic_registration_id;
 
   /**
    * @brief Function to unregister this registration

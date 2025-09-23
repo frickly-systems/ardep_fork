@@ -5,8 +5,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "zephyr/kernel.h"
 #include "zephyr/sys/sflist.h"
 #include "zephyr/sys/slist.h"
+
+#include <stdint.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(uds, CONFIG_UDS_LOG_LEVEL);
@@ -50,31 +53,44 @@ UDSErr_t uds_check_default_dynamically_define_data_ids(
   return UDS_OK;
 }
 
+static UDSErr_t uds_dynamic_data_by_id_read_data_by_id_check(
+    const struct uds_context* const context, bool* apply_action) {
+  // TODO: Do I have to check something here?
+  *apply_action = true;
+  return UDS_OK;
+}
+
+static UDSErr_t uds_dynamic_data_by_id_read_data_by_id_action(
+    struct uds_context* const context, bool* consume_event) {
+  UDSRDBIArgs_t* args
+      // TODO
+      * consume_event = true;
+  return UDS_OK;
+}
+
 UDSErr_t uds_action_default_dynamically_define_data_ids(
     struct uds_context* const context, bool* consume_event) {
   UDSDDDIArgs_t* args = context->arg;
   switch (args->type) {
     case UDS_DYNAMICALLY_DEFINED_DATA_IDS__DEFINE_BY_DATA_ID: {
-      struct uds_registration_t reg = {
-        .type = UDS_REGISTRATION_TYPE__DYNAMIC_DEFINE_DATA_IDS,
-        .instance = context->instance,
-        .dynamically_define_data_ids =
-            {
-              .user_context = NULL,
-              .actor =
-                  {
-                    .check = NULL,
-                    .action = NULL,
-                  },
-            },
-      };
-
-      sys_slist_t* list = &reg.dynamically_define_data_ids.data;
-
-      sys_slist_init(list);
-
       // TODO: Check that identifier exists
       // TODO: Handle append to existing instead of new list
+
+      sys_slist_t* list = k_malloc(sizeof(sys_slist_t));
+      sys_slist_init(list);
+
+      struct uds_registration_t reg = {
+        .type = UDS_REGISTRATION_TYPE__DATA_IDENTIFIER,
+        .instance = context->instance,
+        .data_identifier = {
+          .data = list,
+          .data_id = args->dynamicDataId,
+          .read =
+              {
+                .check = uds_dynamic_data_by_id_read_data_by_id_check,
+                .action = uds_dynamic_data_by_id_read_data_by_id_action,
+              },
+        }};
 
       for (uint32_t i = 0; i < args->subFuncArgs.defineById.len; i++) {
         uint16_t id = args->subFuncArgs.defineById.sources[i].sourceDataId;
@@ -85,6 +101,7 @@ UDSErr_t uds_action_default_dynamically_define_data_ids(
             k_malloc(sizeof(struct uds_dynamically_defined_data));
         if (!data) {
           // TODO: undo all previous allocations and return error
+          // TODO: free sys_slist_t list
         }
         data->type = UDS_DYNAMICALLY_DEFINED_DATA_TYPE__ID;
         data->id.id = id;
@@ -93,6 +110,14 @@ UDSErr_t uds_action_default_dynamically_define_data_ids(
         data->node = (sys_snode_t){0};
 
         sys_slist_append(list, &data->node);
+      }
+
+      for (uint32_t i = 0; i < UINT32_MAX; i++) {
+        int ret = context->instance->register_event_handler(context->instance,
+                                                            reg, i);
+        if (ret == 0) {
+          break;
+        }
       }
 
       *consume_event = true;

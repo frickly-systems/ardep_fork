@@ -227,6 +227,21 @@ static void uds_before(void *f) {
   test_dynamic_registration_check_invoked = false;
   test_dynamic_registration_action_invoked = false;
 
+  data_id_r_data[0] = 0x12;
+  data_id_r_data[1] = 0x34;
+  data_id_r_data[2] = 0x56;
+  data_id_r_data[3] = 0x78;
+
+  data_id_rw_data[0] = 0x87;
+  data_id_rw_data[1] = 0x65;
+  data_id_rw_data[2] = 0x43;
+  data_id_rw_data[3] = 0x21;
+
+  data_id_rw_duplicated_data[0] = 0x11;
+  data_id_rw_duplicated_data[1] = 0x22;
+  data_id_rw_duplicated_data[2] = 0x33;
+  data_id_rw_duplicated_data[3] = 0x44;
+
   memset(copied_data, 0, sizeof(copied_data));
   copied_len = 0;
 }

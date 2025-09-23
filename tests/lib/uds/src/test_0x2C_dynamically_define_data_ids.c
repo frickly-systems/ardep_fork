@@ -59,12 +59,20 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id) {
   };
 
   UDSDDDIArgs_t args = {
-    .type = 0x01,  // UDS_DYNAMICALLY_DEFINED_DATA_IDS__DEFINE_BY_DATA_ID
+    .type = 0x01,  // define by data id
     .allDataIds = false,
     .dynamicDataId = 0xFEDC,
     .subFuncArgs.defineById = {.len = 2, .sources = sources},
   };
 
   int ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
+  zassert_ok(ret);
+
+  UDSRDBIArgs_t read_arg = {
+    .dataId = 0xFEDC,
+    .copy = copy,
+  };
+
+  ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &read_arg);
   zassert_ok(ret);
 }

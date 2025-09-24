@@ -119,6 +119,19 @@ static UDSErr_t uds_dynamic_data_by_id_read_data_by_id_action(
         return ret;
       }
     }
+
+    if (data->type == UDS_DYNAMICALLY_DEFINED_DATA_TYPE__MEMORY) {
+      UDSReadMemByAddrArgs_t child_args = {.memAddr = data->memory.memAddr,
+                                           .memSize = data->memory.memSize,
+                                           .copy = parent_read_args->copy};
+
+      int ret = uds_event_callback(&context->instance->iso14229,
+                                   UDS_EVT_ReadMemByAddr, &child_args,
+                                   context->instance);
+      if (ret != UDS_PositiveResponse) {
+        return ret;
+      }
+    }
   }
 
   *consume_event = true;

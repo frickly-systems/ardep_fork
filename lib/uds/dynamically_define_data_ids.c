@@ -366,31 +366,31 @@ static void uds_dynamicallY_define_data_by_id_remove_single_id(
 
 static void uds_dynamicallY_define_data_by_id_remove_all_ids(
     struct uds_instance_t* instance) {
-  // Collect all dynamic registration IDs from all dynamically_define_data_ids
-  // event handlers
-  sys_slist_t dynamic_ids_to_remove =
-      SYS_SLIST_STATIC_INIT(&dynamic_ids_to_remove);
-
-  // Check static registrations first
+  // Remove all dynamic registrations referenced by static registrations
   STRUCT_SECTION_FOREACH (uds_registration_t, reg) {
     if (reg->type == UDS_REGISTRATION_TYPE__DYNAMIC_DEFINE_DATA_IDS) {
       struct dynamic_registration_id_sll_item* item;
       SYS_SLIST_FOR_EACH_CONTAINER (
           &reg->dynamically_define_data_ids.dynamic_registration_id_list, item,
           node) {
-        // Add to removal list
-        struct dynamic_registration_id_sll_item* removal_item =
-            k_malloc(sizeof(struct dynamic_registration_id_sll_item));
-        if (removal_item) {
-          removal_item->dynamic_registration_id = item->dynamic_registration_id;
-          removal_item->node = (sys_snode_t){0};
-          sys_slist_append(&dynamic_ids_to_remove, &removal_item->node);
+        uint32_t dynamic_id_to_remove = item->dynamic_registration_id;
+
+        LOG_INF("Removing dynamic registration with dynamic id: 0x%04X",
+                dynamic_id_to_remove);
+
+        int ret =
+            instance->unregister_event_handler(instance, dynamic_id_to_remove);
+        if (ret != 0) {
+          LOG_WRN(
+              "Failed to unregister dynamic registration identifier ID %u. "
+              "ERR: %d",
+              dynamic_id_to_remove, ret);
         }
       }
     }
   }
 
-  // Check dynamic registrations
+  // Remove all dynamic registrations referenced by dynamic registrations
   struct uds_registration_t* dynamic_reg;
   SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, dynamic_reg,
                                 node) {
@@ -399,38 +399,25 @@ static void uds_dynamicallY_define_data_by_id_remove_all_ids(
       SYS_SLIST_FOR_EACH_CONTAINER (&dynamic_reg->dynamically_define_data_ids
                                          .dynamic_registration_id_list,
                                     item, node) {
-        // Add to removal list
-        struct dynamic_registration_id_sll_item* removal_item =
-            k_malloc(sizeof(struct dynamic_registration_id_sll_item));
-        if (removal_item) {
-          removal_item->dynamic_registration_id = item->dynamic_registration_id;
-          removal_item->node = (sys_snode_t){0};
-          sys_slist_append(&dynamic_ids_to_remove, &removal_item->node);
+        uint32_t dynamic_id_to_remove = item->dynamic_registration_id;
+
+        LOG_INF("Removing dynamic registration with dynamic id: 0x%04X",
+                dynamic_id_to_remove);
+
+        int ret =
+            instance->unregister_event_handler(instance, dynamic_id_to_remove);
+        if (ret != 0) {
+          LOG_WRN(
+              "Failed to unregister dynamic registration identifier ID %u. "
+              "ERR: %d",
+              dynamic_id_to_remove, ret);
         }
       }
     }
   }
 
-  // Remove all dynamic registrations with the collected IDs
-  struct dynamic_registration_id_sll_item* removal_item;
-  struct dynamic_registration_id_sll_item* removal_next;
-  SYS_SLIST_FOR_EACH_CONTAINER_SAFE (&dynamic_ids_to_remove, removal_item,
-                                     removal_next, node) {
-    uint32_t dynamic_id_to_remove = removal_item->dynamic_registration_id;
-
-    LOG_INF("Removing all dynamic registrations with dynamic id: 0x%04X",
-            dynamic_id_to_remove);
-
-    int ret =
-        instance->unregister_event_handler(instance, dynamic_id_to_remove);
-    if (ret != 0) {
-      LOG_WRN(
-          "Failed to unregister dynamic registration identifier ID %u. ERR: %d",
-          dynamic_id_to_remove, ret);
-    }
-  }
-
-  // Clean up dynamic_registration_id_list entries from all event handlers
+  // Clean up dynamic_registration_id_list entries from all static event
+  // handlers
   STRUCT_SECTION_FOREACH (uds_registration_t, reg) {
     if (reg->type == UDS_REGISTRATION_TYPE__DYNAMIC_DEFINE_DATA_IDS) {
       struct dynamic_registration_id_sll_item* item;
@@ -447,7 +434,8 @@ static void uds_dynamicallY_define_data_by_id_remove_all_ids(
     }
   }
 
-  // Clean up dynamic registrations' dynamic_registration_id_list entries
+  // Clean up dynamic_registration_id_list entries from all dynamic event
+  // handlers
   SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, dynamic_reg,
                                 node) {
     if (dynamic_reg->type == UDS_REGISTRATION_TYPE__DYNAMIC_DEFINE_DATA_IDS) {
@@ -464,12 +452,6 @@ static void uds_dynamicallY_define_data_by_id_remove_all_ids(
         k_free(item);
       }
     }
-  }
-
-  // Free the temporary removal list
-  SYS_SLIST_FOR_EACH_CONTAINER_SAFE (&dynamic_ids_to_remove, removal_item,
-                                     removal_next, node) {
-    k_free(removal_item);
   }
 }
 

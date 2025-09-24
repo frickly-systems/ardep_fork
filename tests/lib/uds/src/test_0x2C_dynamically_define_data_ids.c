@@ -49,6 +49,20 @@ UDSErr_t custom_action_for_0x2C_dynamically_define_data(
   return UDS_OK;
 }
 
+void assert_dynamic_data_registration_with_id(
+    sys_slist_t *dynamic_registrations, uint16_t id, bool should_be_found) {
+  bool registration_found = false;
+  struct uds_registration_t *registration;
+  SYS_SLIST_FOR_EACH_CONTAINER (dynamic_registrations, registration, node) {
+    if (registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
+        registration->data_identifier.data_id == id) {
+      registration_found = true;
+      break;
+    }
+  }
+  zassert_equal(registration_found, should_be_found);
+}
+
 ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id) {
   struct uds_instance_t *instance = fixture->instance;
 
@@ -81,17 +95,8 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id) {
   int ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
   zassert_ok(ret);
 
-  bool registration_found = false;
-  struct uds_registration_t *registration;
-  SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, registration,
-                                node) {
-    if (registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
-        registration->data_identifier.data_id == 0xFEDC) {
-      registration_found = true;
-      break;
-    }
-  }
-  zassert_true(registration_found);
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xFEDC, true);
 
   UDSRDBIArgs_t read_arg = {
     .dataId = 0xFEDC,
@@ -114,17 +119,8 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id) {
   ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &remove_args);
   zassert_ok(ret);
 
-  registration_found = false;
-  SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, registration,
-                                node) {
-    if (registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
-        registration->data_identifier.data_id == 0xFEDC) {
-      registration_found = true;
-      break;
-    }
-  }
-
-  zassert_false(registration_found);
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xFEDC, false);
 }
 
 ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
@@ -153,17 +149,8 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
   int ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
   zassert_ok(ret);
 
-  bool registration_found = false;
-  struct uds_registration_t *registration;
-  SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, registration,
-                                node) {
-    if (registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
-        registration->data_identifier.data_id == 0xFEDC) {
-      registration_found = true;
-      break;
-    }
-  }
-  zassert_true(registration_found);
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xFEDC, true);
 
   UDSDDDI_DBIArgs_t sources2[] = {
     {
@@ -179,16 +166,8 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
   ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
   zassert_ok(ret);
 
-  registration_found = false;
-  SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, registration,
-                                node) {
-    if (registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
-        registration->data_identifier.data_id == 0xFEDC) {
-      registration_found = true;
-      break;
-    }
-  }
-  zassert_true(registration_found);
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xFEDC, true);
 
   UDSRDBIArgs_t read_arg = {
     .dataId = 0xFEDC,
@@ -211,16 +190,141 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
   ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &remove_args);
   zassert_ok(ret);
 
-  registration_found = false;
-  SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, registration,
-                                node) {
-    if (registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
-        registration->data_identifier.data_id == 0xFEDC) {
-      registration_found = true;
-      break;
-    }
-  }
-  zassert_false(registration_found);
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xFEDC, false);
+}
+
+ZTEST_F(lib_uds,
+        test_0x2C_dynamically_define_data_ids__remove_defined_data_id) {
+  struct uds_instance_t *instance = fixture->instance;
+
+  data_id_check_fn_fake.custom_fake =
+      custom_check_for_0x2C_dynamically_define_data;
+  data_id_action_fn_fake.custom_fake =
+      custom_action_for_0x2C_dynamically_define_data;
+
+  UDSDDDI_DBIArgs_t sources1[] = {
+    {
+      .sourceDataId = data_id_r,
+      .position = 1,
+      .size = 2,
+    },
+  };
+
+  UDSDDDIArgs_t args = {
+    .type = 0x01,
+    .allDataIds = false,
+    .dynamicDataId = 0xFEDC,
+    .subFuncArgs.defineById = {.len = 1, .sources = sources1},
+  };
+
+  int ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
+  zassert_ok(ret);
+
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xFEDC, true);
+
+  UDSDDDI_DBIArgs_t sources2[] = {
+    {
+      .sourceDataId = data_id_rw,
+      .position = 2,
+      .size = 1,
+    },
+  };
+
+  args.subFuncArgs.defineById.sources = sources2;
+  args.subFuncArgs.defineById.len = 1;
+  args.dynamicDataId = 0xBA98;
+
+  ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
+  zassert_ok(ret);
+
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xBA98, true);
+
+  UDSDDDIArgs_t remove_args = {
+    .type = 0x03,  // clear dynamic data id
+    .allDataIds = false,
+    .dynamicDataId = 0xFEDC,
+  };
+
+  ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &remove_args);
+  zassert_ok(ret);
+
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xFEDC, false);
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xBA98, true);
+
+  remove_args.dynamicDataId = 0xBA98;
+  ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &remove_args);
+  zassert_ok(ret);
+
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xFEDC, false);
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xBA98, false);
+}
+
+ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__remove_all_data_id) {
+  struct uds_instance_t *instance = fixture->instance;
+
+  data_id_check_fn_fake.custom_fake =
+      custom_check_for_0x2C_dynamically_define_data;
+  data_id_action_fn_fake.custom_fake =
+      custom_action_for_0x2C_dynamically_define_data;
+
+  UDSDDDI_DBIArgs_t sources1[] = {
+    {
+      .sourceDataId = data_id_r,
+      .position = 1,
+      .size = 2,
+    },
+  };
+
+  UDSDDDIArgs_t args = {
+    .type = 0x01,
+    .allDataIds = false,
+    .dynamicDataId = 0xFEDC,
+    .subFuncArgs.defineById = {.len = 1, .sources = sources1},
+  };
+
+  int ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
+  zassert_ok(ret);
+
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xFEDC, true);
+
+  UDSDDDI_DBIArgs_t sources2[] = {
+    {
+      .sourceDataId = data_id_rw,
+      .position = 2,
+      .size = 1,
+    },
+  };
+
+  args.subFuncArgs.defineById.sources = sources2;
+  args.subFuncArgs.defineById.len = 1;
+  args.dynamicDataId = 0xBA98;
+
+  ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
+  zassert_ok(ret);
+
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xBA98, true);
+
+  UDSDDDIArgs_t remove_args = {
+    .type = 0x03,  // clear dynamic data id
+    .allDataIds = true,
+  };
+
+  ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &remove_args);
+  zassert_ok(ret);
+
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xFEDC, false);
+  assert_dynamic_data_registration_with_id(&instance->dynamic_registrations,
+                                           0xBA98, false);
 }
 
 // ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_mem) {

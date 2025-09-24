@@ -259,201 +259,138 @@ static UDSErr_t uds_register_new_data_by_id_item(
   return UDS_OK;
 }
 
+static UDSErr_t uds_dynamicallY_define_data_by_id_add_new_id(
+    struct uds_context* const context, bool* consume_event) {
+  UDSDDDIArgs_t* args = context->arg;
+
+  struct uds_registration_t* read_data_by_id_reg = NULL;
+  int ret = uds_find_existing_registration_by_data_id(
+      context, args->dynamicDataId, &read_data_by_id_reg);
+
+  bool is_existing_registration = ret == 0;
+
+  if (!is_existing_registration) {
+    ret = uds_create_new_data_identifier_by_id(context, args->dynamicDataId,
+                                               &read_data_by_id_reg);
+    if (ret < 0) {
+      LOG_ERR("Failed to create new data identifier registration. ERR: %d",
+              ret);
+      return UDS_NRC_GeneralReject;
+    }
+  }
+
+  sys_slist_t* data_list = read_data_by_id_reg->data_identifier.data;
+
+  ret = uds_append_dynamic_data_identifiers_to_registration(args, data_list);
+
+  if (!is_existing_registration) {
+    ret = uds_register_new_data_by_id_item(context, read_data_by_id_reg);
+  }
+
+  *consume_event = true;
+  return UDS_OK;
+}
+
+static void uds_dynamicallY_define_data_by_id_remove_single_id(
+    struct uds_instance_t* instance, uint16_t data_id) {
+  uint32_t dynamic_id_to_remove = 0;
+
+  // Remove the data ID from the dynamic registrations
+  {
+    struct uds_registration_t* dynamic_reg;
+    SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, dynamic_reg,
+                                  node) {
+      LOG_INF("dynamic registration with dynamic id: 0x%04X",
+              dynamic_reg->dynamic_registration_id);
+
+      if (dynamic_reg->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
+          dynamic_reg->data_identifier.data_id == data_id) {
+        dynamic_id_to_remove = dynamic_reg->dynamic_registration_id;
+        LOG_INF("Found dynamic registration ID to remove: %u",
+                dynamic_id_to_remove);
+        int ret =
+            instance->unregister_event_handler(instance, dynamic_id_to_remove);
+        if (ret != 0) {
+          LOG_WRN(
+              "Failed to unregister dynamic registration identifier ID "
+              "%u. "
+              "ERR: %d",
+              dynamic_id_to_remove, ret);
+        }
+        break;  // Found and processed the registration, exit the loop
+      }
+    }
+  }
+
+  // Remove the dynamic_id of the removed registration item from the
+  // list of the dynamically defined data ids event handler
+  {
+    STRUCT_SECTION_FOREACH (uds_registration_t, reg) {
+      if (reg->type == UDS_REGISTRATION_TYPE__DYNAMIC_DEFINE_DATA_IDS) {
+        struct dynamic_registration_id_sll_item* item;
+        struct dynamic_registration_id_sll_item* next;
+
+        SYS_SLIST_FOR_EACH_CONTAINER_SAFE (
+            &reg->dynamically_define_data_ids.dynamic_registration_id_list,
+            item, next, node) {
+          if (item->dynamic_registration_id == dynamic_id_to_remove) {
+            sys_slist_find_and_remove(
+                &reg->dynamically_define_data_ids.dynamic_registration_id_list,
+                &item->node);
+          }
+        }
+      }
+    }
+
+    struct uds_registration_t* dynamic_reg;
+    SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, dynamic_reg,
+                                  node) {
+      if (dynamic_reg->type == UDS_REGISTRATION_TYPE__DYNAMIC_DEFINE_DATA_IDS) {
+        struct dynamic_registration_id_sll_item* item;
+        struct dynamic_registration_id_sll_item* next;
+
+        SYS_SLIST_FOR_EACH_CONTAINER_SAFE (
+            &dynamic_reg->dynamically_define_data_ids
+                 .dynamic_registration_id_list,
+            item, next, node) {
+          if (item->dynamic_registration_id == dynamic_id_to_remove) {
+            sys_slist_find_and_remove(&dynamic_reg->dynamically_define_data_ids
+                                           .dynamic_registration_id_list,
+                                      &item->node);
+          }
+        }
+      }
+    }
+  }
+}
+
+static UDSErr_t uds_dynamicallY_define_data_by_id_remove_ids(
+    struct uds_context* const context, bool* consume_event) {
+  UDSDDDIArgs_t* args = context->arg;
+
+  if (args->allDataIds) {
+  } else {
+    uds_dynamicallY_define_data_by_id_remove_single_id(context->instance,
+                                                       args->dynamicDataId);
+  }
+
+  *consume_event = true;
+  return UDS_OK;
+}
+
 UDSErr_t uds_action_default_dynamically_define_data_ids(
     struct uds_context* const context, bool* consume_event) {
   UDSDDDIArgs_t* args = context->arg;
   switch (args->type) {
-    case UDS_DYNAMICALLY_DEFINED_DATA_IDS__DEFINE_BY_DATA_ID: {
-      struct uds_registration_t* read_data_by_id_reg = NULL;
-      int ret = uds_find_existing_registration_by_data_id(
-          context, args->dynamicDataId, &read_data_by_id_reg);
-
-      bool is_existing_registration = ret == 0;
-
-      if (!is_existing_registration) {
-        ret = uds_create_new_data_identifier_by_id(context, args->dynamicDataId,
-                                                   &read_data_by_id_reg);
-        if (ret < 0) {
-          LOG_ERR("Failed to create new data identifier registration. ERR: %d",
-                  ret);
-          return UDS_NRC_GeneralReject;
-        }
-      }
-
-      sys_slist_t* data_list = read_data_by_id_reg->data_identifier.data;
-
-      struct uds_dynamically_defined_data* print_data;
-      SYS_SLIST_FOR_EACH_CONTAINER (data_list, print_data, node) {
-        // LOG_INF("Existing data id: 0x%04X pos: %u size: %u",
-        // print_data->id.id,
-        //         print_data->id.position, print_data->id.size);
-      }
-
-      ret =
-          uds_append_dynamic_data_identifiers_to_registration(args, data_list);
-
-      SYS_SLIST_FOR_EACH_CONTAINER (data_list, print_data, node) {
-        // LOG_INF("New     data id: 0x%04X pos: %u size: %u",
-        // print_data->id.id,
-        //         print_data->id.position, print_data->id.size);
-      }
-
-      if (!is_existing_registration) {
-        ret = uds_register_new_data_by_id_item(context, read_data_by_id_reg);
-      }
-
-      *consume_event = true;
-      return UDS_OK;
-    };
+    case UDS_DYNAMICALLY_DEFINED_DATA_IDS__DEFINE_BY_DATA_ID:
+      return uds_dynamicallY_define_data_by_id_add_new_id(context,
+                                                          consume_event);
     case UDS_DYNAMICALLY_DEFINED_DATA_IDS__DEFINE_BY_MEMORY_ADDRESS: {
       return UDS_NRC_SubFunctionNotSupported;
     };
-    case UDS_DYNAMICALLY_DEFINED_DATA_IDS__CLEAR: {
-      if (args->allDataIds) {
-        sys_snode_t* node;
-        sys_snode_t* next_node;
-        struct dynamic_registration_id_sll_item* item;
-
-        SYS_SLIST_FOR_EACH_NODE_SAFE (
-            &context->registration->dynamically_define_data_ids
-                 .dynamic_registration_id_list,
-            node, next_node) {
-          item = SYS_SLIST_CONTAINER(node, item, node);
-          int ret = context->instance->unregister_event_handler(
-              context->instance, item->dynamic_registration_id);
-          if (ret != 0) {
-            LOG_WRN(
-                "Failed to unregister dynamic registration identifier ID %u. "
-                "ERR: %d",
-                item->dynamic_registration_id, ret);
-          }
-          sys_slist_find_and_remove(
-              &context->registration->dynamically_define_data_ids
-                   .dynamic_registration_id_list,
-              node);
-          // Free node to hold dynamic registration ID's for the dynamically
-          // defined data ids event handler [4]
-          k_free(node);
-        }
-      } else {
-        // TODO:
-        //   - Find the registration by data ID
-        //   - Free all items in the data list (unregister callback)
-        //   - Free the data list itself? (unregister callback)
-        //   - Find the default event handler for dynamic IDS and remove this
-        //     items dynamic ID
-
-        // struct uds_dynamically_defined_data* print_data;
-        // SYS_SLIST_FOR_EACH_CONTAINER (context->re, print_data, node) {
-        //   // LOG_INF("Existing data id: 0x%04X pos: %u size: %u",
-        //   // print_data->id.id,
-        //   //         print_data->id.position, print_data->id.size);
-        // }
-
-        uint32_t dynamic_id_to_remove = 0;
-        {
-          // Remove the data ID from the dynamic registrations
-          uint16_t data_id = args->dynamicDataId;
-          struct uds_registration_t* dynamic_reg;
-          SYS_SLIST_FOR_EACH_CONTAINER (
-              &context->instance->dynamic_registrations, dynamic_reg, node) {
-            LOG_INF("dynamic registration with dynamic id: 0x%04X",
-                    dynamic_reg->dynamic_registration_id);
-
-            if (dynamic_reg->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
-                dynamic_reg->data_identifier.data_id == data_id) {
-              dynamic_id_to_remove = dynamic_reg->dynamic_registration_id;
-              LOG_INF("Found dynamic registration ID to remove: %u",
-                      dynamic_id_to_remove);
-              int ret = context->instance->unregister_event_handler(
-                  context->instance, dynamic_id_to_remove);
-              if (ret != 0) {
-                LOG_WRN(
-                    "Failed to unregister dynamic registration identifier ID "
-                    "%u. "
-                    "ERR: %d",
-                    dynamic_id_to_remove, ret);
-              }
-              break;  // Found and processed the registration, exit the loop
-            }
-          }
-        }
-
-        // Remove the dynamic_id of the removed registration item from the list
-        // of the dynamically defined data ids event handler
-
-        // uds_registration_t* dddd_registration = NULL;
-        // We start with static registrations
-        STRUCT_SECTION_FOREACH (uds_registration_t, reg) {
-          if (reg->type == UDS_REGISTRATION_TYPE__DYNAMIC_DEFINE_DATA_IDS) {
-            struct dynamic_registration_id_sll_item* item;
-            struct dynamic_registration_id_sll_item* next;
-
-            SYS_SLIST_FOR_EACH_CONTAINER_SAFE (
-                &reg->dynamically_define_data_ids.dynamic_registration_id_list,
-                item, next, node) {
-              if (item->dynamic_registration_id == dynamic_id_to_remove) {
-                sys_slist_find_and_remove(&reg->dynamically_define_data_ids
-                                               .dynamic_registration_id_list,
-                                          &item->node);
-              }
-            }
-          }
-        }
-
-        struct uds_registration_t* dynamic_reg;
-        SYS_SLIST_FOR_EACH_CONTAINER (&context->instance->dynamic_registrations,
-                                      dynamic_reg, node) {
-          if (dynamic_reg->type ==
-              UDS_REGISTRATION_TYPE__DYNAMIC_DEFINE_DATA_IDS) {
-            struct dynamic_registration_id_sll_item* item;
-            struct dynamic_registration_id_sll_item* next;
-
-            SYS_SLIST_FOR_EACH_CONTAINER_SAFE (
-                &dynamic_reg->dynamically_define_data_ids
-                     .dynamic_registration_id_list,
-                item, next, node) {
-              if (item->dynamic_registration_id == dynamic_id_to_remove) {
-                sys_slist_find_and_remove(
-                    &dynamic_reg->dynamically_define_data_ids
-                         .dynamic_registration_id_list,
-                    &item->node);
-              }
-            }
-          }
-        }
-
-        // SYS_SLIST_FOR_EACH_NODE_SAFE (
-        //     &context->registration->dynamically_define_data_ids
-        //          .dynamic_registration_id_list,
-        //     node, next_node) {
-        //   item = SYS_SLIST_CONTAINER(node, item, node);
-        //   if (item->)
-        //     if (item->dynamic_registration_id == args->dynamicDataId) {
-        //       int ret = context->instance->unregister_event_handler(
-        //           context->instance, item->dynamic_registration_id);
-        //       if (ret != 0) {
-        //         LOG_WRN(
-        //             "Failed to unregister dynamic registration identifier ID
-        //             "
-        //             "%u. "
-        //             "ERR: %d",
-        //             item->dynamic_registration_id, ret);
-        //       }
-        //       sys_slist_find_and_remove(
-        //           &context->registration->dynamically_define_data_ids
-        //                .dynamic_registration_id_list,
-        //           node);
-        //       // Free node to hold dynamic registration ID's for the
-        //       dynamically
-        //       // defined data ids event handler [4]
-        //       k_free(node);
-        //     }
-      }
-
-      *consume_event = true;
-      return UDS_OK;
-    };
+    case UDS_DYNAMICALLY_DEFINED_DATA_IDS__CLEAR:
+      return uds_dynamicallY_define_data_by_id_remove_ids(context,
+                                                          consume_event);
     default:
       return UDS_NRC_SubFunctionNotSupported;
   }

@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "zephyr/logging/log.h"
+#include "zephyr/sys/slist.h"
 LOG_MODULE_REGISTER(uds_test, CONFIG_UDS_LOG_LEVEL);
 
 #include "ardep/uds.h"
@@ -15,35 +16,6 @@ LOG_MODULE_REGISTER(uds_test, CONFIG_UDS_LOG_LEVEL);
 #include <wchar.h>
 
 #include <zephyr/ztest.h>
-
-UDSErr_t dynamic_def_data_id_0x2C_check_fn(
-    const struct uds_context *const context, bool *apply_action) {
-  //   zassert_equal(context->event, UDS_EVT_RoutineCtrl);
-  //   zassert_not_null(context->arg);
-
-  //   UDSRoutineCtrlArgs_t *args = context->arg;
-
-  //   zassert_equal(args->ctrlType, UDS_ROUTINE_CONTROL__START_ROUTINE);
-  //   zassert_equal(args->id, routine_id);
-  //   zassert_equal(args->len, 2);
-  //   uint8_t option_record[2] = {0x12, 0x34};
-  //   zassert_mem_equal(args->optionRecord, option_record,
-  //   sizeof(option_record));
-
-  *apply_action = true;
-  return UDS_OK;
-}
-
-UDSErr_t dynamic_def_data_id_0x2C__action_fn(struct uds_context *const context,
-                                             bool *consume_event) {
-  //   UDSRoutineCtrlArgs_t *args = context->arg;
-
-  //   uint8_t routine_status_record[] = {0x11, 0x22};
-  //   return args->copyStatusRecord(context->server, routine_status_record,
-  //                                 sizeof(routine_status_record));
-  *consume_event = true;
-  return UDS_OK;
-}
 
 UDSErr_t custom_check_for_0x2C_dynamically_define_data(
     const struct uds_context *const context, bool *apply_action) {
@@ -109,6 +81,18 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id) {
   int ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
   zassert_ok(ret);
 
+  bool registration_found = false;
+  struct uds_registration_t *registration;
+  SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, registration,
+                                node) {
+    if (registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
+        registration->data_identifier.data_id == 0xFEDC) {
+      registration_found = true;
+      break;
+    }
+  }
+  zassert_true(registration_found);
+
   UDSRDBIArgs_t read_arg = {
     .dataId = 0xFEDC,
     .copy = copy,
@@ -129,6 +113,18 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id) {
 
   ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &remove_args);
   zassert_ok(ret);
+
+  registration_found = false;
+  SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, registration,
+                                node) {
+    if (registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
+        registration->data_identifier.data_id == 0xFEDC) {
+      registration_found = true;
+      break;
+    }
+  }
+
+  zassert_false(registration_found);
 }
 
 ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
@@ -157,6 +153,18 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
   int ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
   zassert_ok(ret);
 
+  bool registration_found = false;
+  struct uds_registration_t *registration;
+  SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, registration,
+                                node) {
+    if (registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
+        registration->data_identifier.data_id == 0xFEDC) {
+      registration_found = true;
+      break;
+    }
+  }
+  zassert_true(registration_found);
+
   UDSDDDI_DBIArgs_t sources2[] = {
     {
       .sourceDataId = data_id_rw,
@@ -165,20 +173,27 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
     },
   };
 
-  LOG_INF("=-=-=-=-=-=-=-=-=-=-=-");
-
   args.subFuncArgs.defineById.sources = sources2;
   args.subFuncArgs.defineById.len = 1;
 
   ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &args);
   zassert_ok(ret);
 
+  registration_found = false;
+  SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, registration,
+                                node) {
+    if (registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
+        registration->data_identifier.data_id == 0xFEDC) {
+      registration_found = true;
+      break;
+    }
+  }
+  zassert_true(registration_found);
+
   UDSRDBIArgs_t read_arg = {
     .dataId = 0xFEDC,
     .copy = copy,
   };
-
-  LOG_INF("=-=-=-=-=-=-=-=-=-=-=-");
 
   ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &read_arg);
   zassert_ok(ret);
@@ -195,6 +210,17 @@ ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_id_multiple) {
 
   ret = receive_event(instance, UDS_EVT_DynamicDefineDataId, &remove_args);
   zassert_ok(ret);
+
+  registration_found = false;
+  SYS_SLIST_FOR_EACH_CONTAINER (&instance->dynamic_registrations, registration,
+                                node) {
+    if (registration->type == UDS_REGISTRATION_TYPE__DATA_IDENTIFIER &&
+        registration->data_identifier.data_id == 0xFEDC) {
+      registration_found = true;
+      break;
+    }
+  }
+  zassert_false(registration_found);
 }
 
 // ZTEST_F(lib_uds, test_0x2C_dynamically_define_data_ids__data_by_mem) {

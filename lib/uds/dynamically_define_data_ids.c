@@ -147,10 +147,10 @@ static int uds_unregister_dynamic_identifier(struct uds_registration_t* this) {
     struct uds_dynamically_defined_data* data =
         CONTAINER_OF(node, struct uds_dynamically_defined_data, node);
     // Free data list item to hold sub-item [3]
-    k_free(data);
+    k_free(data);  // FREE: [DATA_ITEM] - normal cleanup via unregister
   }
   // Free data list for sub-items to be read [1]
-  k_free(list);
+  k_free(list);  // FREE: [DATA_LIST] - normal cleanup via unregister
 
   return 0;
 }
@@ -162,7 +162,9 @@ static UDSErr_t uds_append_dynamic_data_identifiers_to_registration(
     uint8_t position = args->subFuncArgs.defineById.sources[i].position;
     uint8_t size = args->subFuncArgs.defineById.sources[i].size;
 
-    // Allocate data list item to hold sub-item [3]
+    // Allocate data list item to hold sub-item [DATA_ITEM]
+    // FREED: [DATA_ITEM] via uds_unregister_dynamic_identifier, error cleanup,
+    // or caller error cleanup
     struct uds_dynamically_defined_data* data =
         k_malloc(sizeof(struct uds_dynamically_defined_data));
     if (!data) {
@@ -173,7 +175,8 @@ static UDSErr_t uds_append_dynamic_data_identifiers_to_registration(
         struct uds_dynamically_defined_data* cleanup_data =
             CONTAINER_OF(node, struct uds_dynamically_defined_data, node);
         sys_slist_remove(data_list, NULL, &cleanup_data->node);
-        k_free(cleanup_data);
+        k_free(cleanup_data);  // FREE: [DATA_ITEM] - error cleanup in append
+                               // function
       }
       LOG_ERR("Failed to allocate memory for dynamic data identifier");
       return UDS_NRC_GeneralReject;
@@ -196,7 +199,9 @@ static UDSErr_t uds_append_dynamic_memory_addresses_to_registration(
     void* memAddr = args->subFuncArgs.defineByMemAddress.sources[i].memAddr;
     size_t memSize = args->subFuncArgs.defineByMemAddress.sources[i].memSize;
 
-    // Allocate data list item to hold sub-item [3]
+    // Allocate data list item to hold sub-item [DATA_ITEM]
+    // FREED: [DATA_ITEM] via uds_unregister_dynamic_identifier, error cleanup,
+    // or caller error cleanup
     struct uds_dynamically_defined_data* data =
         k_malloc(sizeof(struct uds_dynamically_defined_data));
     if (!data) {
@@ -207,7 +212,8 @@ static UDSErr_t uds_append_dynamic_memory_addresses_to_registration(
         struct uds_dynamically_defined_data* cleanup_data =
             CONTAINER_OF(node, struct uds_dynamically_defined_data, node);
         sys_slist_remove(data_list, NULL, &cleanup_data->node);
-        k_free(cleanup_data);
+        k_free(cleanup_data);  // FREE: [DATA_ITEM] - error cleanup in append
+                               // function
       }
       LOG_ERR("Failed to allocate memory for dynamic memory address");
       return UDS_NRC_GeneralReject;
@@ -254,18 +260,20 @@ static int uds_create_new_data_identifier_by_id(
     struct uds_context* const context,
     uint16_t data_id,
     struct uds_registration_t** read_data_by_id_reg_ptr) {
-  // Allocating data list for sub-items to be read [1]
+  // Allocating data list for sub-items to be read [DATA_LIST]
+  // FREED: [DATA_LIST] via uds_unregister_dynamic_identifier or error cleanup
   sys_slist_t* data_list = k_malloc(sizeof(sys_slist_t));
   if (!data_list) {
     return -1;
   }
   sys_slist_init(data_list);
 
-  // Allocate new temporary registration item [2]
+  // Allocate new temporary registration item [TEMP_REG]
+  // FREED: [TEMP_REG] after successful registration or via error cleanup
   *read_data_by_id_reg_ptr = k_malloc(sizeof(struct uds_registration_t));
   if (*read_data_by_id_reg_ptr == NULL) {
-    // Free [1]
-    k_free(data_list);
+    // Free [DATA_LIST]
+    k_free(data_list);  // FREE: [DATA_LIST] - error cleanup in create function
     return -2;
   }
 
@@ -299,7 +307,8 @@ static UDSErr_t uds_register_new_data_by_id_item(
   }
 
   // Allocate node to hold dynamic registration ID's for the dynamically defined
-  // data ids event handler [4]
+  // data ids event handler [REG_ID_ITEM]
+  // FREED: [REG_ID_ITEM] when removing single ID or removing all IDs
   struct dynamic_registration_id_sll_item* registration_item =
       k_malloc(sizeof(struct dynamic_registration_id_sll_item));
   if (registration_item == NULL) {
@@ -316,8 +325,9 @@ static UDSErr_t uds_register_new_data_by_id_item(
   registration_item->dynamic_registration_id = dynamic_id;
 
   sys_slist_append(identifier_list, &registration_item->node);
-  // Free new temporary registration item [2]
-  k_free(read_data_by_id_reg);
+  // Free new temporary registration item [TEMP_REG]
+  k_free(
+      read_data_by_id_reg);  // FREE: [TEMP_REG] - after successful registration
 
   return UDS_OK;
 }
@@ -348,8 +358,10 @@ static UDSErr_t uds_dynamicallY_define_data_by_id_add_new_id(
   if (ret != UDS_OK) {
     if (!is_existing_registration) {
       // If we created a new registration but failed to add data, clean it up
-      k_free(read_data_by_id_reg->data_identifier.data);
-      k_free(read_data_by_id_reg);
+      k_free(read_data_by_id_reg->data_identifier
+                 .data);  // FREE: [DATA_LIST] - error cleanup in caller
+      k_free(
+          read_data_by_id_reg);  // FREE: [TEMP_REG] - error cleanup in caller
     }
     return ret;
   }
@@ -364,10 +376,12 @@ static UDSErr_t uds_dynamicallY_define_data_by_id_add_new_id(
         struct uds_dynamically_defined_data* cleanup_data =
             CONTAINER_OF(node, struct uds_dynamically_defined_data, node);
         sys_slist_remove(data_list, NULL, &cleanup_data->node);
-        k_free(cleanup_data);
+        k_free(cleanup_data);  // FREE: [DATA_ITEM] - error cleanup in caller
       }
-      k_free(read_data_by_id_reg->data_identifier.data);
-      k_free(read_data_by_id_reg);
+      k_free(read_data_by_id_reg->data_identifier
+                 .data);  // FREE: [DATA_LIST] - error cleanup in caller
+      k_free(
+          read_data_by_id_reg);  // FREE: [TEMP_REG] - error cleanup in caller
       return ret;
     }
   }
@@ -402,8 +416,10 @@ static UDSErr_t uds_dynamicallY_define_data_by_memory_address_add_new_id(
   if (ret != UDS_OK) {
     if (!is_existing_registration) {
       // If we created a new registration but failed to add data, clean it up
-      k_free(read_data_by_id_reg->data_identifier.data);
-      k_free(read_data_by_id_reg);
+      k_free(read_data_by_id_reg->data_identifier
+                 .data);  // FREE: [DATA_LIST] - error cleanup in caller
+      k_free(
+          read_data_by_id_reg);  // FREE: [TEMP_REG] - error cleanup in caller
     }
     return ret;
   }
@@ -418,10 +434,12 @@ static UDSErr_t uds_dynamicallY_define_data_by_memory_address_add_new_id(
         struct uds_dynamically_defined_data* cleanup_data =
             CONTAINER_OF(node, struct uds_dynamically_defined_data, node);
         sys_slist_remove(data_list, NULL, &cleanup_data->node);
-        k_free(cleanup_data);
+        k_free(cleanup_data);  // FREE: [DATA_ITEM] - error cleanup in caller
       }
-      k_free(read_data_by_id_reg->data_identifier.data);
-      k_free(read_data_by_id_reg);
+      k_free(read_data_by_id_reg->data_identifier
+                 .data);  // FREE: [DATA_LIST] - error cleanup in caller
+      k_free(
+          read_data_by_id_reg);  // FREE: [TEMP_REG] - error cleanup in caller
       return ret;
     }
   }
@@ -476,7 +494,8 @@ static void uds_dynamicallY_define_data_by_id_remove_single_id(
             sys_slist_find_and_remove(
                 &reg->dynamically_define_data_ids.dynamic_registration_id_list,
                 &item->node);
-            k_free(item);
+            k_free(item);  // FREE: [REG_ID_ITEM] - remove single ID from static
+                           // registrations
           }
         }
       }
@@ -497,7 +516,8 @@ static void uds_dynamicallY_define_data_by_id_remove_single_id(
             sys_slist_find_and_remove(&dynamic_reg->dynamically_define_data_ids
                                            .dynamic_registration_id_list,
                                       &item->node);
-            k_free(item);
+            k_free(item);  // FREE: [REG_ID_ITEM] - remove single ID from
+                           // dynamic registrations
           }
         }
       }
@@ -570,7 +590,8 @@ static void uds_dynamicallY_define_data_by_id_remove_all_ids(
         sys_slist_find_and_remove(
             &reg->dynamically_define_data_ids.dynamic_registration_id_list,
             &item->node);
-        k_free(item);
+        k_free(item);  // FREE: [REG_ID_ITEM] - remove all IDs from static
+                       // registrations
       }
     }
   }
@@ -590,7 +611,8 @@ static void uds_dynamicallY_define_data_by_id_remove_all_ids(
         sys_slist_find_and_remove(&dynamic_reg->dynamically_define_data_ids
                                        .dynamic_registration_id_list,
                                   &item->node);
-        k_free(item);
+        k_free(item);  // FREE: [REG_ID_ITEM] - remove all IDs from dynamic
+                       // registrations
       }
     }
   }

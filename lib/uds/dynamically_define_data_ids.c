@@ -166,8 +166,17 @@ static UDSErr_t uds_append_dynamic_data_identifiers_to_registration(
     struct uds_dynamically_defined_data* data =
         k_malloc(sizeof(struct uds_dynamically_defined_data));
     if (!data) {
-      // TODO: undo all previous allocations and return error
-      // TODO: free sys_slist_t list
+      // Cleanup all previously allocated items in this list
+      sys_snode_t* node;
+      sys_snode_t* next_node;
+      SYS_SLIST_FOR_EACH_NODE_SAFE (data_list, node, next_node) {
+        struct uds_dynamically_defined_data* cleanup_data =
+            CONTAINER_OF(node, struct uds_dynamically_defined_data, node);
+        sys_slist_remove(data_list, NULL, &cleanup_data->node);
+        k_free(cleanup_data);
+      }
+      LOG_ERR("Failed to allocate memory for dynamic data identifier");
+      return UDS_NRC_GeneralReject;
     }
 
     data->type = UDS_DYNAMICALLY_DEFINED_DATA_TYPE__ID;
@@ -191,8 +200,17 @@ static UDSErr_t uds_append_dynamic_memory_addresses_to_registration(
     struct uds_dynamically_defined_data* data =
         k_malloc(sizeof(struct uds_dynamically_defined_data));
     if (!data) {
-      // TODO: undo all previous allocations and return error
-      // TODO: free sys_slist_t list
+      // Cleanup all previously allocated items in this list
+      sys_snode_t* node;
+      sys_snode_t* next_node;
+      SYS_SLIST_FOR_EACH_NODE_SAFE (data_list, node, next_node) {
+        struct uds_dynamically_defined_data* cleanup_data =
+            CONTAINER_OF(node, struct uds_dynamically_defined_data, node);
+        sys_slist_remove(data_list, NULL, &cleanup_data->node);
+        k_free(cleanup_data);
+      }
+      LOG_ERR("Failed to allocate memory for dynamic memory address");
+      return UDS_NRC_GeneralReject;
     }
 
     data->type = UDS_DYNAMICALLY_DEFINED_DATA_TYPE__MEMORY;
@@ -286,6 +304,9 @@ static UDSErr_t uds_register_new_data_by_id_item(
       k_malloc(sizeof(struct dynamic_registration_id_sll_item));
   if (registration_item == NULL) {
     LOG_ERR("Failed to allocate memory for dynamic registration ID item.");
+    // Cleanup: unregister the event handler we just registered
+    context->instance->unregister_event_handler(context->instance, dynamic_id);
+    return UDS_NRC_GeneralReject;
   }
   memset(registration_item, 0, sizeof(*registration_item));
 
@@ -324,9 +345,31 @@ static UDSErr_t uds_dynamicallY_define_data_by_id_add_new_id(
   sys_slist_t* data_list = read_data_by_id_reg->data_identifier.data;
 
   ret = uds_append_dynamic_data_identifiers_to_registration(args, data_list);
+  if (ret != UDS_OK) {
+    if (!is_existing_registration) {
+      // If we created a new registration but failed to add data, clean it up
+      k_free(read_data_by_id_reg->data_identifier.data);
+      k_free(read_data_by_id_reg);
+    }
+    return ret;
+  }
 
   if (!is_existing_registration) {
     ret = uds_register_new_data_by_id_item(context, read_data_by_id_reg);
+    if (ret != UDS_OK) {
+      // Clean up the data list and registration we created
+      sys_snode_t* node;
+      sys_snode_t* next_node;
+      SYS_SLIST_FOR_EACH_NODE_SAFE (data_list, node, next_node) {
+        struct uds_dynamically_defined_data* cleanup_data =
+            CONTAINER_OF(node, struct uds_dynamically_defined_data, node);
+        sys_slist_remove(data_list, NULL, &cleanup_data->node);
+        k_free(cleanup_data);
+      }
+      k_free(read_data_by_id_reg->data_identifier.data);
+      k_free(read_data_by_id_reg);
+      return ret;
+    }
   }
 
   *consume_event = true;
@@ -356,9 +399,31 @@ static UDSErr_t uds_dynamicallY_define_data_by_memory_address_add_new_id(
   sys_slist_t* data_list = read_data_by_id_reg->data_identifier.data;
 
   ret = uds_append_dynamic_memory_addresses_to_registration(args, data_list);
+  if (ret != UDS_OK) {
+    if (!is_existing_registration) {
+      // If we created a new registration but failed to add data, clean it up
+      k_free(read_data_by_id_reg->data_identifier.data);
+      k_free(read_data_by_id_reg);
+    }
+    return ret;
+  }
 
   if (!is_existing_registration) {
     ret = uds_register_new_data_by_id_item(context, read_data_by_id_reg);
+    if (ret != UDS_OK) {
+      // Clean up the data list and registration we created
+      sys_snode_t* node;
+      sys_snode_t* next_node;
+      SYS_SLIST_FOR_EACH_NODE_SAFE (data_list, node, next_node) {
+        struct uds_dynamically_defined_data* cleanup_data =
+            CONTAINER_OF(node, struct uds_dynamically_defined_data, node);
+        sys_slist_remove(data_list, NULL, &cleanup_data->node);
+        k_free(cleanup_data);
+      }
+      k_free(read_data_by_id_reg->data_identifier.data);
+      k_free(read_data_by_id_reg);
+      return ret;
+    }
   }
 
   *consume_event = true;
@@ -411,6 +476,7 @@ static void uds_dynamicallY_define_data_by_id_remove_single_id(
             sys_slist_find_and_remove(
                 &reg->dynamically_define_data_ids.dynamic_registration_id_list,
                 &item->node);
+            k_free(item);
           }
         }
       }
@@ -431,6 +497,7 @@ static void uds_dynamicallY_define_data_by_id_remove_single_id(
             sys_slist_find_and_remove(&dynamic_reg->dynamically_define_data_ids
                                            .dynamic_registration_id_list,
                                       &item->node);
+            k_free(item);
           }
         }
       }

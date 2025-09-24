@@ -7,6 +7,8 @@
 
 #ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 
+/* Requires: a handler for read_memory_by_address and read_data_by_id */
+
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(uds, CONFIG_UDS_LOG_LEVEL);
 
@@ -90,29 +92,32 @@ static UDSErr_t uds_dynamic_data_by_id_read_data_by_id_action(
   SYS_SLIST_FOR_EACH_NODE (list, node) {
     struct uds_dynamically_defined_data* data =
         CONTAINER_OF(node, struct uds_dynamically_defined_data, node);
-    UDSRDBIArgs_t child_args = {.dataId = data->id.id, .copy = uds_copy};
 
-    temp_buffer_len = 0;
+    if (data->type == UDS_DYNAMICALLY_DEFINED_DATA_TYPE__ID) {
+      UDSRDBIArgs_t child_args = {.dataId = data->id.id, .copy = uds_copy};
 
-    int ret = uds_event_callback(&context->instance->iso14229,
-                                 UDS_EVT_ReadDataByIdent, &child_args,
-                                 context->instance);
-    if (ret != UDS_PositiveResponse) {
-      return ret;
-    }
+      temp_buffer_len = 0;
 
-    if (data->id.position + data->id.size > temp_buffer_len) {
-      LOG_WRN(
-          "Not enough data returned for data ID 0x%04X to satisfy configured "
-          "dynamic data identifier 0x%04X",
-          data->id.id, parent_read_args->dataId);
-      return UDS_NRC_GeneralReject;
-    }
+      int ret = uds_event_callback(&context->instance->iso14229,
+                                   UDS_EVT_ReadDataByIdent, &child_args,
+                                   context->instance);
+      if (ret != UDS_PositiveResponse) {
+        return ret;
+      }
 
-    ret = parent_read_args->copy(
-        context->server, temp_buffer + data->id.position, data->id.size);
-    if (ret != UDS_OK) {
-      return ret;
+      if (data->id.position + data->id.size > temp_buffer_len) {
+        LOG_WRN(
+            "Not enough data returned for data ID 0x%04X to satisfy configured "
+            "dynamic data identifier 0x%04X",
+            data->id.id, parent_read_args->dataId);
+        return UDS_NRC_GeneralReject;
+      }
+
+      ret = parent_read_args->copy(
+          context->server, temp_buffer + data->id.position, data->id.size);
+      if (ret != UDS_OK) {
+        return ret;
+      }
     }
   }
 
@@ -156,6 +161,30 @@ static UDSErr_t uds_append_dynamic_data_identifiers_to_registration(
     data->id.id = id;
     data->id.position = position;
     data->id.size = size;
+    data->node = (sys_snode_t){0};
+
+    sys_slist_append(data_list, &data->node);
+  }
+  return UDS_OK;
+}
+
+static UDSErr_t uds_append_dynamic_memory_addresses_to_registration(
+    UDSDDDIArgs_t* args, sys_slist_t* data_list) {
+  for (uint32_t i = 0; i < args->subFuncArgs.defineByMemAddress.len; i++) {
+    void* memAddr = args->subFuncArgs.defineByMemAddress.sources[i].memAddr;
+    size_t memSize = args->subFuncArgs.defineByMemAddress.sources[i].memSize;
+
+    // Allocate data list item to hold sub-item [3]
+    struct uds_dynamically_defined_data* data =
+        k_malloc(sizeof(struct uds_dynamically_defined_data));
+    if (!data) {
+      // TODO: undo all previous allocations and return error
+      // TODO: free sys_slist_t list
+    }
+
+    data->type = UDS_DYNAMICALLY_DEFINED_DATA_TYPE__MEMORY;
+    data->memory.memAddr = memAddr;
+    data->memory.memSize = memSize;
     data->node = (sys_snode_t){0};
 
     sys_slist_append(data_list, &data->node);
@@ -282,6 +311,38 @@ static UDSErr_t uds_dynamicallY_define_data_by_id_add_new_id(
   sys_slist_t* data_list = read_data_by_id_reg->data_identifier.data;
 
   ret = uds_append_dynamic_data_identifiers_to_registration(args, data_list);
+
+  if (!is_existing_registration) {
+    ret = uds_register_new_data_by_id_item(context, read_data_by_id_reg);
+  }
+
+  *consume_event = true;
+  return UDS_OK;
+}
+
+static UDSErr_t uds_dynamicallY_define_data_by_memory_address_add_new_id(
+    struct uds_context* const context, bool* consume_event) {
+  UDSDDDIArgs_t* args = context->arg;
+
+  struct uds_registration_t* read_data_by_id_reg = NULL;
+  int ret = uds_find_existing_registration_by_data_id(
+      context, args->dynamicDataId, &read_data_by_id_reg);
+
+  bool is_existing_registration = ret == 0;
+
+  if (!is_existing_registration) {
+    ret = uds_create_new_data_identifier_by_id(context, args->dynamicDataId,
+                                               &read_data_by_id_reg);
+    if (ret < 0) {
+      LOG_ERR("Failed to create new data identifier registration. ERR: %d",
+              ret);
+      return UDS_NRC_GeneralReject;
+    }
+  }
+
+  sys_slist_t* data_list = read_data_by_id_reg->data_identifier.data;
+
+  ret = uds_append_dynamic_memory_addresses_to_registration(args, data_list);
 
   if (!is_existing_registration) {
     ret = uds_register_new_data_by_id_item(context, read_data_by_id_reg);
@@ -477,9 +538,9 @@ UDSErr_t uds_action_default_dynamically_define_data_ids(
     case UDS_DYNAMICALLY_DEFINED_DATA_IDS__DEFINE_BY_DATA_ID:
       return uds_dynamicallY_define_data_by_id_add_new_id(context,
                                                           consume_event);
-    case UDS_DYNAMICALLY_DEFINED_DATA_IDS__DEFINE_BY_MEMORY_ADDRESS: {
-      return UDS_NRC_SubFunctionNotSupported;
-    };
+    case UDS_DYNAMICALLY_DEFINED_DATA_IDS__DEFINE_BY_MEMORY_ADDRESS:
+      return uds_dynamicallY_define_data_by_memory_address_add_new_id(
+          context, consume_event);
     case UDS_DYNAMICALLY_DEFINED_DATA_IDS__CLEAR:
       return uds_dynamicallY_define_data_by_id_remove_ids(context,
                                                           consume_event);

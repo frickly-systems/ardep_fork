@@ -208,12 +208,10 @@ K_WORK_DELAYABLE_DEFINE(dtc_status_increment_work,
 static void dtc_status_increment_work_handler(struct k_work *work) {
   k_mutex_lock(&dtc_record_mutex, K_FOREVER);
 
-  // Increment the first DTC's status if not frozen
-  if (!dtc_records[0].is_frozen) {
-    dtc_records[0].status = (dtc_records[0].status + 1) & 0xFF;
-    // LOG_DBG("DTC 0x%02X%02X%02X status incremented to: 0x%02X",
-    //         dtc_records[0].dtc[0], dtc_records[0].dtc[1],
-    //         dtc_records[0].dtc[2], dtc_records[0].status);
+  for (uint32_t i = 0; i < ARRAY_SIZE(dtc_records); i++) {
+    if (!dtc_records[i].is_frozen) {
+      dtc_records[i].status = (dtc_records[i].status + 1) & 0xFF;
+    }
   }
 
   k_mutex_unlock(&dtc_record_mutex);

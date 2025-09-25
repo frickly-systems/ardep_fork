@@ -767,4 +767,49 @@
 
 // #endregion DYNAMICALLY_DEFINE_DATA_IDS
 
+// #region LINK_CONTROL
+
+// clang-format off
+
+/**
+ * @brief Register a new link control event handler
+ * 
+ * @param _instance Pointer to associated the UDS server instance
+ * @param _check Check if the associated action should be executed
+ * @param _act Execute the handler for the dynamically define data IDs event
+ * @param _user_context Optional context provided by the user
+ * 
+ * @note Note that the link settings should be reset after an ecu_reset or session timeout event.
+ *       This must be handles separately in the event handlers for these events and is not part of
+ *       this registration.
+ * 
+ * @note When using link settings, you should set the suppress response bit on the request that
+ *       triggers a change in the link settings (e.g. ecu reset or subfunction 0x03).
+ *       The response is send after the event is emitted and thus can lead to communication
+ *       problems when participants use different settings during transition.
+ *
+ */
+#define UDS_REGISTER_LINK_CONTROL_HANDLER(                                     \
+  _instance,                                                                   \
+  _check,                                                                      \
+  _act,                                                                        \
+  _user_context                                                                \
+)                                                                              \
+  STRUCT_SECTION_ITERABLE(uds_registration_t,                                  \
+        _UDS_CAT_EXPAND(__uds_registration_link_control_, __COUNTER__)) = {    \
+    .instance = _instance,                                                     \
+    .type = UDS_REGISTRATION_TYPE__LINK_CONTROL,                               \
+    .link_control = {                                                          \
+      .user_context = _user_context,                                           \
+      .actor = {                                                               \
+        .check =  _check,                                                      \
+        .action = _act,                                                        \
+      },                                                                       \
+    },                                                                         \
+  };
+
+// clang-format on
+
+// #endregion LINK_CONTROL
+
 #endif  // ARDEP_UDS_MACRO_H

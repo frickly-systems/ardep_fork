@@ -284,6 +284,7 @@ enum uds_registration_type_t {
   UDS_REGISTRATION_TYPE__COMMUNICATION_CONTROL,
   UDS_REGISTRATION_TYPE__DYNAMIC_DEFINE_DATA_IDS,
   UDS_REGISTRATION_TYPE__CONTROL_DTC_SETTING,
+  UDS_REGISTRATION_TYPE__LINK_CONTROL,
 };
 
 enum uds_dynamically_defined_data_type {
@@ -549,8 +550,7 @@ struct uds_registration_t {
     /**
      * @brief Data for the Link Control event handler
      *
-     * Handles *UDS_EVT_LinkControl*, *UDS_EVT_EcuReset* and
-     * *UDS_EVT_SessionTimeout* events
+     * Handles *UDS_EVT_LinkControl* events
      */
     struct {
       /**
@@ -560,21 +560,7 @@ struct uds_registration_t {
       /**
        * @brief Actor for *UDS_EVT_LinkControl* events
        */
-      struct uds_actor link_control;
-      /**
-       * @brief Actor for *UDS_EVT_SessionTimeout* events
-       *
-       * @note Beware that these handlers and the actual handlers setup for the
-       * Session Timeout event must not conflict.
-       */
-      struct uds_actor session_timeout;
-      /**
-       * @brief Actor for *UDS_EVT_EcuReset* events
-       *
-       * @note Beware that these handlers and the actual handlers setup for the
-       * ECU Reset function must not conflict.
-       */
-      struct uds_actor ecu_reset;
+      struct uds_actor actor;
     } link_control;
   };
 

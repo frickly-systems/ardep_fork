@@ -20,7 +20,7 @@ struct DtcRecord {
   uint8_t dtc[3];
   uint8_t status;
   bool is_active;
-  bool is_frozen;  // New field for Control DTC Setting
+  bool is_frozen;
 };
 
 const uint8_t dtc_status_availability_mask = 0x7F;

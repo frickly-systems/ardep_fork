@@ -89,6 +89,30 @@ enum uds_dynamically_define_data_ids_subfunc {
   UDS_DYNAMICALLY_DEFINED_DATA_IDS__CLEAR = 0x03,
 };
 
+enum uds_link_control_subfunc {
+  UDS_LINK_CONTROL__VERIFY_MODE_TRANSITION_WITH_FIXED_PARAMETER = 0x01,
+  UDS_LINK_CONTROL__VERIFY_MODE_TRANSITION_WITH_SPECIFIC_PARAMETER = 0x02,
+  UDS_LINK_CONTROL__TRANSITION_MODE = 0x03,
+  UDS_LINK_CONTROL__VEHICLE_MANUFACTURER_SPECIFIC_START = 0x40,
+  UDS_LINK_CONTROL__VEHICLE_MANUFACTURER_SPECIFIC_END = 0x5F,
+  UDS_LINK_CONTROL__SYSTEM_SUPPLIER_SPECIFIC_START = 0x60,
+  UDS_LINK_CONTROL__SYSTEM_SUPPLIER_SPECIFIC_END = 0x7E,
+};
+
+enum uds_link_control_modifier {
+  UDS_LINK_CONTROL_MODIFIER__PC_9600_BAUD = 0x01,
+  UDS_LINK_CONTROL_MODIFIER__PC_1920_BAUD = 0x02,
+  UDS_LINK_CONTROL_MODIFIER__PC_38400_BAUD = 0x03,
+  UDS_LINK_CONTROL_MODIFIER__PC_57600_BAUD = 0x04,
+  UDS_LINK_CONTROL_MODIFIER__PC_115200_BAUD = 0x05,
+  UDS_LINK_CONTROL_MODIFIER__CAN_125000_BAUD = 0x10,
+  UDS_LINK_CONTROL_MODIFIER__CAN_250000_BAUD = 0x11,
+  UDS_LINK_CONTROL_MODIFIER__CAN_500000_BAUD = 0x12,
+  UDS_LINK_CONTROL_MODIFIER__CAN_1000000_BAUD = 0x13,
+  UDS_LINK_CONTROL_MODIFIER__PROGRAMMING_SETUP = 0x20,
+
+};
+
 /**
  * @brief Context provided to Event handlers on an event
  */
@@ -522,6 +546,36 @@ struct uds_registration_t {
        */
       struct uds_actor actor;
     } dynamically_define_data_ids;
+    /**
+     * @brief Data for the Link Control event handler
+     *
+     * Handles *UDS_EVT_LinkControl*, *UDS_EVT_EcuReset* and
+     * *UDS_EVT_SessionTimeout* events
+     */
+    struct {
+      /**
+       * @brief User-defined context pointer
+       */
+      void *user_context;
+      /**
+       * @brief Actor for *UDS_EVT_LinkControl* events
+       */
+      struct uds_actor link_control;
+      /**
+       * @brief Actor for *UDS_EVT_SessionTimeout* events
+       *
+       * @note Beware that these handlers and the actual handlers setup for the
+       * Session Timeout event must not conflict.
+       */
+      struct uds_actor session_timeout;
+      /**
+       * @brief Actor for *UDS_EVT_EcuReset* events
+       *
+       * @note Beware that these handlers and the actual handlers setup for the
+       * ECU Reset function must not conflict.
+       */
+      struct uds_actor ecu_reset;
+    } link_control;
   };
 
 #ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION

@@ -606,6 +606,29 @@ struct uds_registration_t {
 #endif  // CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 };
 
+#if CONFIG_UDS_USE_LINK_CONTROL
+
+/**
+ * @brief Transitions the CAN controller to the specified baudrate
+ *
+ * @param can_dev the CAN device
+ * @param baud_rate the target baudrate in bit/s
+ * @return UDS_OK on success, otherwise an appropriate negative error code
+ */
+UDSErr_t uds_set_can_bitrate(const struct device *can_dev, uint32_t baud_rate);
+
+/**
+ * @brief Transitions the CAN controller to the default bitrate
+ *
+ * The default bitrate is configured via `CONFIG_UDS_DEFAULT_CAN_BITRATE`
+ *
+ * @param can_dev the CAN device
+ * @return same as `uds_set_can_bitrate`
+ */
+UDSErr_t uds_set_can_default_bitrate(const struct device *can_dev);
+
+#endif  // CONFIG_UDS_USE_LINK_CONTROL
+
 /**
  * @brief Default check function for the default ECU Hard Reset handler
  */
@@ -675,6 +698,18 @@ UDSErr_t uds_check_default_dynamically_define_data_ids(
  */
 UDSErr_t uds_action_default_dynamically_define_data_ids(
     struct uds_context *const context, bool *consume_event);
+
+/**
+ * @brief Default check function for the default link control handler
+ */
+UDSErr_t uds_check_default_link_control(const struct uds_context *const context,
+                                        bool *apply_action);
+
+/**
+ * @brief Default action function for the default link control handler
+ */
+UDSErr_t uds_action_default_link_control(struct uds_context *const context,
+                                         bool *consume_event);
 
 // Include macro declarations after all types are defined
 #include "ardep/uds_macro.h"  // IWYU pragma: keep

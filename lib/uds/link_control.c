@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifdef CONFIG_UDS_USE_LINK_CONTROL
+
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(uds, CONFIG_UDS_LOG_LEVEL);
 
@@ -79,7 +81,7 @@ UDSErr_t uds_action_default_link_control(struct uds_context *const context,
       return UDS_OK;
     }
     case UDS_LINK_CONTROL__TRANSITION_MODE:
-      return transition_can_modes(
+      return uds_set_can_bitrate(
           context->instance->can_dev,
           uds_link_control_modifier_to_baudrate(modifier));
 
@@ -87,3 +89,5 @@ UDSErr_t uds_action_default_link_control(struct uds_context *const context,
       return UDS_NRC_SubFunctionNotSupported;
   }
 }
+
+#endif  // CONFIG_UDS_USE_LINK_CONTROL

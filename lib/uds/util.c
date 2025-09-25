@@ -5,9 +5,12 @@ LOG_MODULE_DECLARE(uds, CONFIG_UDS_LOG_LEVEL);
 
 #include "iso14229.h"
 
+#include <zephyr/devicetree.h>
 #include <zephyr/kernel.h>
 
 #include <ardep/uds.h>
+
+#if CONFIG_UDS_USE_LINK_CONTROL
 
 uint32_t uds_link_control_modifier_to_baudrate(
     enum uds_link_control_modifier modifier) {
@@ -36,8 +39,7 @@ uint32_t uds_link_control_modifier_to_baudrate(
   }
 }
 
-UDSErr_t transition_can_modes(const struct device *can_dev,
-                              uint32_t baud_rate) {
+UDSErr_t uds_set_can_bitrate(const struct device *can_dev, uint32_t baud_rate) {
   int ret = can_stop(can_dev);
   if (ret != 0) {
     LOG_ERR("Failed to stop CAN controller");
@@ -60,25 +62,8 @@ UDSErr_t transition_can_modes(const struct device *can_dev,
   return UDS_OK;
 }
 
-UDSErr_t set_default_can_bitrate(const struct device *can_dev) {
-  int ret = can_stop(can_dev);
-  if (ret != 0) {
-    LOG_ERR("Failed to stop CAN controller");
-    return UDS_NRC_ConditionsNotCorrect;
-  }
-
-  ret = can_set_bitrate(can_dev, BITRATE);
-  if (ret != 0) {
-    LOG_ERR("Failed to set default CAN bitrate");
-    can_start(can_dev);
-    return UDS_NRC_ConditionsNotCorrect;
-  }
-
-  ret = can_start(can_dev);
-  if (ret != 0) {
-    LOG_ERR("Failed to start CAN controller");
-    return UDS_NRC_ConditionsNotCorrect;
-  }
-
-  return UDS_OK;
+UDSErr_t uds_set_can_default_bitrate(const struct device *can_dev) {
+  return uds_set_can_bitrate(can_dev, CONFIG_UDS_DEFAULT_CAN_BITRATE);
 }
+
+#endif  // CONFIG_UDS_USE_LINK_CONTROL

@@ -767,6 +767,8 @@
 
 // #endregion DYNAMICALLY_DEFINE_DATA_IDS
 
+#ifdef CONFIG_UDS_USE_LINK_CONTROL
+
 // #region LINK_CONTROL
 
 // clang-format off
@@ -826,5 +828,7 @@
 // clang-format on
 
 // #endregion LINK_CONTROL
+
+#endif  // CONFIG_UDS_USE_LINK_CONTROL
 
 #endif  // ARDEP_UDS_MACRO_H

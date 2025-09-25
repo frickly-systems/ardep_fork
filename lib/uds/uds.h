@@ -48,4 +48,13 @@ UDSErr_t uds_event_callback(struct iso14229_zephyr_instance* inst,
 
 #endif  // CONFIG_UDS_USE_DYNAMIC_REGISTRATION
 
+/**
+ * @brief Transitions the CAN controller to the specified baudrate
+ *
+ * @param can_dev the CAN device
+ * @param baud_rate the target baudrate in bit/s
+ * @return UDS_OK on success, otherwise an appropriate negative error code
+ */
+UDSErr_t transition_can_modes(const struct device* can_dev, uint32_t baud_rate);
+
 #endif  // ARDEP_LIB_UDS_UDS_H

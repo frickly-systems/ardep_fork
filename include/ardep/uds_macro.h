@@ -808,6 +808,21 @@
     },                                                                         \
   };
 
+/**
+ * @brief Register the default Link Control event handler
+ * 
+ * @param _instance Pointer to associated the UDS server instance
+ */
+#define UDS_REGISTER_LINK_CONTROL_DEFAULT_HANDLER( \
+  _instance                                        \
+)                                                  \
+  UDS_REGISTER_LINK_CONTROL_HANDLER(               \
+    _instance,                                     \
+    uds_check_default_link_control,                \
+    uds_action_default_link_control,               \
+    NULL                                           \
+  )
+
 // clang-format on
 
 // #endregion LINK_CONTROL

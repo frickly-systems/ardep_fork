@@ -110,8 +110,18 @@ enum uds_link_control_modifier {
   UDS_LINK_CONTROL_MODIFIER__CAN_500000_BAUD = 0x12,
   UDS_LINK_CONTROL_MODIFIER__CAN_1000000_BAUD = 0x13,
   UDS_LINK_CONTROL_MODIFIER__PROGRAMMING_SETUP = 0x20,
-
 };
+
+/**
+ * @brief Get the baudrate associated with the `enum uds_link_control_modifier`
+ * entry
+ *
+ * @returns The baudrate in bit/s
+ * @returns 0 if the modifier is unknown or
+ *          `UDS_LINK_CONTROL_MODIFIER__PROGRAMMING_SETUP`
+ */
+uint32_t uds_link_control_modifier_to_baudrate(
+    enum uds_link_control_modifier modifier);
 
 /**
  * @brief Context provided to Event handlers on an event
@@ -253,6 +263,8 @@ struct uds_instance_t {
   struct iso14229_zephyr_instance iso14229;
 
   void *user_context;
+
+  const struct device *can_dev;
 
 #ifdef CONFIG_UDS_USE_DYNAMIC_REGISTRATION
   /**

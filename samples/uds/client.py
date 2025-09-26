@@ -19,6 +19,7 @@ from argparse import ArgumentParser, Namespace
 
 import isotp
 import udsoncan
+from udsoncan import Baudrate
 from udsoncan.client import Client, MemoryLocation
 from udsoncan.connections import IsoTPSocketConnection
 from udsoncan.exceptions import (
@@ -31,6 +32,57 @@ def change_session(client: Client):
     print("Changing to programming session...")
     client.change_session(DiagnosticSessionControl.Session.programmingSession)
     print("\tSession change successful")
+
+
+def link_control(client: Client):
+    print("Link Control...")
+    data_id = 0x0050
+    data = client.read_data_by_identifier_first([data_id])
+    print(f"\tReading data from identifier\t0x{data_id:04X}:\t0x{data:04X}")
+
+    new_baudrate = 250000
+    print(f"\tRequesting baudrate transition to\t{new_baudrate}")
+    response = client.link_control(control_type=0x01, baudrate=Baudrate(new_baudrate))
+    if not response.positive:
+        print("Negative response when requesting baudrate transition")
+        return
+
+    print("Applying baudrate")
+
+    with client.suppress_positive_response(wait_nrc=True):
+        response = client.link_control(control_type=0x03)
+
+        if (response is not None) and (not response.positive):
+            print(
+                "Negative response when applying baudrate. "
+                "You might need to reset the device manually to fix the baudrate."
+            )
+            return
+
+    data = client.read_data_by_identifier_first([data_id])
+    print(f"\tReading data from identifier\t0x{data_id:04X}:\t0x{data:04X}")
+
+    new_baudrate = 250000
+    print(f"\tRequesting baudrate transition to\t{new_baudrate}")
+    response = client.link_control(control_type=0x01, baudrate=Baudrate(new_baudrate))
+    if not response.positive:
+        print("Negative response when requesting baudrate transition")
+        return
+
+    print("Applying baudrate")
+
+    with client.suppress_positive_response(wait_nrc=True):
+        response = client.link_control(control_type=0x03)
+
+        if (response is not None) and (not response.positive):
+            print(
+                "Negative response when applying baudrate. "
+                "You might need to reset the device manually to fix the baudrate."
+            )
+            return
+
+    data = client.read_data_by_identifier_first([data_id])
+    print(f"\tReading data from identifier\t0x{data_id:04X}:\t0x{data:04X}")
 
 
 def data_by_identifier(client: Client):
@@ -569,6 +621,13 @@ def main(args: Namespace):
 
     with Client(conn, config=config, request_timeout=2) as client:
         try_run(lambda: change_session(client))
+
+        if args.baudrate is not None:
+            try_run(lambda: link_control(client))
+            print(
+                "Now update the CAN interface baudrate on your machine and execute the sample again"
+            )
+
         try_run(lambda: data_by_identifier(client))
         try_run(lambda: read_write_memory_by_address(client))
         try_run(lambda: dtc_information(client))
@@ -585,6 +644,11 @@ if __name__ == "__main__":
     parser = ArgumentParser(description="UDS ISO 14229 Demo Script")
     parser.add_argument(
         "-c", "--can", default="vcan0", help="CAN interface (default: vcan0)"
+    )
+    parser.add_argument(
+        "-b",
+        "--baudrate",
+        help="Set the CAN interface baudrate (e.g., 500000 or 250000)",
     )
     parser.add_argument("-r", "--reset", action="store_true", help="Perform ECU reset")
     parsed_args = parser.parse_args()

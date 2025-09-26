@@ -84,7 +84,7 @@ class CreateUdevRule:
 #   TAG+="uaccess"              → grant an ACL to the active logged-in user via systemd-logind
 
 ACTION=="add", SUBSYSTEM=="usb", ENV{{DEVTYPE}}=="usb_device", \\
-  IMPORT{{program}}="/bin/sh -c 'if getent group uucp >/dev/null; then echo ASSIGN_GROUP=uucp; elif getent group plugdev >/dev/null; then echo ASSIGN_GROUP=plugdev; fi'"
+  IMPORT{{program}}="/bin/sh -c 'if getent group plugdev >/dev/null && [ $(getent group plugdev | cut -d: -f3) -lt 1000 ]; then echo ASSIGN_GROUP=plugdev; elif getent group uucp >/dev/null && [ $(getent group uucp | cut -d: -f3) -lt 1000 ]; then echo ASSIGN_GROUP=uucp; else echo ASSIGN_GROUP=plugdev; fi'"
 
 ACTION=="add", SUBSYSTEM=="usb", ENV{{DEVTYPE}}=="usb_device", ATTR{{idVendor}}=="{self._vid}", ATTR{{idProduct}}=="{self._pid}", \\
   MODE:="0660", GROUP:="%E{{ASSIGN_GROUP}}", TAG+="uaccess"

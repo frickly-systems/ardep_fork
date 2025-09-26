@@ -66,11 +66,32 @@ class CreateUdevRule:
         with open(fd, "w", encoding="utf-8") as f:
             f.write(
                 f"""\
-# {self._board_name}: Udev rule required by dfu-util to access {self._board_name} devices
+# {self._board_name}: Allow dfu-util/libusb access to ZEPHYR {self._board_name.upper()} devices
+#
+# Group selection:
+# - First rule sets ASSIGN_GROUP to a suitable system group present on the host:
+#     * "uucp" (common on Arch-like distros), otherwise
+#     * "plugdev" (common on Ubuntu/Debian)
+# - Following rules use GROUP="%E{{ASSIGN_GROUP}}" plus TAG+="uaccess".
+#
+# Action/match keys used below:
+#   ACTION=="add"               → run when the device is added (hotplug event)
+#   SUBSYSTEM=="usb"            → act only on devices in the USB subsystem
+#   ENV{{DEVTYPE}}=="usb_device"  → target the USB *device* node (/dev/bus/usb/BUS/DEV), not interfaces
+#   ATTR{{idVendor}}/idProduct    → match the specific board VID/PIDs
+#   MODE:="0660"                → set permissions (rw for owner+group)
+#   GROUP:="%E{{ASSIGN_GROUP}}"   → set the node's group to the selected group from the first rule
+#   TAG+="uaccess"              → grant an ACL to the active logged-in user via systemd-logind
 
-ATTRS{{idVendor}}=="{self._vid}", ATTRS{{idProduct}}=="{self._pid}", MODE="664", GROUP="plugdev"
-ATTRS{{idVendor}}=="{self._vid}", ATTRS{{idProduct}}=="{self._pid_dfu}", MODE="664", GROUP="plugdev"
-    """
+ACTION=="add", SUBSYSTEM=="usb", ENV{{DEVTYPE}}=="usb_device", \\
+  IMPORT{{program}}="/bin/sh -c 'if getent group uucp >/dev/null; then echo ASSIGN_GROUP=uucp; elif getent group plugdev >/dev/null; then echo ASSIGN_GROUP=plugdev; fi'"
+
+ACTION=="add", SUBSYSTEM=="usb", ENV{{DEVTYPE}}=="usb_device", ATTR{{idVendor}}=="{self._vid}", ATTR{{idProduct}}=="{self._pid}", \\
+  MODE:="0660", GROUP:="%E{{ASSIGN_GROUP}}", TAG+="uaccess"
+
+ACTION=="add", SUBSYSTEM=="usb", ENV{{DEVTYPE}}=="usb_device", ATTR{{idVendor}}=="{self._vid}", ATTR{{idProduct}}=="{self._pid_dfu}", \\
+  MODE:="0660", GROUP:="%E{{ASSIGN_GROUP}}", TAG+="uaccess"
+"""
             )
 
         cmd = ["mv", tmpfile, rule_path]

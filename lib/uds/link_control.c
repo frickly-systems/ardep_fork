@@ -61,6 +61,8 @@ UDSErr_t uds_check_default_link_control(const struct uds_context *const context,
         *apply_action = false;
         return UDS_NRC_RequestSequenceError;
       }
+
+      *apply_action = true;
       return UDS_OK;
     default:
       return UDS_NRC_SubFunctionNotSupported;

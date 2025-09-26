@@ -20,6 +20,7 @@ import isotp
 import udsoncan
 from udsoncan.client import Client
 from udsoncan.connections import IsoTPSocketConnection
+from udsoncan import Baudrate, Request
 from udsoncan.exceptions import (
     NegativeResponseException,
 )
@@ -31,7 +32,18 @@ def data_by_identifier(client: Client):
     data = client.read_data_by_identifier_first([data_id])
     print(f"\tReading data from identifier\t0x{data_id:04X}:\t0x{data:04X}")
 
-    data = client.link_control(control_type=0x01, baud_rate=250000)
+    print("Requesting baudrate")
+    response = client.link_control(control_type=0x01, baudrate=Baudrate(250000))
+    if not response.positive:
+        print("Negative response when requesting baudrate transition")
+        return
+
+    print("Applying baudrate")
+
+    with client.suppress_positive_response(wait_nrc=True):
+        response = client.link_control(control_type=0x03)
+
+    print(data)
 
 
 def try_run(runnable):

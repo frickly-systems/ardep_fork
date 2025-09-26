@@ -1,5 +1,3 @@
-#include "syscalls/can.h"
-
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(uds, CONFIG_UDS_LOG_LEVEL);
 

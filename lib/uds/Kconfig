@@ -6,6 +6,8 @@
 menuconfig UDS
     bool "UDS"
     select ISO14229
+    select FLASH
+    select FLASH_MAP
     imply REBOOT
 
 if UDS 

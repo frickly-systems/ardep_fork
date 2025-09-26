@@ -52,14 +52,26 @@ static UDSErr_t start_download(
     return UDS_NRC_RequestOutOfRange;
   }
 
+  // only support plain data (it is the only format defined in the standard)
+  if (args->dataFormatIdentifier != 0x00) {
+    return UDS_NRC_RequestOutOfRange;
+  }
+
   upload_download_state.start_address = (uintptr_t)args->addr;
   upload_download_state.current_address = (uintptr_t)args->addr;
   upload_download_state.total_size = args->size;
 
 #if defined(CONFIG_FLASH_HAS_EXPLICIT_ERASE)
   // prepare flash by erasing necessary sectors
-  flash_erase(flash_controller, upload_download_state.start_address, upload_download_state.total_size);
-#endif
+  int rc = flash_erase(flash_controller, upload_download_state.start_address, upload_download_state.total_size);
+  if (rc != 0) {
+    LOG_ERR("Flash erase failed at addr 0x%08lx, size %zu, err %d",
+        upload_download_state.start_address,
+        upload_download_state.total_size,
+        rc);
+    return UDS_NRC_GeneralProgrammingFailure;
+  }
+  #endif
 
   upload_download_state.state = UDS_UPDOWN_DOWNLOAD_IN_PROGRESS;
 

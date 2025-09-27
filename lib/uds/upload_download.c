@@ -11,6 +11,7 @@ LOG_MODULE_DECLARE(uds, CONFIG_UDS_LOG_LEVEL);
 
 static const struct device *const flash_controller =
 	DEVICE_DT_GET_OR_NULL(DT_CHOSEN(zephyr_flash_controller));
+#define FLASH_BASE_ADDRESS DT_REG_ADDR(DT_CHOSEN(zephyr_flash_controller))
 
 enum UploadDownloadState {
   UDS_UPDOWN_IDLE,
@@ -71,7 +72,7 @@ static UDSErr_t start_download(
         rc);
     return UDS_NRC_GeneralProgrammingFailure;
   }
-  #endif
+#endif
 
   upload_download_state.state = UDS_UPDOWN_DOWNLOAD_IN_PROGRESS;
 

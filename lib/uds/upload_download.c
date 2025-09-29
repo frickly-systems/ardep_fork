@@ -182,7 +182,7 @@ static UDSErr_t transferExit(
     const struct uds_context* const context) {
   if (upload_download_state.state != UDS_UPDOWN_DOWNLOAD_IN_PROGRESS &&
       upload_download_state.state != UDS_UPDOWN_UPLOAD_IN_PROGRESS) {
-    return UDS_NRC_ConditionsNotCorrect;
+    return UDS_NRC_RequestSequenceError;
   }
 
   // The exit request and response contains some optional user specific parameters

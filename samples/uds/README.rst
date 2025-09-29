@@ -65,11 +65,14 @@ This is also the reason why root privileges are required to run the client
         sudo ip link set can0 type can bitrate 500000
         sudo ip link set up can0
 
-#. Run test client with *can0* interface with root privileges
+#. Run test client with *can0* interface with root privileges.
+   Make sure to source the python virtual environment again after elevating privileges so the clients dependencies are still available.
 
     .. code-block:: bash
 
-        sudo python samples/uds/client_link_control.py --can can0
+        sudo -s
+        source <path_to_your_venv>/bin/activate
+        python samples/uds/client_link_control.py --can can0
 
 If you get a series of message errors (e.g. on `Wireshark <https://www.wireshark.org/>`_), then you should:
 

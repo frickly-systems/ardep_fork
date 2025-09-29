@@ -11,6 +11,10 @@
 #include "zephyr/ztest_assert.h"
 
 #include <zephyr/drivers/flash.h>
+#include <zephyr/fs/fs.h>
+
+#include <string.h>
+#include <errno.h>
 
 #include <zephyr/ztest.h>
 
@@ -23,6 +27,8 @@
 
 const struct device *const flash_controller =
   DEVICE_DT_GET_OR_NULL(DT_CHOSEN(zephyr_flash_controller));
+
+#define UDS_TEST_FS_MOUNT_POINT "/lfs"
 
 ZTEST_F(lib_uds, test_0x34_0x38_upload_download_request_download_fail_on_size_0) {
   struct uds_instance_t *instance = fixture->instance;
@@ -358,6 +364,138 @@ ZTEST_F(lib_uds, test_0x34_0x38_upload_download_transfer_exit_out_of_sequence) {
     ret = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
   }
 
+  zassert_equal(ret, UDS_NRC_RequestSequenceError);
+}
+
+ZTEST_F(lib_uds, test_0x34_0x38_file_transfer_addfile_and_write) {
+  struct uds_instance_t *instance = fixture->instance;
+  const char path[] = UDS_TEST_FS_MOUNT_POINT "/transfer.bin";
+  const uint8_t payload[] = {0x10, 0x20, 0x30, 0x40};
+
+  UDSRequestFileTransferArgs_t request = {
+    .modeOfOperation = UDS_MOOP_ADDFILE,
+    .filePathLen = (uint16_t)strlen(path),
+    .filePath = (const uint8_t *)path,
+    .dataFormatIdentifier = 0x00,
+    .fileSizeUnCompressed = sizeof(payload),
+    .fileSizeCompressed = sizeof(payload),
+    .maxNumberOfBlockLength = 0,
+  };
+
+  int ret = receive_event(instance, UDS_EVT_RequestFileTransfer, &request);
+  zassert_equal(ret, UDS_OK);
+  zassert_true(request.maxNumberOfBlockLength >= sizeof(payload));
+
+  UDSTransferDataArgs_t transfer = {
+    .data = payload,
+    .len = sizeof(payload),
+  };
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &transfer);
+  zassert_equal(ret, UDS_OK);
+
+  const uint8_t extra = 0xAA;
+  UDSTransferDataArgs_t extra_transfer = {
+    .data = &extra,
+    .len = 1,
+  };
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &extra_transfer);
+  zassert_equal(ret, UDS_NRC_RequestOutOfRange);
+
+  ret = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
+  zassert_equal(ret, UDS_OK);
+
+  struct fs_file_t file;
+  fs_file_t_init(&file);
+  ret = fs_open(&file, path, FS_O_READ);
+  zassert_equal(ret, 0);
+
+  uint8_t buffer[sizeof(payload)] = {0};
+  ssize_t read_bytes = fs_read(&file, buffer, sizeof(buffer));
+  zassert_equal(read_bytes, (ssize_t)sizeof(payload));
+  zassert_mem_equal(buffer, payload, sizeof(payload));
+  fs_close(&file);
+}
+
+ZTEST_F(lib_uds, test_0x34_0x38_file_transfer_readfile) {
+  struct uds_instance_t *instance = fixture->instance;
+  const char path[] = UDS_TEST_FS_MOUNT_POINT "/read.bin";
+  const uint8_t payload[] = {0x01, 0x02, 0x03, 0x04, 0x05};
+
+  struct fs_file_t file;
+  fs_file_t_init(&file);
+  int ret = fs_open(&file, path, FS_O_CREATE | FS_O_TRUNC | FS_O_RDWR);
+  zassert_equal(ret, 0);
+  ret = fs_write(&file, payload, sizeof(payload));
+  zassert_equal(ret, (int)sizeof(payload));
+  fs_close(&file);
+
+  UDSRequestFileTransferArgs_t request = {
+    .modeOfOperation = UDS_MOOP_RDFILE,
+    .filePathLen = (uint16_t)strlen(path),
+    .filePath = (const uint8_t *)path,
+    .dataFormatIdentifier = 0x00,
+    .fileSizeUnCompressed = 0,
+    .fileSizeCompressed = 0,
+    .maxNumberOfBlockLength = 0,
+  };
+
+  ret = receive_event(instance, UDS_EVT_RequestFileTransfer, &request);
+  zassert_equal(ret, UDS_OK);
+
+  uint8_t buffer[sizeof(payload)] = {0};
+  UDSTransferDataArgs_t transfer = {
+    .data = buffer,
+    .len = sizeof(buffer),
+    .maxRespLen = sizeof(buffer),
+    .copyResponse = copy,
+  };
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &transfer);
+  zassert_equal(ret, UDS_OK);
+  zassert_mem_equal(buffer, payload, sizeof(payload));
+  zassert_equal(copy_fake.call_count, 1);
+  assert_copy_data(payload, sizeof(payload));
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &transfer);
+  zassert_equal(ret, UDS_NRC_RequestSequenceError);
+
+  ret = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
+  zassert_equal(ret, UDS_OK);
+}
+
+ZTEST_F(lib_uds, test_0x34_0x38_file_transfer_deletefile) {
+  struct uds_instance_t *instance = fixture->instance;
+  const char path[] = UDS_TEST_FS_MOUNT_POINT "/remove.bin";
+  const uint8_t payload[] = {0xDE, 0xAD, 0xBE, 0xEF};
+
+  struct fs_file_t file;
+  fs_file_t_init(&file);
+  int ret = fs_open(&file, path, FS_O_CREATE | FS_O_TRUNC | FS_O_RDWR);
+  zassert_equal(ret, 0);
+  ret = fs_write(&file, payload, sizeof(payload));
+  zassert_equal(ret, (int)sizeof(payload));
+  fs_close(&file);
+
+  UDSRequestFileTransferArgs_t request = {
+    .modeOfOperation = UDS_MOOP_DELFILE,
+    .filePathLen = (uint16_t)strlen(path),
+    .filePath = (const uint8_t *)path,
+    .dataFormatIdentifier = 0x00,
+    .fileSizeUnCompressed = 0,
+    .fileSizeCompressed = 0,
+    .maxNumberOfBlockLength = 0,
+  };
+
+  ret = receive_event(instance, UDS_EVT_RequestFileTransfer, &request);
+  zassert_equal(ret, UDS_OK);
+
+  struct fs_dirent entry;
+  ret = fs_stat(path, &entry);
+  zassert_equal(ret, -ENOENT);
+
+  ret = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
   zassert_equal(ret, UDS_NRC_RequestSequenceError);
 }
 

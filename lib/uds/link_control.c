@@ -50,6 +50,7 @@ UDSErr_t uds_check_default_link_control(const struct uds_context *const context,
           modifier != UDS_LINK_CONTROL_MODIFIER__CAN_250000_BAUD &&
           modifier != UDS_LINK_CONTROL_MODIFIER__CAN_500000_BAUD) {
         LOG_WRN("Link control: Unsupported link modifier 0x%02X", modifier);
+        *apply_action = false;
         return UDS_NRC_RequestOutOfRange;
       }
 
@@ -76,6 +77,12 @@ UDSErr_t uds_action_default_link_control(struct uds_context *const context,
 
   switch (args->type) {
     case UDS_LINK_CONTROL__VERIFY_MODE_TRANSITION_WITH_FIXED_PARAMETER: {
+      if (context->server->sessionType == UDS_DIAG_SESSION__DEFAULT) {
+        LOG_WRN("Link control: Cannot verify new bitrate in default session");
+        *consume_event = false;
+        return UDS_NRC_SubFunctionNotSupportedInActiveSession;
+      }
+
       uds_default_link_control_handler_modifier = modifier;
       uds_default_link_control_handler_modifier_set = true;
 
@@ -83,6 +90,11 @@ UDSErr_t uds_action_default_link_control(struct uds_context *const context,
       return UDS_OK;
     }
     case UDS_LINK_CONTROL__TRANSITION_MODE:
+      if (context->server->sessionType == UDS_DIAG_SESSION__DEFAULT) {
+        LOG_WRN("Link control: Cannot change link in default session");
+        return UDS_NRC_SubFunctionNotSupportedInActiveSession;
+      }
+
       return uds_set_can_bitrate(
           context->instance->can_dev,
           uds_link_control_modifier_to_baudrate(modifier));

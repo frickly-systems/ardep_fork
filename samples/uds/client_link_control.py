@@ -206,6 +206,11 @@ def main(args: Namespace):
     conn = IsoTPSocketConnection(can, addr)
     with Client(conn, config=config, request_timeout=2) as client:
         try_run(lambda: read_data_by_identifier(client))
+        print("Changing bitrate in default session should result in an error")
+        try:
+            link_control(client, new_bitrate)
+        except NegativeResponseException as e:
+            print(f"\tCaught expected exception: {e}")
 
     print("\n=== Demo finished ===\n")
 

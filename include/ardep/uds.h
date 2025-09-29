@@ -18,6 +18,18 @@
 struct uds_instance_t;
 struct uds_registration_t;
 
+enum uds_diagnostic_session {
+  UDS_DIAG_SESSION__DEFAULT = 0x01,
+  UDS_DIAG_SESSION__PROGRAMMING = 0x02,
+  UDS_DIAG_SESSION__EXTENDED = 0x03,
+  UDS_DIAG_SESSION__SAFETY_SYSTEM = 0x04,
+  UDS_DIAG_SESSION__VEHICLE_MANUFACTURER_SPECIFIC_START = 0x40,
+  UDS_DIAG_SESSION__VEHICLE_MANUFACTURER_SPECIFIC_END = 0x5F,
+  UDS_DIAG_SESSION__SYSTEM_SUPPLIER_SPECIFIC_START = 0x60,
+  UDS_DIAG_SESSION__SYSTEM_SUPPLIER_SPECIFIC_END = 0x7E,
+
+};
+
 enum uds_ecu_reset_type {
   ECU_RESET__HARD = 1,
   ECU_RESET__KEY_OFF_ON = 2,
@@ -710,6 +722,20 @@ UDSErr_t uds_check_default_link_control(const struct uds_context *const context,
  */
 UDSErr_t uds_action_default_link_control(struct uds_context *const context,
                                          bool *consume_event);
+
+/**
+ * @brief Default check function for  diagnostic session events for the
+ * default link control handler
+ */
+UDSErr_t uds_check_default_link_control_change_diag_session(
+    const struct uds_context *const context, bool *apply_action);
+
+/**
+ * @brief Default action function for diagnostic session events for the default
+ * link control handler
+ */
+UDSErr_t uds_action_default_link_control_change_diag_session(
+    struct uds_context *const context, bool *consume_event);
 
 // Include macro declarations after all types are defined
 #include "ardep/uds_macro.h"  // IWYU pragma: keep

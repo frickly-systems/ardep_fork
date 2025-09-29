@@ -815,15 +815,23 @@
  * 
  * @param _instance Pointer to associated the UDS server instance
  */
-#define UDS_REGISTER_LINK_CONTROL_DEFAULT_HANDLER( \
-  _instance                                        \
-)                                                  \
-  UDS_REGISTER_LINK_CONTROL_HANDLER(               \
-    _instance,                                     \
-    uds_check_default_link_control,                \
-    uds_action_default_link_control,               \
-    NULL                                           \
-  )
+#define UDS_REGISTER_LINK_CONTROL_DEFAULT_HANDLER(     \
+  _instance                                            \
+)                                                      \
+  UDS_REGISTER_LINK_CONTROL_HANDLER(                   \
+    _instance,                                         \
+    uds_check_default_link_control,                    \
+    uds_action_default_link_control,                   \
+    NULL                                               \
+  )                                                    \
+  UDS_REGISTER_DIAG_SESSION_CTRL_HANDLER(              \
+  _instance,                                           \
+  uds_check_default_link_control_change_diag_session,  \
+  uds_action_default_link_control_change_diag_session, \
+  uds_check_default_link_control_change_diag_session,  \
+  uds_action_default_link_control_change_diag_session, \
+  NULL                                                 \
+)
 
 // clang-format on
 

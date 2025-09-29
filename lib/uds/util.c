@@ -38,6 +38,7 @@ uint32_t uds_link_control_modifier_to_baudrate(
 }
 
 UDSErr_t uds_set_can_bitrate(const struct device *can_dev, uint32_t baud_rate) {
+  LOG_INF("Attempting to set CAN bitrate to %u", baud_rate);
   int ret = can_stop(can_dev);
   if (ret != 0) {
     LOG_ERR("Failed to stop CAN controller");
@@ -56,6 +57,8 @@ UDSErr_t uds_set_can_bitrate(const struct device *can_dev, uint32_t baud_rate) {
     LOG_ERR("Failed to start CAN controller");
     return UDS_NRC_ConditionsNotCorrect;
   }
+
+  LOG_INF("Successfully set CAN bitrate to %u", baud_rate);
 
   return UDS_OK;
 }

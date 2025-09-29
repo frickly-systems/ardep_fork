@@ -92,4 +92,24 @@ UDSErr_t uds_action_default_link_control(struct uds_context *const context,
   }
 }
 
+UDSErr_t uds_check_default_link_control_change_diag_session(
+    const struct uds_context *const context, bool *apply_action) {
+  if (context->event == UDS_EVT_DiagSessCtrl) {
+    UDSDiagSessCtrlArgs_t *args = context->arg;
+    if (args->type == UDS_DIAG_SESSION__DEFAULT) {
+      *apply_action = true;
+    }
+  } else if (context->event == UDS_EVT_SessionTimeout) {
+    *apply_action = true;
+  }
+
+  return UDS_OK;
+}
+
+UDSErr_t uds_action_default_link_control_change_diag_session(
+    struct uds_context *const context, bool *consume_event) {
+  *consume_event = false;
+  return uds_set_can_default_bitrate(context->instance->can_dev);
+}
+
 #endif  // CONFIG_UDS_USE_LINK_CONTROL

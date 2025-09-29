@@ -209,6 +209,118 @@ ZTEST_F(lib_uds, test_0x34_0x38_upload_download_transfer_data_prevent_overflow) 
   zassert_equal(guard_after, guard_before);
 }
 
+ZTEST_F(lib_uds, test_0x34_0x38_upload_download_request_upload_fail_on_size_0) {
+  struct uds_instance_t *instance = fixture->instance;
+
+  int cleanup = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
+  zassert_true(cleanup == UDS_OK || cleanup == UDS_NRC_RequestSequenceError);
+
+  UDSRequestUploadArgs_t args = {
+    .addr = (void*)SCRATCH_PARTITION_OFFSET,
+    .size = 0,
+    .dataFormatIdentifier = 0x00,
+  };
+
+  int ret = receive_event(instance, UDS_EVT_RequestUpload, &args);
+  zassert_equal(ret, UDS_NRC_RequestOutOfRange);
+}
+
+ZTEST_F(lib_uds, test_0x34_0x38_upload_download_request_upload_and_transfer_data) {
+  struct uds_instance_t *instance = fixture->instance;
+
+  int cleanup = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
+  zassert_true(cleanup == UDS_OK || cleanup == UDS_NRC_RequestSequenceError);
+
+  fill_scratch_with_test_pattern();
+
+  const size_t upload_size = 8;
+  zassert_true(SCRATCH_PARTITION_SIZE >= upload_size);
+
+  UDSRequestUploadArgs_t upload_args = {
+    .addr = (void*)SCRATCH_PARTITION_OFFSET,
+    .size = upload_size,
+    .dataFormatIdentifier = 0x00,
+  };
+
+  int ret = receive_event(instance, UDS_EVT_RequestUpload, &upload_args);
+  zassert_equal(ret, UDS_OK);
+
+  uint8_t buffer[4];
+  const uint8_t expected_first_chunk[4] = {0x00, 0x01, 0x02, 0x03};
+  const uint8_t expected_second_chunk[4] = {0x04, 0x05, 0x06, 0x07};
+
+  UDSTransferDataArgs_t transfer_args = {
+    .data = buffer,
+    .len = sizeof(buffer),
+    .maxRespLen = sizeof(buffer),
+    .copyResponse = copy,
+  };
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &transfer_args);
+  zassert_equal(ret, UDS_OK);
+  zassert_mem_equal(buffer, expected_first_chunk, sizeof(buffer));
+  zassert_equal(copy_fake.call_count, 1);
+  zassert_equal(copy_fake.arg0_val, &instance->iso14229.server);
+  zassert_equal(copy_fake.arg1_val, buffer);
+  zassert_equal(copy_fake.arg2_val, sizeof(buffer));
+  assert_copy_data(expected_first_chunk, sizeof(expected_first_chunk));
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &transfer_args);
+  zassert_equal(ret, UDS_OK);
+  zassert_mem_equal(buffer, expected_second_chunk, sizeof(buffer));
+  zassert_equal(copy_fake.call_count, 2);
+  zassert_equal(copy_fake.arg2_val, sizeof(buffer));
+  const uint8_t expected_combined[8] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+  };
+  assert_copy_data(expected_combined, sizeof(expected_combined));
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &transfer_args);
+  zassert_equal(ret, UDS_NRC_RequestSequenceError);
+
+  ret = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
+  zassert_equal(ret, UDS_OK);
+}
+
+ZTEST_F(lib_uds, test_0x34_0x38_upload_download_request_upload_prevent_overflow) {
+  struct uds_instance_t *instance = fixture->instance;
+
+  int cleanup = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
+  zassert_true(cleanup == UDS_OK || cleanup == UDS_NRC_RequestSequenceError);
+
+  fill_scratch_with_test_pattern();
+
+  const size_t upload_size = 4;
+  zassert_true(SCRATCH_PARTITION_SIZE >= upload_size);
+
+  UDSRequestUploadArgs_t upload_args = {
+    .addr = (void*)SCRATCH_PARTITION_OFFSET,
+    .size = upload_size,
+    .dataFormatIdentifier = 0x00,
+  };
+
+  int ret = receive_event(instance, UDS_EVT_RequestUpload, &upload_args);
+  zassert_equal(ret, UDS_OK);
+
+  uint8_t buffer[4];
+
+  UDSTransferDataArgs_t transfer_args = {
+    .data = buffer,
+    .len = sizeof(buffer),
+    .maxRespLen = sizeof(buffer),
+    .copyResponse = copy,
+  };
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &transfer_args);
+  zassert_equal(ret, UDS_OK);
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &transfer_args);
+  zassert_equal(ret, UDS_NRC_RequestSequenceError);
+
+  ret = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
+  zassert_equal(ret, UDS_OK);
+}
+
 ZTEST_F(lib_uds, test_0x34_0x38_upload_download_transfer_exit_success) {
   struct uds_instance_t *instance = fixture->instance;
 

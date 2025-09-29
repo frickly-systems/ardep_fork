@@ -10,6 +10,8 @@
 #include "iso14229.h"
 #include "zephyr/ztest_assert.h"
 
+#include <zephyr/drivers/flash.h>
+
 #include <zephyr/ztest.h>
 
 #define FLASH_BASE_ADDRESS DT_REG_ADDR(DT_CHOSEN(zephyr_flash_controller))
@@ -18,6 +20,9 @@
 #define SCRATCH_PARTITION_SIZE DT_REG_SIZE(SCRATCH_PARTITION)
 
 #define SCRATCH_BASE_ADDRESS (FLASH_BASE_ADDRESS + SCRATCH_PARTITION_OFFSET)
+
+const struct device *const flash_controller =
+  DEVICE_DT_GET_OR_NULL(DT_CHOSEN(zephyr_flash_controller));
 
 ZTEST_F(lib_uds, test_0x34_0x38_upload_download_request_download_fail_on_size_0) {
   struct uds_instance_t *instance = fixture->instance;
@@ -45,7 +50,39 @@ ZTEST_F(lib_uds, test_0x34_0x38_upload_download_request_download_fail_on_format_
   zassert_equal(ret, UDS_NRC_RequestOutOfRange);
 }
 
+static void clear_scratch_partition(void) {
+  int ret = flash_erase(flash_controller, SCRATCH_PARTITION_OFFSET, SCRATCH_PARTITION_SIZE);
+  zassert_equal(ret, 0);
+}
+
+static void fill_scratch_with_test_pattern(void) {
+  clear_scratch_partition();
+
+  uint8_t buf[SCRATCH_PARTITION_SIZE];
+
+  for (size_t i = 0; i < sizeof(buf); i++) {
+    buf[i] = (uint8_t)i; // some test pattern
+  }
+
+  int ret = flash_write(flash_controller, SCRATCH_PARTITION_OFFSET, buf, sizeof(buf));
+  zassert_equal(ret, 0);
+}
+
+static void assert_scratch_is_erased(void) {
+  uint8_t buf[SCRATCH_PARTITION_SIZE];
+
+  int ret = flash_read(flash_controller, SCRATCH_PARTITION_OFFSET, buf, sizeof(buf));
+  zassert_equal(ret, 0);
+
+  uint8_t erased_pattern = 0xFF;
+  for (size_t i = 0; i < sizeof(buf); i++) {
+    zassert_equal(buf[i], erased_pattern);
+  }
+}
+
 ZTEST_F(lib_uds, test_0x34_0x38_upload_download_request_download_success) {
+  fill_scratch_with_test_pattern();
+
   struct uds_instance_t *instance = fixture->instance;
 
   UDSRequestDownloadArgs_t args = {
@@ -56,4 +93,46 @@ ZTEST_F(lib_uds, test_0x34_0x38_upload_download_request_download_success) {
 
   int ret = receive_event(instance, UDS_EVT_RequestDownload, &args);
   zassert_equal(ret, UDS_OK);
+
+  assert_scratch_is_erased();
+}
+
+ZTEST_F(lib_uds, test_0x34_0x38_upload_download_transfer_data) {
+  struct uds_instance_t *instance = fixture->instance;
+
+  UDSRequestDownloadArgs_t download_args = {
+    .addr = (void*)SCRATCH_BASE_ADDRESS,
+    .size = SCRATCH_PARTITION_SIZE,
+    .dataFormatIdentifier = 0x00,
+  };
+
+  int ret = receive_event(instance, UDS_EVT_RequestDownload, &download_args);
+  zassert_equal(ret, UDS_OK);
+
+  assert_scratch_is_erased();
+
+  UDSTransferDataArgs_t transfer_args_1 = {
+    .data = (const uint8_t[]){0xDE, 0xAD, 0xBE, 0xEF},
+    .len = 4,
+  };
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &transfer_args_1);
+  zassert_equal(ret, UDS_OK);
+
+  uint8_t buf[4];
+  ret = flash_read(flash_controller, SCRATCH_PARTITION_OFFSET, buf, sizeof(buf));
+  zassert_equal(ret, 0);
+  zassert_mem_equal(buf, transfer_args_1.data, sizeof(buf));
+
+  UDSTransferDataArgs_t transfer_args_2 = {
+    .data = (const uint8_t[]){0xCA, 0xFE, 0xBA, 0xBE},
+    .len = 4,
+  };
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &transfer_args_2);
+  zassert_equal(ret, UDS_OK);
+
+  ret = flash_read(flash_controller, SCRATCH_PARTITION_OFFSET + 4, buf, sizeof(buf));
+  zassert_equal(ret, 0);
+  zassert_mem_equal(buf, transfer_args_2.data, sizeof(buf));
 }

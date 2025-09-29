@@ -36,9 +36,10 @@ upload_download_state_t upload_download_state = {
 
 static UDSErr_t start_download(
     const struct uds_context* const context) {
-  if (upload_download_state.state != UDS_UPDOWN_IDLE) {
-    return UDS_NRC_RequestSequenceError;
-  }
+  /*
+   * Here we assume that the upper layer has already checked whether an operation
+   * is already in progress. So if we are not in the idle state here thats okay.
+   */
 
   if (flash_controller == NULL ||
       !device_is_ready(flash_controller)) {
@@ -58,8 +59,8 @@ static UDSErr_t start_download(
     return UDS_NRC_RequestOutOfRange;
   }
 
-  upload_download_state.start_address = (uintptr_t)args->addr;
-  upload_download_state.current_address = (uintptr_t)args->addr;
+  upload_download_state.start_address = (uintptr_t)(args->addr - FLASH_BASE_ADDRESS);
+  upload_download_state.current_address = (uintptr_t)(args->addr - FLASH_BASE_ADDRESS);
   upload_download_state.total_size = args->size;
 
 #if defined(CONFIG_FLASH_HAS_EXPLICIT_ERASE)
@@ -111,10 +112,6 @@ static UDSErr_t start_upload(
 
 static UDSErr_t continue_download(
     const struct uds_context* const context) {
-  if (upload_download_state.state != UDS_UPDOWN_DOWNLOAD_IN_PROGRESS) {
-    return UDS_NRC_ConditionsNotCorrect;
-  }
-
   UDSTransferDataArgs_t* args =
       (UDSTransferDataArgs_t*)context->arg;
 
@@ -128,7 +125,12 @@ static UDSErr_t continue_download(
       upload_download_state.current_address,
       args->data,
       args->len);
+
   if (rc != 0) {
+    LOG_ERR("Flash write failed at addr 0x%08lx, size %u, err %d",
+        upload_download_state.current_address,
+        args->len,
+        rc);
     return UDS_NRC_GeneralProgrammingFailure;
   }
 
@@ -217,7 +219,7 @@ static UDSErr_t uds_action_upload_download(
     {
       return continue_upload(context);
     } else {
-      return UDS_NRC_ConditionsNotCorrect;
+      return UDS_NRC_RequestSequenceError;
     }
     break;
 

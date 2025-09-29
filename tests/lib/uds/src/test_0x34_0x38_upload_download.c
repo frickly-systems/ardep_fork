@@ -214,7 +214,7 @@ ZTEST_F(lib_uds, test_0x34_0x38_upload_download_transfer_exit_success) {
 
   UDSRequestDownloadArgs_t download_args = {
     .addr = (void*)SCRATCH_BASE_ADDRESS,
-    .size = 32,
+    .size = SCRATCH_PARTITION_SIZE,
     .dataFormatIdentifier = 0x00,
   };
 
@@ -232,12 +232,20 @@ ZTEST_F(lib_uds, test_0x34_0x38_upload_download_transfer_exit_success) {
 
   ret = receive_event(instance, UDS_EVT_TransferData, &transfer_args);
   zassert_equal(ret, UDS_NRC_RequestSequenceError);
+
+  ret = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
+  zassert_equal(ret, UDS_NRC_RequestSequenceError);
 }
 
 ZTEST_F(lib_uds, test_0x34_0x38_upload_download_transfer_exit_out_of_sequence) {
   struct uds_instance_t *instance = fixture->instance;
 
   int ret = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
+  if (ret == UDS_OK) {
+    // try again to make sure we are out of sequence
+    ret = receive_event(instance, UDS_EVT_RequestTransferExit, NULL);
+  }
+
   zassert_equal(ret, UDS_NRC_RequestSequenceError);
 }
 

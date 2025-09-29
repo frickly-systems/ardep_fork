@@ -782,11 +782,11 @@
  * @param _user_context Optional context provided by the user
  * 
  * @note Note that the link settings should be reset after an ecu_reset or session timeout event.
- *       This must be handles separately in the event handlers for these events and is not part of
+ *       This must be handled separately in the event handlers for these events and is not part of
  *       this registration.
  * 
  * @note When using link settings, you should set the suppress response bit on the request that
- *       triggers a change in the link settings (e.g. ecu reset or subfunction 0x03).
+ *       triggers a change in the link settings (e.g. ecu reset or link control subfunction 0x03).
  *       The response is send after the event is emitted and thus can lead to communication
  *       problems when participants use different settings during transition.
  *

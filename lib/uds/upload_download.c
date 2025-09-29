@@ -59,8 +59,8 @@ static UDSErr_t start_download(
     return UDS_NRC_RequestOutOfRange;
   }
 
-  upload_download_state.start_address = (uintptr_t)(args->addr - FLASH_BASE_ADDRESS);
-  upload_download_state.current_address = (uintptr_t)(args->addr - FLASH_BASE_ADDRESS);
+  upload_download_state.start_address = (uintptr_t)(args->addr) - FLASH_BASE_ADDRESS;
+  upload_download_state.current_address = (uintptr_t)(args->addr) - FLASH_BASE_ADDRESS;
   upload_download_state.total_size = args->size;
 
 #if defined(CONFIG_FLASH_HAS_EXPLICIT_ERASE)

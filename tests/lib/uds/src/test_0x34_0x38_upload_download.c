@@ -136,3 +136,77 @@ ZTEST_F(lib_uds, test_0x34_0x38_upload_download_transfer_data) {
   zassert_equal(ret, 0);
   zassert_mem_equal(buf, transfer_args_2.data, sizeof(buf));
 }
+
+ZTEST_F(lib_uds, test_0x34_0x38_upload_download_transfer_data_prevent_overflow) {
+  struct uds_instance_t *instance = fixture->instance;
+
+  const size_t download_size = SCRATCH_PARTITION_SIZE;
+  zassert_true(download_size > 0);
+
+  UDSRequestDownloadArgs_t download_args = {
+    .addr = (void*)SCRATCH_BASE_ADDRESS,
+    .size = download_size,
+    .dataFormatIdentifier = 0x00,
+  };
+
+  int ret = receive_event(instance, UDS_EVT_RequestDownload, &download_args);
+  zassert_equal(ret, UDS_OK);
+
+  assert_scratch_is_erased();
+
+  uint8_t guard_before;
+  ret = flash_read(flash_controller,
+                   SCRATCH_PARTITION_OFFSET + download_size,
+                   &guard_before,
+                   sizeof(guard_before));
+  zassert_equal(ret, 0);
+
+  uint8_t chunk[256];
+  size_t bytes_sent = 0;
+
+  while (bytes_sent < download_size) {
+    size_t remaining = download_size - bytes_sent;
+    size_t chunk_len = remaining < sizeof(chunk) ? remaining : sizeof(chunk);
+
+    for (size_t i = 0; i < chunk_len; i++) {
+      chunk[i] = (uint8_t)((bytes_sent + i) & 0xFF);
+    }
+
+    UDSTransferDataArgs_t transfer_chunk = {
+      .data = chunk,
+      .len = chunk_len,
+    };
+
+    ret = receive_event(instance, UDS_EVT_TransferData, &transfer_chunk);
+    zassert_equal(ret, UDS_OK);
+
+    bytes_sent += chunk_len;
+  }
+
+  uint8_t last_written_byte;
+  ret = flash_read(flash_controller,
+                   SCRATCH_PARTITION_OFFSET + download_size - 1,
+                   &last_written_byte,
+                   sizeof(last_written_byte));
+  zassert_equal(ret, 0);
+  zassert_equal(last_written_byte, (uint8_t)((download_size - 1) & 0xFF));
+
+  const uint8_t overflow_byte = 0xAA;
+  UDSTransferDataArgs_t overflow_args = {
+    .data = &overflow_byte,
+    .len = 1,
+  };
+
+  ret = receive_event(instance, UDS_EVT_TransferData, &overflow_args);
+  zassert_equal(ret, UDS_NRC_RequestOutOfRange);
+
+  uint8_t guard_after;
+  ret = flash_read(flash_controller,
+                   SCRATCH_PARTITION_OFFSET + download_size,
+                   &guard_after,
+                   sizeof(guard_after));
+  zassert_equal(ret, 0);
+  zassert_equal(guard_after, guard_before);
+}
+
+

@@ -1,17 +1,17 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(uds, CONFIG_UDS_LOG_LEVEL);
 
-#include <zephyr/sys/util.h>
-#include <zephyr/fs/fs.h>
-
-#include <ardep/uds.h>
-#include <iso14229.h>
 #include "uds.h"
+#include "upload_download_file_transfer.h"
 
 #include <errno.h>
 #include <string.h>
 
-#include "upload_download_file_transfer.h"
+#include <zephyr/fs/fs.h>
+#include <zephyr/sys/util.h>
+
+#include <ardep/uds.h>
+#include <iso14229.h>
 
 enum FileTransferMode {
   UDS_FILE_TRANSFER__IDLE,
@@ -50,13 +50,13 @@ static uint16_t uds_file_transfer_block_length(uint16_t requested) {
 
 static UDSErr_t fs_error_to_nrc(int err) {
   switch (-err) {
-  case ENOENT:
-    return UDS_NRC_RequestOutOfRange;
-  case EPERM:
-  case EACCES:
-    return UDS_NRC_SecurityAccessDenied;
-  default:
-    return UDS_NRC_UploadDownloadNotAccepted;
+    case ENOENT:
+      return UDS_NRC_RequestOutOfRange;
+    case EPERM:
+    case EACCES:
+      return UDS_NRC_SecurityAccessDenied;
+    default:
+      return UDS_NRC_UploadDownloadNotAccepted;
   }
 }
 
@@ -72,12 +72,12 @@ static void uds_file_transfer_reset(void) {
   file_transfer_state.block_length = 0;
 }
 
-static UDSErr_t uds_file_transfer_begin_write(const char *path,
-                                              size_t expected_size,
-                                              UDSRequestFileTransferArgs_t *args) {
+static UDSErr_t uds_file_transfer_begin_write(
+    const char *path,
+    size_t expected_size,
+    UDSRequestFileTransferArgs_t *args) {
   fs_file_t_init(&file_transfer_state.file);
-  int rc = fs_open(&file_transfer_state.file,
-                   path,
+  int rc = fs_open(&file_transfer_state.file, path,
                    FS_O_CREATE | FS_O_TRUNC | FS_O_RDWR);
 
   if (rc < 0) {
@@ -88,15 +88,16 @@ static UDSErr_t uds_file_transfer_begin_write(const char *path,
   file_transfer_state.file_open = true;
   file_transfer_state.expected_size = expected_size;
   file_transfer_state.transferred = 0U;
-  file_transfer_state.block_length = uds_file_transfer_block_length(args->maxNumberOfBlockLength);
+  file_transfer_state.block_length =
+      uds_file_transfer_block_length(args->maxNumberOfBlockLength);
 
   args->maxNumberOfBlockLength = file_transfer_state.block_length;
 
   return UDS_OK;
 }
 
-static UDSErr_t uds_file_transfer_begin_read(const char *path,
-                                             UDSRequestFileTransferArgs_t *args) {
+static UDSErr_t uds_file_transfer_begin_read(
+    const char *path, UDSRequestFileTransferArgs_t *args) {
   struct fs_dirent entry;
 
   fs_file_t_init(&file_transfer_state.file);
@@ -121,7 +122,8 @@ static UDSErr_t uds_file_transfer_begin_read(const char *path,
   file_transfer_state.file_open = true;
   file_transfer_state.expected_size = entry.size;
   file_transfer_state.transferred = 0U;
-  file_transfer_state.block_length = uds_file_transfer_block_length(args->maxNumberOfBlockLength);
+  file_transfer_state.block_length =
+      uds_file_transfer_block_length(args->maxNumberOfBlockLength);
 
   args->maxNumberOfBlockLength = file_transfer_state.block_length;
 
@@ -158,16 +160,17 @@ UDSErr_t uds_file_transfer_request(struct uds_context *context) {
   path[args->filePathLen] = '\0';
 
   switch (args->modeOfOperation) {
-  case UDS_MOOP_ADDFILE:
-  case UDS_MOOP_REPLFILE:
-    return uds_file_transfer_begin_write(path, args->fileSizeCompressed, args);
-  case UDS_MOOP_DELFILE:
-    args->maxNumberOfBlockLength = 0U;
-    return uds_file_transfer_delete(path);
-  case UDS_MOOP_RDFILE:
-    return uds_file_transfer_begin_read(path, args);
-  default:
-    return UDS_NRC_RequestOutOfRange;
+    case UDS_MOOP_ADDFILE:
+    case UDS_MOOP_REPLFILE:
+      return uds_file_transfer_begin_write(path, args->fileSizeCompressed,
+                                           args);
+    case UDS_MOOP_DELFILE:
+      args->maxNumberOfBlockLength = 0U;
+      return uds_file_transfer_delete(path);
+    case UDS_MOOP_RDFILE:
+      return uds_file_transfer_begin_read(path, args);
+    default:
+      return UDS_NRC_RequestOutOfRange;
   }
 }
 
@@ -181,7 +184,8 @@ static UDSErr_t uds_file_transfer_write(const UDSTransferDataArgs_t *args) {
   }
 
   if (file_transfer_state.expected_size > 0U &&
-      file_transfer_state.transferred + args->len > file_transfer_state.expected_size) {
+      file_transfer_state.transferred + args->len >
+          file_transfer_state.expected_size) {
     return UDS_NRC_RequestOutOfRange;
   }
 
@@ -201,7 +205,7 @@ static UDSErr_t uds_file_transfer_write(const UDSTransferDataArgs_t *args) {
 }
 
 UDSErr_t uds_file_transfer_read(struct uds_context *context,
-                                       UDSTransferDataArgs_t *args) {
+                                UDSTransferDataArgs_t *args) {
   if (context == NULL || args == NULL) {
     return UDS_ERR_MISUSE;
   }
@@ -212,7 +216,8 @@ UDSErr_t uds_file_transfer_read(struct uds_context *context,
 
   size_t remaining = 0U;
   if (file_transfer_state.expected_size >= file_transfer_state.transferred) {
-    remaining = file_transfer_state.expected_size - file_transfer_state.transferred;
+    remaining =
+        file_transfer_state.expected_size - file_transfer_state.transferred;
   }
 
   if (remaining == 0U) {
@@ -221,9 +226,7 @@ UDSErr_t uds_file_transfer_read(struct uds_context *context,
 
   size_t max_len = MIN((size_t)args->maxRespLen, remaining);
 
-  ssize_t rc = fs_read(&file_transfer_state.file,
-                       (void *)args->data,
-                       max_len);
+  ssize_t rc = fs_read(&file_transfer_state.file, (void *)args->data, max_len);
 
   if (rc < 0) {
     return fs_error_to_nrc((int)rc);
@@ -233,7 +236,8 @@ UDSErr_t uds_file_transfer_read(struct uds_context *context,
     return UDS_NRC_RequestSequenceError;
   }
 
-  uint8_t copy_status = args->copyResponse(context->server, args->data, (uint16_t)rc);
+  uint8_t copy_status =
+      args->copyResponse(context->server, args->data, (uint16_t)rc);
   if (copy_status != UDS_PositiveResponse) {
     return copy_status;
   }
@@ -251,7 +255,8 @@ UDSErr_t uds_file_transfer_continue(struct uds_context *context) {
   if (file_transfer_state.mode == UDS_FILE_TRANSFER__WRITE) {
     return uds_file_transfer_write((UDSTransferDataArgs_t *)context->arg);
   } else if (file_transfer_state.mode == UDS_FILE_TRANSFER__READ) {
-    return uds_file_transfer_read(context, (UDSTransferDataArgs_t *)context->arg);
+    return uds_file_transfer_read(context,
+                                  (UDSTransferDataArgs_t *)context->arg);
   }
 
   return UDS_NRC_RequestSequenceError;
@@ -277,5 +282,5 @@ UDSErr_t uds_file_transfer_exit(void) {
 }
 
 bool uds_file_transfer_is_active(void) {
-    return file_transfer_state.mode != UDS_FILE_TRANSFER__IDLE;
+  return file_transfer_state.mode != UDS_FILE_TRANSFER__IDLE;
 }

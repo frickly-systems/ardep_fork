@@ -188,6 +188,7 @@ static UDSErr_t uds_upload_download_reset() {
 static UDSErr_t transfer_exit(const struct uds_context* const context) {
   ARG_UNUSED(context);
 
+#ifdef CONFIG_UDS_FILE_TRANSFER
   UDSErr_t ret1 = uds_upload_download_reset();
   UDSErr_t ret2 = uds_file_transfer_exit();
 
@@ -195,6 +196,9 @@ static UDSErr_t transfer_exit(const struct uds_context* const context) {
   assert(ret1 == UDS_NRC_RequestSequenceError ||
          ret2 == UDS_NRC_RequestSequenceError);
   return ret1 == UDS_NRC_RequestSequenceError ? ret2 : ret1;
+#else
+  return uds_upload_download_reset();
+#endif
 }
 
 static UDSErr_t uds_action_upload_download(struct uds_context* context,
@@ -223,13 +227,17 @@ static UDSErr_t uds_action_upload_download(struct uds_context* context,
       return start_upload(context);
       break;
 
+#ifdef CONFIG_UDS_FILE_TRANSFER
     case UDS_EVT_RequestFileTransfer:
       return uds_file_transfer_request(context);
+#endif
 
     case UDS_EVT_TransferData:
+#ifdef CONFIG_UDS_FILE_TRANSFER
       if (uds_file_transfer_is_active()) {
         return uds_file_transfer_continue(context);
       }
+#endif
 
       if (upload_download_state.state == UDS_UPDOWN__DOWNLOAD_IN_PROGRESS) {
         return continue_download(context);

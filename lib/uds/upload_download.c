@@ -40,10 +40,6 @@ struct upload_download_state upload_download_state = {
   .total_size = 0,
 };
 
-#ifdef CONFIG_UDS_FILE_TRANSFER
-
-#endif
-
 static UDSErr_t start_download(const struct uds_context* const context) {
   /*
    * Here we assume that the upper layer has already checked whether an

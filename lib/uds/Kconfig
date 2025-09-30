@@ -20,7 +20,6 @@ if UDS
         bool "Allow registering new event handlers at runtime"
         default n
 
-
     config UDS_UPLOAD_DOWNLOAD_MODULE
         bool "module to allow uploading and downloading of big chunks for data"
         default y
@@ -30,6 +29,5 @@ if UDS
         depends on UDS_UPLOAD_DOWNLOAD_MODULE
         depends on FILE_SYSTEM
         default y
-    # TODO: add conditions to enable only if set to y
 
 endif # UDS

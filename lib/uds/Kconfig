@@ -6,8 +6,6 @@
 menuconfig UDS
     bool "UDS"
     select ISO14229
-    select FLASH
-    select FLASH_MAP
     imply REBOOT
 
 if UDS 
@@ -22,6 +20,8 @@ if UDS
 
     menuconfig UDS_UPLOAD_DOWNLOAD_MODULE
         bool "module to allow uploading and downloading of big chunks for data"
+        select FLASH
+        select FLASH_MAP
         default y
 
     if UDS_UPLOAD_DOWNLOAD_MODULE

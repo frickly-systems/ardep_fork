@@ -18,6 +18,8 @@
 
 DECLARE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 
+DECLARE_FAKE_VALUE_FUNC(UDSErr_t, set_auth_state, UDSServer_t *, uint8_t);
+
 DECLARE_FAKE_VALUE_FUNC(UDSErr_t,
                         data_id_check_fn,
                         const struct uds_context *const,

@@ -22,7 +22,6 @@ const unsigned char uds_aes_key_bin[] = {0xc3, 0x6a, 0xd3, 0x5c, 0xa2, 0xb7,
                                          0x0e, 0x82, 0xf7, 0xc3, 0x7a, 0xfa,
                                          0x62, 0xad, 0xae, 0xc2};
 static const unsigned char *const uds_aes_key = uds_aes_key_bin;
-static const size_t uds_aes_key_len = 16;
 
 struct authentication_data auth_data = {
   // Whether we are authenticated or not
@@ -97,14 +96,8 @@ int generate_random_seed(uint8_t *seed) {
 
 static UDSErr_t auth_check(const struct uds_context *const context,
                            bool *apply_action) {
-  // TODO!
-  UDSAuthArgs_t *args = context->arg;
-  if (true) {
-    *apply_action = true;
-    return UDS_OK;
-  }
-
-  return UDS_NRC_SubFunctionNotSupported;
+  *apply_action = true;
+  return UDS_OK;
 }
 
 static UDSErr_t auth_action(struct uds_context *const context,
@@ -214,6 +207,8 @@ static UDSErr_t auth_timeout_action(struct uds_context *const context,
                                     bool *consume_event) {
   struct authentication_data *auth = context->registration->auth.user_context;
   auth->authenticated = false;
+
+  LOG_INF("Authentication timeout - user de-authenticated");
 
   *consume_event = true;
   return UDS_PositiveResponse;

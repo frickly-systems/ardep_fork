@@ -26,6 +26,8 @@ from udsoncan.exceptions import (
     NegativeResponseException,
 )
 from udsoncan.services import DiagnosticSessionControl, ECUReset
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+import pathlib, binascii
 
 
 def change_session(client: Client):
@@ -505,14 +507,43 @@ algo_indicator: bytes = bytes(
 )
 
 
-def authentication(client: Client):
+def read_key(path: str) -> bytes:
+    key = pathlib.Path(path).read_bytes()
+    if len(key) != 16:
+        raise ValueError(f"Expected 16 bytes, got {len(key)}")
+    return key
+
+
+def encrypt_seed(seed: bytes, key: bytes) -> bytes:
+    cipher = Cipher(algorithms.AES(key), modes.ECB())
+    encryptor = cipher.encryptor()
+    ct = encryptor.update(seed) + encryptor.finalize()
+    return ct
+
+
+def authentication(client: Client, key_file: str):
+    print("Authentication:")
     response = client.authentication(
         authentication_task=5,
         communication_configuration=0,
         algorithm_indicator=algo_indicator,
     )
 
-    response.data
+    seed: bytes = response.service_data.challenge_server
+
+    print("\tSeed (hex):\t\t", seed.hex())
+    key: bytes = read_key(key_file)
+
+    ct = encrypt_seed(seed, key)
+    print("\tCiphertext (hex):\t", ct.hex())
+
+    client.authentication(
+        authentication_task=6,
+        proof_of_ownership_client=ct,
+        algorithm_indicator=algo_indicator,
+    )
+
+    print("\tAuthentication successful!")
 
 
 class CustomUint16Codec(udsoncan.DidCodec):
@@ -581,6 +612,7 @@ def try_run(runnable):
 def main(args: Namespace):
     can: str = args.can
     reset: bool = args.reset
+    aes_key_file = args.key_file
 
     addr = isotp.Address(isotp.AddressingMode.Normal_11bits, rxid=0x7E0, txid=0x7E8)
     conn = IsoTPSocketConnection(can, addr)
@@ -602,12 +634,12 @@ def main(args: Namespace):
 
     with Client(conn, config=config, request_timeout=2) as client:
         try_run(lambda: change_session(client))
-        try_run(lambda: data_by_identifier(client))
-        try_run(lambda: read_write_memory_by_address(client))
-        try_run(lambda: dtc_information(client))
-        try_run(lambda: routine_control(client))
-        try_run(lambda: security_access(client))
-        try_run(lambda: authentication(client))
+        # try_run(lambda: data_by_identifier(client))
+        # try_run(lambda: read_write_memory_by_address(client))
+        # try_run(lambda: dtc_information(client))
+        # try_run(lambda: routine_control(client))
+        # try_run(lambda: security_access(client))
+        try_run(lambda: authentication(client, aes_key_file))
 
         if reset:
             try_run(lambda: ecu_reset(client))
@@ -621,6 +653,12 @@ if __name__ == "__main__":
         "-c", "--can", default="vcan0", help="CAN interface (default: vcan0)"
     )
     parser.add_argument("-r", "--reset", action="store_true", help="Perform ECU reset")
+    parser.add_argument(
+        "-k",
+        "--key-file",
+        default=str(pathlib.Path(__file__).parent / "uds_aes_key.bin"),
+        help="Path to AES key file used for authentication (default: uds_aes_key.bin in script directory)",
+    )
     parsed_args = parser.parse_args()
 
     main(parsed_args)

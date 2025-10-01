@@ -483,6 +483,38 @@ def security_algorithm(level: int, seed: bytes, params: Any) -> bytes:
     return bytes(~b & 0xFF for b in seed)
 
 
+algo_indicator: bytes = bytes(
+    [
+        0x06,
+        0x09,
+        0x60,
+        0x86,
+        0x48,
+        0x01,
+        0x65,
+        0x03,
+        0x04,
+        0x01,
+        0x02,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+    ]
+)
+
+
+def authentication(client: Client):
+    response = client.authentication(
+        authentication_task=5,
+        communication_configuration=0,
+        algorithm_indicator=algo_indicator,
+    )
+
+    response.data
+
+
 class CustomUint16Codec(udsoncan.DidCodec):
     def encode(self, *did_value: Any):
         return struct.pack(">H", *did_value)  # Big endian, 16 bit value
@@ -575,6 +607,7 @@ def main(args: Namespace):
         try_run(lambda: dtc_information(client))
         try_run(lambda: routine_control(client))
         try_run(lambda: security_access(client))
+        try_run(lambda: authentication(client))
 
         if reset:
             try_run(lambda: ecu_reset(client))

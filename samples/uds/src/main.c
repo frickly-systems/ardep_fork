@@ -46,6 +46,8 @@ int main(void) {
     .target_addr_func = UDS_TP_NOOP_ADDR,
   };
 
+  instance.user_context = &auth_data;
+
   uds_init(&instance, &cfg, can_dev, &instance);
 
   if (!device_is_ready(can_dev)) {

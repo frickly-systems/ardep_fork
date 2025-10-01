@@ -28,7 +28,6 @@ if UDS
 
         config UDS_FILE_TRANSFER
             bool "feature of upload download moduel that allows file transfer"
-            depends on UDS_UPLOAD_DOWNLOAD_MODULE
             depends on FILE_SYSTEM
             default y
 

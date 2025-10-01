@@ -24,7 +24,7 @@ DEFINE_FFF_GLOBALS;
 
 DEFINE_FAKE_VALUE_FUNC(uint8_t, copy, UDSServer_t *, const void *, uint16_t);
 
-DEFINE_FAKE_VALUE_FUNC(UDSErr_t, set_auth_state, UDSServer_t *, uint8_t);
+DEFINE_FAKE_VALUE_FUNC(uint8_t, set_auth_state, UDSServer_t *, uint8_t);
 
 DEFINE_FAKE_VALUE_FUNC(UDSErr_t,
                        data_id_check_fn,
@@ -232,9 +232,9 @@ void assert_auth_state(uint8_t expected_state) {
   zassert_equal(expected_state, auth_state_data);
 }
 
-static UDSErr_t custom_set_auth_state(UDSServer_t *server, uint8_t state) {
+static uint8_t custom_set_auth_state(UDSServer_t *server, uint8_t state) {
   auth_state_data = state;
-  return 0;
+  return UDS_OK;
 }
 
 static void *uds_setup(void) {

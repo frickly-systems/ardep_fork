@@ -182,12 +182,10 @@ static UDSErr_t auth_action(struct uds_context *const context,
       LOG_INF("De-authenticate request");
       auth->authenticated = false;
 
-      uint8_t response_data[1] = {UDS_AT_DAS};  // DeAuthentication successful
-      UDSErr_t copy_result =
-          args->copy(context->server, response_data, sizeof(response_data));
-      if (copy_result != UDS_OK) {
+      UDSErr_t ret = args->set_auth_state(context->server, UDS_AT_DAS);
+      if (ret != UDS_OK) {
         LOG_INF("Failed to copy de-authentication response");
-        return copy_result;
+        return ret;
       }
 
       return UDS_OK;

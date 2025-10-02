@@ -523,6 +523,24 @@ def encrypt_seed(seed: bytes, key: bytes) -> bytes:
 
 def authentication(client: Client, key_file: str):
     print("Authentication:")
+
+    data_id: int = 0x0150
+    print(
+        f"\tTry reading secure data with id 0x{data_id:04X} without authentication..."
+    )
+    try:
+        data = client.read_data_by_identifier([data_id])
+        print(
+            f'\t\tReading data from identifier\t0x{data_id:04X} should have failed but succeeded with data "{data.service_data.values[data_id]}". Are we still authenticated?'
+        )
+    except NegativeResponseException as e:
+        if e.response.code == 0x22:  # Conditions Not Correct
+            print(
+                f"\t\tAccess denied as expected: {e.response.code_name} (0x{e.response.code:02X})"
+            )
+        else:
+            raise
+
     response = client.authentication(
         authentication_task=5,
         communication_configuration=0,
@@ -544,6 +562,18 @@ def authentication(client: Client, key_file: str):
     )
 
     print("\tAuthentication successful!")
+
+    print(f"\tTry reading secure data with id 0x{data_id:04X} with authentication...")
+    data = client.read_data_by_identifier([data_id])
+    print(
+        f"\t\tReading data from secured identifier\t0x{data_id:04X}:\t0x{data.service_data.values[data_id]:02X}"
+    )
+
+    client.authentication(
+        authentication_task=0,
+    )
+
+    print("\tDe-Authentication successful!")
 
 
 class CustomUint16Codec(udsoncan.DidCodec):
@@ -622,6 +652,7 @@ def main(args: Namespace):
         "default": ">H",  # Default codec is a struct.pack/unpack string. 16bits little endian
         0x0050: CustomUint16Codec,
         0x0100: StringCodec,
+        0x0150: CustomUint8Codec,
         0x0200: CustomUint8Codec,
         0x0300: SecureDataCodec,
     }
@@ -634,11 +665,11 @@ def main(args: Namespace):
 
     with Client(conn, config=config, request_timeout=2) as client:
         try_run(lambda: change_session(client))
-        # try_run(lambda: data_by_identifier(client))
-        # try_run(lambda: read_write_memory_by_address(client))
-        # try_run(lambda: dtc_information(client))
-        # try_run(lambda: routine_control(client))
-        # try_run(lambda: security_access(client))
+        try_run(lambda: data_by_identifier(client))
+        try_run(lambda: read_write_memory_by_address(client))
+        try_run(lambda: dtc_information(client))
+        try_run(lambda: routine_control(client))
+        try_run(lambda: security_access(client))
         try_run(lambda: authentication(client, aes_key_file))
 
         if reset:

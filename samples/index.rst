@@ -18,6 +18,7 @@ Samples and Demos
    hardware_test/*
    hardware_tester/*
    hv_shield/*
+   iso14229/*
    led/*
    lin/*
    lin2can/*

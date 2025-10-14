@@ -16,6 +16,7 @@ LOG_MODULE_DECLARE(uds_sample, LOG_LEVEL_DBG);
 #include <zephyr/kernel.h>
 #include <zephyr/sys/byteorder.h>
 
+// Setup data for Data by Identifier handlers
 const uint16_t primitive_type_id = 0x50;
 uint16_t primitive_type = 5;
 uint16_t primitive_type_size = sizeof(primitive_type);
@@ -29,9 +30,11 @@ const uint16_t authenticated_type_id = 0x150;
 uint8_t authenticated_type = 0x42;
 uint16_t authenticated_type_size = sizeof(authenticated_type);
 
+// Check function for the Read Data by Identifier event
 UDSErr_t read_data_by_id_check(const struct uds_context *const context,
                                bool *apply_action) {
   UDSRDBIArgs_t *args = context->arg;
+
   // Return Ok, when we don't handle this event but don't set
   // `apply_action` to true
   if (args->dataId != context->registration->data_identifier.data_id) {

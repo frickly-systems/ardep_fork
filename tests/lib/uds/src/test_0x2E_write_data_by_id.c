@@ -195,7 +195,7 @@ ZTEST_F(lib_uds, test_0x2E_write_by_id_returns_action_returncode) {
   uint32_t data = 0x11223344;
 
   UDSWDBIArgs_t arg = {
-    .dataId = data_id_rw,
+    .dataId = data_id_rw_duplicated1,
     .data = (uint8_t *)&data,
     .len = sizeof(data),
   };

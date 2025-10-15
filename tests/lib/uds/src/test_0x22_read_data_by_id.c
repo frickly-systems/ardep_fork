@@ -127,12 +127,9 @@ ZTEST_F(lib_uds, test_0x22_read_by_id_returns_action_returncode) {
   data_id_action_fn_fake.custom_fake =
       custom_action_for_0x22_returns_action_returncode;
 
-  uint32_t data = 0x11223344;
-
-  UDSWDBIArgs_t arg = {
-    .dataId = data_id_rw,
-    .data = (uint8_t *)&data,
-    .len = sizeof(data),
+  UDSRDBIArgs_t arg = {
+    .dataId = data_id_r,
+    .copy = copy,
   };
 
   int ret = receive_event(instance, UDS_EVT_ReadDataByIdent, &arg);

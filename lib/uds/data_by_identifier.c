@@ -23,7 +23,11 @@ static UDSErr_t uds_check_read_with_data_id(
     return UDS_OK;
   }
 
-  return reg->data_identifier.read.check(context, apply_action);
+  if (reg->data_identifier.read.check) {
+    return reg->data_identifier.read.check(context, apply_action);
+  }
+
+  return UDS_OK;
 }
 
 uds_check_fn uds_get_check_for_read_data_by_identifier(

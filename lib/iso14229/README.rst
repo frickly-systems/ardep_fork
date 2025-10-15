@@ -62,15 +62,6 @@ When to Use This Library
 - You want to register handlers for specific services/subfunctions
 - You need built-in support for session management, security access, etc.
 
-Getting Started
-***************
-
-Prerequisites
-=============
-
-1. **CAN Interface**: A Zephyr-supported CAN device configured in your device tree
-2. **Kconfig Options**: Enable ``CONFIG_ISO14229`` and optionally ``CONFIG_ISO14229_THREAD``
-
 Example
 *******
 

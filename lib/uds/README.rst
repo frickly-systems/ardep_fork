@@ -61,12 +61,17 @@ The following UDS services are currently implemented:
 Basic API
 *********
 
-Usually, every event is associated with a ``check`` and an ``action`` function.
+To handle events from the underlying :ref:`iso14229-lib`, the UDS library uses event handlers registered either statically or dynamically at runtime.
+And event handler basically associates custom callbacks (``check`` and ``action``) and related data with one or more UDS events.
+
 The ``check`` function is supposed to check, whether the event with its arguments can be handled in the current state of the ECU.
 If it is the case, the associated ``action`` function is executed to act on the event.
 
-The UDS library uses several Macros to allow you to statically define event handlers for specific groups of events.
+One or more the these ``check`` / ``action`` pairs together with other associated data are registered as an event handler within an ``struct uds_registration_t`` for the ``struct uds_instance_t``.
 
+These registrations can be statically defined via macros or dynamically at runtime (see below).
+
+When an event is received from the underlying :ref:`iso14229-lib`, the UDS library iterates over all registered event handlers and calls the ``check`` function of each handler and the ``action`` function if applicable.
 
 
 Macros and KConfig options per Event
@@ -134,6 +139,14 @@ The current session is stored internally and can be accessed as follows:
 
 - ``UDS_REGISTER_SECURITY_ACCESS_HANDLER``: Register a custom handler
 
+The current security level is stored internally and can be accessed as follows:
+
+    .. code-block:: c
+
+        struct uds_instance_t instance;
+        
+        instance.iso14229.server.securityLevel
+
 ``UDS_EVT_CommCtrl``
 ---------------------
   
@@ -161,6 +174,33 @@ Since dynamically defining data identifiers is a complex task that requires acce
 -----------------------------------------
 
 - ``UDS_REGISTER_AUTHENTICATION_HANDLER``: Register a custom handler
+  
+Since the authentication process is more complex than a simple security access, no authentication data is stored internally.
+It is up to the user to store and manage authentication data. To make it available in the context for every event handler, you can store the data e.g. in the user context when initializing the UDS instance:
+
+    .. code-block:: c
+
+        struct my_context {
+            // your data
+        };
+        
+        struct my_context context = {
+            // initialize your data
+        };
+        
+        struct uds_instance_t instance;
+        
+        uds_init(&instance, &iso_tp_config, &can_dev, &context)
+        
+
+        UDSErr_t my_custom_check_function(const struct uds_context *const context,
+                                 bool *apply_action){
+            struct my_context *context = (struct my_context *)context->instance->user_context;
+            
+            // ...
+        }
+
+``UDS_EVT_TesterPresent``
 
 ``UDS_EVT_LinkControl``
 -----------------------
@@ -169,6 +209,8 @@ Since dynamically defining data identifiers is a complex task that requires acce
 - ``UDS_REGISTER_LINK_CONTROL_DEFAULT_HANDLER``: Register a default handler provided by the library
 
 Because the *Link Control* service changes the communication settings of the underlying can interface, it is recommended to use the default handler to correctly restore the interface on a timeout.
+
+Due to restrictions on the can interface (it is not possible to read the current bitrate), the default bitrate must be set with `CONFIG_UDS_DEFAULT_CAN_BITRATE` in your project's prj.conf.
 
 The default handler also registers a handler for the session control events, so don't consume these events if you use the default handler.
 
@@ -182,9 +224,21 @@ The default handler also registers a handler for the session control events, so 
 
 These events don't allow registration of custom handlers. The data transfer can be enabled by setting the KConfig option: ``UDS_USE_DYNAMIC_REGISTRATION``.
 
-To further allow file transfer, additionally enable ``UDS_FILE_TRANSFER``
+To further allow file transfer, additionally enable ``CONFIG_UDS_FILE_TRANSFER``
 
 
+Dynamically register Event Handler
+====================================
+
+To dynamically register an event handler at runtime, do the following:
+
+- ensure the ``CONFIG_UDS_USE_DYNAMIC_REGISTRATION`` KConfig option is enabled
+
+- create an ``struct uds_registration_t`` object. Look at the macro implementations above for what data should be set to correctly configure the event handler registration.
+
+- register the event handler by calling the ``instance.register_event_handler`` function. The ``dynamic_id_out`` parameter retuns the ID, the custom registration is registered under.
+
+To unregister a dynamically registered event handler, you can use ``instance.unregister_event_handler`` and pass the dynamic id of the registration as an argument.
 
 
 Internals

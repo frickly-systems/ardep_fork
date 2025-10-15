@@ -4,6 +4,10 @@
  */
 
 / {
+    chosen {
+        hw_test,command-uart = &sut_uart ;
+    };
+
     zephyr,user {
         gpios = <&arduino_header 0 GPIO_ACTIVE_HIGH>,
                 <&arduino_header 1 GPIO_ACTIVE_HIGH>,
@@ -99,4 +103,11 @@
 
 &dac2 {
     status = "disabled";
+};
+
+&usb {
+	sut_uart: sut_uart {
+		compatible = "zephyr,cdc-acm-uart";
+		label = "SUT UART";
+	};
 };

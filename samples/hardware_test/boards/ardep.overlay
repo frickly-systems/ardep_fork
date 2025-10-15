@@ -108,6 +108,7 @@
 &usb {
 	sut_uart: sut_uart {
 		compatible = "zephyr,cdc-acm-uart";
+        status = "okay";
 		label = "SUT UART";
 	};
 };

@@ -7,8 +7,11 @@
 
 #include "zephyr/devicetree.h"
 #include "zephyr/drivers/gpio.h"
+#include "zephyr/drivers/uart.h"
 #include "zephyr/logging/log.h"
 #include "zephyr/sys/printk.h"
+
+#include <stdint.h>
 
 #include <zephyr/console/console.h>
 #include <zephyr/kernel.h>
@@ -54,3 +57,26 @@ int main() {
     }
   }
 }
+
+const struct device *uart_dev = DEVICE_DT_GET(DT_CHOSEN(hw_test_command_uart));
+
+void entry(void *p1, void *p2, void *p3) {
+  if (!device_is_ready(uart_dev)) {
+    LOG_ERR("UART device not ready");
+    return;
+  }
+
+  LOG_INF("UART device ready");
+  uint8_t counter = 0;
+
+  while (1) {
+    k_sleep(K_SECONDS(1));
+
+    uart_poll_out(uart_dev, counter);
+    LOG_INF("Counter: %d\n", counter);
+
+    counter = counter == UINT8_MAX ? 0 : counter + 1;
+  }
+}
+
+K_THREAD_DEFINE(asdf, 1024, entry, NULL, NULL, NULL, 7, 0, 0);

@@ -1,0 +1,13 @@
+#include <st/g4/stm32g474v(b-c-e)tx-pinctrl.dtsi>
+
+&i2c2 {
+	status = "okay";
+
+	mcp23017: pinctrl@20 {
+		compatible = "microchip,mcp23017";
+		reg = <0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <16>;
+	};
+};

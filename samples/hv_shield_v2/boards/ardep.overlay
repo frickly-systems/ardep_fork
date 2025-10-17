@@ -1,21 +1,23 @@
+#include <ardep/dt-bindings/hv-shield-v2.h>
+
 / {
   zephyr,user{
-    output-gpios = <&mcp23017 0 0>,
-                  <&mcp23017 1 0>,
-                  <&mcp23017 2 0>,
-                  <&mcp23017 3 0>,
-                  <&mcp23017 4 0>,
-                  <&mcp23017 5 0>;
+    output-gpios = <&hv_shield0 HV_SHIELD_V2_OUTPUTS 0 0>,
+                   <&hv_shield0 HV_SHIELD_V2_OUTPUTS 1 0>,
+                   <&hv_shield0 HV_SHIELD_V2_OUTPUTS 2 0>,
+                   <&hv_shield0 HV_SHIELD_V2_OUTPUTS 3 0>,
+                   <&hv_shield0 HV_SHIELD_V2_OUTPUTS 4 0>,
+                   <&hv_shield0 HV_SHIELD_V2_OUTPUTS 5 0>;
 
-    input-gpios = <&mcp23017 8 0>,
-      <&mcp23017 9 0>,
-      <&mcp23017 10 0>,
-      <&mcp23017 11 0>,
-      <&mcp23017 12 0>,
-      <&mcp23017 13 0>;
+    input-gpios = <&hv_shield0 HV_SHIELD_V2_INPUTS 0 0>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUTS 1 0>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUTS 2 0>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUTS 3 0>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUTS 4 0>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUTS 5 0>;
 
-    fault-gpios = <&mcp23017 6 0>,
-      <&mcp23017 14 0>,
-      <&mcp23017 15 0>;
+    fault-gpios = <&hv_shield0 HV_SHIELD_V2_FAULT_PINS 0 0>,
+                  <&hv_shield0 HV_SHIELD_V2_FAULT_PINS 1 0>,
+                  <&hv_shield0 HV_SHIELD_V2_FAULT_PINS 2 0>;
   };
 };

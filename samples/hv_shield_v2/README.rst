@@ -14,7 +14,7 @@ Build the firmware with:
 
 .. code-block:: bash
 
-  west build -b ardep samples/hv_shield_v2 -DSHIELD=hv_shield_v2
+  west build -b ardep samples/hv_shield_v2
 
 
 Flash it using dfu-util:

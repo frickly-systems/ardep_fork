@@ -170,8 +170,19 @@ static int hv_shield_v2_port_get_raw(const struct device* port,
 
   data->reg_cache.gpio = reg_value;
 
-  // todo: map to logical pin layout
-  *value = reg_value;
+  const uint32_t input_values =
+      ((reg_value >> 8) & 0x3F);  // Inputs are on port b 0-5
+  const uint32_t output_values =
+      (reg_value & 0x3F);  // Outputs are on port a 0-5
+  const uint32_t fault_values =
+      ((reg_value >> 6) & 0x1) | (((reg_value >> 14) & 0x1) << 1) |
+      (((reg_value >> 15) & 0x1)
+       << 2);  // Faults on bits 6,14,15 mapped to 0..2
+
+  // todo: check mapping
+  *value = (input_values << HV_SHIELD_V2_INPUT_BASE) |
+           (output_values << HV_SHIELD_V2_OUTPUT_BASE) |
+           (fault_values << HV_SHIELD_V2_FAULT_BASE);
 
   return 0;
 }
@@ -186,8 +197,8 @@ static int hv_shield_v2_gpio_set_masked_raw(const struct device* port,
   const uint8_t output_mask = (mask >> HV_SHIELD_V2_OUTPUT_BASE) & 0x003F;
   const uint8_t output_value = (value >> HV_SHIELD_V2_OUTPUT_BASE) & 0x003F;
   // shift to correct mcp pin bits
-  const uint16_t mapped_mask = (output_mask << 8);  // Outputs are on pins 8-13
-  const uint16_t mapped_value = (output_value << 8);
+  const uint16_t mapped_mask = output_mask;  // Outputs are on pins 0-5
+  const uint16_t mapped_value = output_value;
 
   const uint16_t new_gpio =
       (data->reg_cache.gpio & ~mapped_mask) | (mapped_value & mapped_mask);

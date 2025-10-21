@@ -1,0 +1,13 @@
+description: HV shield v2 gpio nexus driver binding.
+
+compatible: "hv-shield-v2-custom"
+
+include: [gpio-controller.yaml, i2c-device.yaml]
+
+properties:
+  "#gpio-cells":
+    const: 2
+
+gpio-cells:
+  - pin
+  - flags

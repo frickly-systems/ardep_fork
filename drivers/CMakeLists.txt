@@ -5,4 +5,5 @@
 
 add_subdirectory(can)
 add_subdirectory(hv_shield)
+add_subdirectory(hv_shield_v2)
 add_subdirectory(lin)

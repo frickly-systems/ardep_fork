@@ -3,36 +3,10 @@
 &i2c2 {
 	status = "okay";
 
-	mcp23017: pinctrl@20 {
-		compatible = "microchip,mcp23017";
+	hv_shield0: hv_shield0@20 {
+		compatible = "hv-shield-v2-custom";
 		reg = <0x20>;
 		gpio-controller;
 		#gpio-cells = <2>;
-	};
-};
-
-/ {
-	hv-shields {
-		hv_shield0: hv-shield0 {
-			compatible = "hv-shield-v2";
-			#gpio-cells = <3>;
-			gpio-map-mask = <0xffffffff 0xffffffff 0xffffffc0>;
-			gpio-map-pass-thru = <0 0 0x3f>;
-			gpio-map = <HV_SHIELD_V2_OUTPUTS    0 0 &mcp23017 0  0>,
-								 <HV_SHIELD_V2_OUTPUTS    1 0 &mcp23017 1  0>,
-								 <HV_SHIELD_V2_OUTPUTS    2 0 &mcp23017 2  0>,
-								 <HV_SHIELD_V2_OUTPUTS    3 0 &mcp23017 3  0>,
-								 <HV_SHIELD_V2_OUTPUTS    4 0 &mcp23017 4  0>,
-								 <HV_SHIELD_V2_OUTPUTS    5 0 &mcp23017 5  0>,
-								 <HV_SHIELD_V2_INPUTS     0 0 &mcp23017 8  0>,
-								 <HV_SHIELD_V2_INPUTS     1 0 &mcp23017 9  0>,
-								 <HV_SHIELD_V2_INPUTS     2 0 &mcp23017 10 0>,
-								 <HV_SHIELD_V2_INPUTS     3 0 &mcp23017 11 0>,
-								 <HV_SHIELD_V2_INPUTS     4 0 &mcp23017 12 0>,
-								 <HV_SHIELD_V2_INPUTS     5 0 &mcp23017 13 0>,
-								 <HV_SHIELD_V2_FAULT_PINS 0 0 &mcp23017 6  0>,
-								 <HV_SHIELD_V2_FAULT_PINS 1 0 &mcp23017 14 0>,
-								 <HV_SHIELD_V2_FAULT_PINS 2 0 &mcp23017 15 0>;
-		};
 	};
 };

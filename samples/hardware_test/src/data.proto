@@ -18,7 +18,7 @@ message DeviceInfo {
 }
 
 message GPIOResponse {
-  repeated string errors = 1;
+  string errors = 1;
 }
 
 message Response {

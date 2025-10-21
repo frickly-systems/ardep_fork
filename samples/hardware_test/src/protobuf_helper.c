@@ -37,6 +37,11 @@ struct BytesData {
   size_t length;
 };
 
+struct StringArray {
+  const char *const *strings;
+  size_t count;
+};
+
 bool encode_bytes(pb_ostream_t *stream,
                   const pb_field_t *field,
                   void *const *arg) {
@@ -48,6 +53,30 @@ bool encode_bytes(pb_ostream_t *stream,
   return pb_encode_string(stream, bytes_data->data, bytes_data->length);
 }
 
+static bool encode_string_list(pb_ostream_t *stream,
+                               const pb_field_t *field,
+                               void *const *arg) {
+  const struct StringArray *string_array = (const struct StringArray *)(*arg);
+
+  for (size_t i = 0; i < string_array->count; ++i) {
+    const char *entry = string_array->strings[i];
+
+    if (!entry) {
+      continue;
+    }
+
+    if (!pb_encode_tag_for_field(stream, field)) {
+      return false;
+    }
+
+    if (!pb_encode_string(stream, (const uint8_t *)entry, strlen(entry))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 int request_from_proto(Request *proto, struct Request *request) {
   if (!proto || !request) {
     LOG_ERR("Invalid parameters for request_from_proto");
@@ -57,6 +86,15 @@ int request_from_proto(Request *proto, struct Request *request) {
   switch (proto->type) {
     case RequestType_GET_DEVICE_INFO:
       request->type = REQUEST_TYPE__GET_DEVICE_INFO;
+      break;
+    case RequestType_SETUP_GPIO_TEST:
+      request->type = REQUEST_TYPE__SETUP_GPIO_TEST;
+      break;
+    case RequestType_EXECUTE_GPIO_TEST:
+      request->type = REQUEST_TYPE__EXECUTE_GPIO_TEST;
+      break;
+    case RequestType_STOP_GPIO_TEST:
+      request->type = REQUEST_TYPE__STOP_GPIO_TEST;
       break;
     default:
       LOG_ERR("Unknown RequestType: %d", proto->type);
@@ -99,19 +137,47 @@ static int response_device_info_to_proto(const struct Response *resp,
   return 0;
 }
 
+static int response_gpio_to_proto(const struct Response *resp,
+                                  uint8_t *buffer,
+                                  size_t buffer_size,
+                                  size_t *message_length) {
+  Response prot_response = Response_init_zero;
+
+  prot_response.result_code = resp->result_code;
+  prot_response.role = DeviceRole_TESTER;
+  prot_response.which_payload = Response_gpio_response_tag;
+
+  struct StringArray errors = {
+    .strings = (const char *const *)resp->payload.gpio_response.errors,
+    .count = resp->payload.gpio_response.errors_length,
+  };
+
+  prot_response.payload.gpio_response.errors.funcs.encode = encode_string_list;
+  prot_response.payload.gpio_response.errors.arg = &errors;
+
+  pb_ostream_t stream = pb_ostream_from_buffer(buffer, buffer_size);
+
+  if (!pb_encode(&stream, Response_fields, &prot_response)) {
+    LOG_ERR("Failed to encode GPIO response");
+    return -EINVAL;
+  }
+
+  *message_length = stream.bytes_written;
+  return 0;
+}
+
 int response_to_proto(const void *response,
                       uint8_t *buffer,
                       size_t buffer_size,
                       size_t *message_length) {
-  Response prot_response = Response_init_zero;
   const struct Response *resp = (const struct Response *)response;
-
-  prot_response.result_code = resp->result_code;
 
   switch (resp->payload_type) {
     case RESPONSE_TYPE__DEVICE_INFO:
       return response_device_info_to_proto(resp, buffer, buffer_size,
                                            message_length);
+    case RESPONSE_TYPE__GPIO:
+      return response_gpio_to_proto(resp, buffer, buffer_size, message_length);
     default:
       LOG_ERR("Unknown response payload type: %d", resp->payload_type);
       return -EINVAL;

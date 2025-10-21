@@ -29,7 +29,10 @@ class GPIOResponse:
     @classmethod
     def from_protobuf(cls, pb_gpio_response: Any) -> "GPIOResponse":
         """Convert protobuf GPIOResponse to dataclass"""
-        return cls(errors=list(pb_gpio_response.errors))
+        # Split newline-delimited error payload from protobuf into individual entries
+        errors_payload = getattr(pb_gpio_response, "errors", "")
+        errors = [entry for entry in errors_payload.splitlines() if entry]
+        return cls(errors=errors)
 
     def __str__(self) -> str:
         """Human-readable string representation"""

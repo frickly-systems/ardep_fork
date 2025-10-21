@@ -27,13 +27,6 @@ int rx_callback(const uint8_t *data, size_t length) {
   Request request_proto = Request_init_zero;
   struct Request request_struct = {0};
 
-  // Set up the callback to decode the request type
-  int decode_ret = request_from_proto(&request_proto, &request_struct);
-  if (decode_ret != 0) {
-    LOG_ERR("Failed to setup request decoder: %d", decode_ret);
-    return decode_ret;
-  }
-
   pb_istream_t stream = pb_istream_from_buffer(data, length);
 
   bool decode_successful = pb_decode(&stream, Request_fields, &request_proto);
@@ -43,6 +36,12 @@ int rx_callback(const uint8_t *data, size_t length) {
     LOG_ERR("Stream bytes_left: %zu", stream.bytes_left);
     LOG_ERR("Stream errmsg: %s", PB_GET_ERROR(&stream));
     return -EINVAL;
+  }
+
+  int decode_ret = request_from_proto(&request_proto, &request_struct);
+  if (decode_ret != 0) {
+    LOG_ERR("Failed to convert request struct: %d", decode_ret);
+    return decode_ret;
   }
 
   LOG_INF("Successfully decoded Request message");

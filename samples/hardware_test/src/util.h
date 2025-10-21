@@ -3,8 +3,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define LOG_MODULE_NAME sut
-
 extern char logs[5000];
 
 enum DeviceRole {

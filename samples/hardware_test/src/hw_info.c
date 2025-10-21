@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "deps.h"
 #include "util.h"
 #include "zephyr/drivers/hwinfo.h"
 #include "zephyr/logging/log.h"
 
-#define LOG_MODULE_NAME sut
 LOG_MODULE_DECLARE(LOG_MODULE_NAME, CONFIG_APP_LOG_LEVEL);
 
 uint8_t hw_info[60];

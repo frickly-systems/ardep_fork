@@ -10,3 +10,15 @@ endmenu
 module = APP
 module-str = APP
 source "subsys/logging/Kconfig.template.log_config"
+
+choice HARDWARE_TEST_DEVICE
+    prompt "Hardware Test Device Role"
+    default SUT
+
+config SUT
+    bool "System Under Test"
+
+config TESTER
+    bool "Tester"
+
+endchoice

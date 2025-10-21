@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "deps.h"
 #include "uart_tx.h"
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(uart_tx, CONFIG_APP_LOG_LEVEL);
+LOG_MODULE_DECLARE(LOG_MODULE_NAME, CONFIG_APP_LOG_LEVEL);
 
 #include "protobuf_helper.h"
 

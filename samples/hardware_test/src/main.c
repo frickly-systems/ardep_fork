@@ -5,13 +5,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "deps.h"
 #include "protobuf_helper.h"
 #include "serial_communication.h"
-#include "uart_rx.h"
-#include "uart_tx.h"
 #include "util.h"
 #include "zephyr/devicetree.h"
-#include "zephyr/drivers/hwinfo.h"
 #include "zephyr/logging/log.h"
 
 #include <stdint.h>
@@ -24,10 +22,6 @@ char logs[5000];
 
 const struct device *test_uart_dev =
     DEVICE_DT_GET(DT_CHOSEN(hw_test_command_uart));
-
-int setup_gpio_test(const struct Request *request, struct Response *response);
-int execute_gpio_test(const struct Request *request, struct Response *response);
-int stop_gpio_test(const struct Request *request, struct Response *response);
 
 int request_response(const struct Request *request, struct Response *response) {
   switch (request->type) {

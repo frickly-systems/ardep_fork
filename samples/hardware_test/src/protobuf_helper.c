@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "deps.h"
 #include "src/data.pb.h"
 #include "util.h"
 
@@ -11,7 +12,6 @@
 
 #include <zephyr/logging/log.h>
 
-#define LOG_MODULE_NAME sut
 LOG_MODULE_DECLARE(LOG_MODULE_NAME);
 
 #include "pb.h"

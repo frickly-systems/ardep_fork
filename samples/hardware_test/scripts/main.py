@@ -20,49 +20,19 @@ def setup_logger(level=logging.INFO):
     logging.getLogger(APP_PREFIX).setLevel(level)  # controls all "myapp.*"
 
 
-def response_callback(response: Response):
-    log = get_logger(APP_PREFIX)
-    log.info(f"Received Response: {response}")
-
-
-def deserialize_response(data: bytes) -> Response:
-    return Response.from_protobuf(data_pb2.Response.FromString(data))
-
-
-def serialize_request(request: Request) -> bytes:
-    log = get_logger(APP_PREFIX)
-    log.debug(f"Serializing request: {request}")
-
-    a: data_pb2.Request = request.to_protobuf()
-    log.debug(f"Protobuf request type: {a.type}")
-    log.debug(f"Protobuf request: {a}")
-
-    b: bytes = a.SerializeToString()
-    log.debug(
-        f"Serialized bytes length: {len(b)}, content: {b.hex() if b else 'empty'}"
-    )
-
-    return b
-
-
 def run(device: str, delimiter: int):
+    log = get_logger("main")
 
     com = SerialCommunication(
         device=device,
         delimiter=delimiter,
-        deserialize_callback=deserialize_response,
-        serialize_callback=serialize_request,
-        response_callback=response_callback,
     )
-    com.start()
 
-    try:
-        while True:
-            logging.info("Heartbeat")
-            com.send_data(Request(type=RequestType.GET_DEVICE_INFO))
-            time.sleep(1)
-    except KeyboardInterrupt:
-        logging.info("Shutting down...")
+    while True:
+        response = com.transmit(bytes([0x01, 0x00]))
+        log.info(f"Received response: {" ".join(format(x, "02x") for x in response)}")
+        print(f"Received response: {" ".join(format(x, "02x") for x in response)}")
+        time.sleep(1)
 
 
 def main():

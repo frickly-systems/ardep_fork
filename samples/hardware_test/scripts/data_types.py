@@ -22,24 +22,22 @@ class DeviceInfo:
     """Device information"""
 
     device_id: bytes
-    role: DeviceRole
 
     @classmethod
     def from_protobuf(cls, pb_device_info: data_pb2.DeviceInfo) -> "DeviceInfo":
         """Convert protobuf DeviceInfo to dataclass"""
         return cls(
             device_id=pb_device_info.device_id,
-            role=DeviceRole(pb_device_info.role),
         )
 
     def __str__(self) -> str:
         """Human-readable string representation"""
         device_id_hex = self.device_id.hex()
-        return f"DeviceInfo(device_id=0x{device_id_hex}, role={self.role.name})"
+        return f"DeviceInfo(device_id=0x{device_id_hex})"
 
     def __repr__(self) -> str:
         """Detailed string representation for debugging"""
-        return f"DeviceInfo(device_id={self.device_id!r}, role={self.role!r})"
+        return f"DeviceInfo(device_id={self.device_id!r})"
 
 
 @dataclass

@@ -73,18 +73,7 @@ static int response_device_info_to_proto(const struct Response *resp,
   Response prot_response = Response_init_zero;
 
   prot_response.result_code = resp->result_code;
-
-  switch (resp->payload.device_info.role) {
-    case DEVICE_ROLE__TESTER:
-      prot_response.payload.device_info.role = DeviceRole_TESTER;
-      break;
-    case DEVICE_ROLE__SUT:
-      prot_response.payload.device_info.role = DeviceRole_SUT;
-      break;
-    default:
-      LOG_ERR("Unknown DeviceRole: %d", resp->payload.device_info.role);
-      return -EINVAL;
-  }
+  prot_response.role = DeviceRole_TESTER;
 
   // BytesData must remain valid during pb_encode call
   // So we declare it outside the inner scope

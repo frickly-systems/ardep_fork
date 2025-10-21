@@ -15,18 +15,26 @@ enum DeviceRole {
 
 message DeviceInfo {
   bytes device_id = 1;
-  DeviceRole role = 2;
+}
+
+message GPIOResponse {
+  repeated string errors = 1;
 }
 
 message Response {
   int32 result_code = 1;
+  DeviceRole role = 2;
   oneof payload {
-    DeviceInfo device_info = 2;
+    DeviceInfo device_info = 3;
+    GPIOResponse gpio_response = 4;
   }
 }
 
 enum RequestType {
   GET_DEVICE_INFO = 0;
+  SETUP_GPIO_TEST = 1;
+  EXECUTE_GPIO_TEST = 2;
+  STOP_GPIO_TEST = 3;
 }
 
 message Request {

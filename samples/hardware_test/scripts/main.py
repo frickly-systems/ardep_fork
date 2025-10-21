@@ -2,11 +2,16 @@ import logging
 import sys
 import time
 import argparse
-from typing import Any
-from generated import data_pb2
-from serial_communication import SerialCommunication
+from logging import Logger
+from serial_communication import (
+    SerialCommunication,
+    decode_response,
+    encode_request,
+)
 from logger_util import APP_PREFIX, get_logger
-from data_types import Request, Response, RequestType
+from data_types import Request, RequestType
+
+log: Logger = get_logger("main")
 
 
 def setup_logger(level=logging.INFO):
@@ -17,21 +22,24 @@ def setup_logger(level=logging.INFO):
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-    logging.getLogger(APP_PREFIX).setLevel(level)  # controls all "myapp.*"
+    logging.getLogger(APP_PREFIX).setLevel(level)
 
 
 def run(device: str, delimiter: int):
-    log = get_logger("main")
-
     com = SerialCommunication(
         device=device,
         delimiter=delimiter,
     )
 
     while True:
-        response = com.transmit(bytes([0x01, 0x00]))
-        log.info(f"Received response: {" ".join(format(x, "02x") for x in response)}")
-        print(f"Received response: {" ".join(format(x, "02x") for x in response)}")
+        response_raw = com.transmit(
+            encode_request(Request(type=RequestType.GET_DEVICE_INFO))
+        )
+
+        response = decode_response(response_raw)
+
+        log.info(f"Received response: {response}")
+
         time.sleep(1)
 
 

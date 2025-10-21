@@ -24,23 +24,25 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ndata.proto\":\n\nDeviceInfo\x12\x11\n\tdevice_id\x18\x01 \x01(\x0c\x12\x19\n\x04role\x18\x02 \x01(\x0e\x32\x0b.DeviceRole\"N\n\x08Response\x12\x13\n\x0bresult_code\x18\x01 \x01(\x05\x12\"\n\x0b\x64\x65vice_info\x18\x02 \x01(\x0b\x32\x0b.DeviceInfoH\x00\x42\t\n\x07payload\"%\n\x07Request\x12\x1a\n\x04type\x18\x01 \x01(\x0e\x32\x0c.RequestType*\x11\n\x05State\x12\x08\n\x04IDLE\x10\x00*!\n\nDeviceRole\x12\n\n\x06TESTER\x10\x00\x12\x07\n\x03SUT\x10\x01*\"\n\x0bRequestType\x12\x13\n\x0fGET_DEVICE_INFO\x10\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ndata.proto\"\x1f\n\nDeviceInfo\x12\x11\n\tdevice_id\x18\x01 \x01(\x0c\"\x1e\n\x0cGPIOResponse\x12\x0e\n\x06\x65rrors\x18\x01 \x03(\t\"\x91\x01\n\x08Response\x12\x13\n\x0bresult_code\x18\x01 \x01(\x05\x12\x19\n\x04role\x18\x02 \x01(\x0e\x32\x0b.DeviceRole\x12\"\n\x0b\x64\x65vice_info\x18\x03 \x01(\x0b\x32\x0b.DeviceInfoH\x00\x12&\n\rgpio_response\x18\x04 \x01(\x0b\x32\r.GPIOResponseH\x00\x42\t\n\x07payload\"%\n\x07Request\x12\x1a\n\x04type\x18\x01 \x01(\x0e\x32\x0c.RequestType*\x11\n\x05State\x12\x08\n\x04IDLE\x10\x00*!\n\nDeviceRole\x12\n\n\x06TESTER\x10\x00\x12\x07\n\x03SUT\x10\x01*b\n\x0bRequestType\x12\x13\n\x0fGET_DEVICE_INFO\x10\x00\x12\x13\n\x0fSETUP_GPIO_TEST\x10\x01\x12\x15\n\x11\x45XECUTE_GPIO_TEST\x10\x02\x12\x12\n\x0eSTOP_GPIO_TEST\x10\x03\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'data_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_STATE']._serialized_start=193
-  _globals['_STATE']._serialized_end=210
-  _globals['_DEVICEROLE']._serialized_start=212
-  _globals['_DEVICEROLE']._serialized_end=245
-  _globals['_REQUESTTYPE']._serialized_start=247
-  _globals['_REQUESTTYPE']._serialized_end=281
+  _globals['_STATE']._serialized_start=266
+  _globals['_STATE']._serialized_end=283
+  _globals['_DEVICEROLE']._serialized_start=285
+  _globals['_DEVICEROLE']._serialized_end=318
+  _globals['_REQUESTTYPE']._serialized_start=320
+  _globals['_REQUESTTYPE']._serialized_end=418
   _globals['_DEVICEINFO']._serialized_start=14
-  _globals['_DEVICEINFO']._serialized_end=72
-  _globals['_RESPONSE']._serialized_start=74
-  _globals['_RESPONSE']._serialized_end=152
-  _globals['_REQUEST']._serialized_start=154
-  _globals['_REQUEST']._serialized_end=191
+  _globals['_DEVICEINFO']._serialized_end=45
+  _globals['_GPIORESPONSE']._serialized_start=47
+  _globals['_GPIORESPONSE']._serialized_end=77
+  _globals['_RESPONSE']._serialized_start=80
+  _globals['_RESPONSE']._serialized_end=225
+  _globals['_REQUEST']._serialized_start=227
+  _globals['_REQUEST']._serialized_end=264
 # @@protoc_insertion_point(module_scope)

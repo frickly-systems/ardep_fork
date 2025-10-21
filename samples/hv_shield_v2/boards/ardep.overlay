@@ -2,22 +2,22 @@
 
 / {
   zephyr,user{
-    output-gpios = <&hv_shield0 0x00 0>,
-                   <&hv_shield0 0x01 0>,
-                   <&hv_shield0 0x02 0>,
-                   <&hv_shield0 0x03 0>,
-                   <&hv_shield0 0x04 0>,
-                   <&hv_shield0 0x05 0>;
+    output-gpios = <&hv_shield0 HV_SHIELD_V2_OUTPUT(0) 0>,
+                   <&hv_shield0 HV_SHIELD_V2_OUTPUT(1) 0>,
+                   <&hv_shield0 HV_SHIELD_V2_OUTPUT(2) 0>,
+                   <&hv_shield0 HV_SHIELD_V2_OUTPUT(3) 0>,
+                   <&hv_shield0 HV_SHIELD_V2_OUTPUT(4) 0>,
+                   <&hv_shield0 HV_SHIELD_V2_OUTPUT(5) 0>;
 
-    input-gpios = <&hv_shield0 0x10 GPIO_ACTIVE_LOW>,
-                  <&hv_shield0 0x11 GPIO_ACTIVE_LOW>,
-                  <&hv_shield0 0x12 GPIO_ACTIVE_LOW>,
-                  <&hv_shield0 0x13 GPIO_ACTIVE_LOW>,
-                  <&hv_shield0 0x14 GPIO_ACTIVE_LOW>,
-                  <&hv_shield0 0x15 GPIO_ACTIVE_LOW>;
+    input-gpios = <&hv_shield0 HV_SHIELD_V2_INPUT(0) GPIO_ACTIVE_LOW>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUT(1) GPIO_ACTIVE_LOW>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUT(2) GPIO_ACTIVE_LOW>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUT(3) GPIO_ACTIVE_LOW>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUT(4) GPIO_ACTIVE_LOW>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUT(5) GPIO_ACTIVE_LOW>;
 
-    fault-gpios = <&hv_shield0 0x20 0>,
-                  <&hv_shield0 0x21 0>,
-                  <&hv_shield0 0x22 0>;
+    fault-gpios = <&hv_shield0 HV_SHIELD_V2_FAULT(0) 0>,
+                  <&hv_shield0 HV_SHIELD_V2_FAULT(1) 0>,
+                  <&hv_shield0 HV_SHIELD_V2_FAULT(2) 0>;
   };
 };

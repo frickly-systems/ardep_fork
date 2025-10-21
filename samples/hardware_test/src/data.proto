@@ -1,0 +1,34 @@
+// Copyright (C) Frickly Systems GmbH
+// Copyright (C) MBition GmbH
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+enum State {
+  IDLE = 0;
+}
+
+enum DeviceRole {
+  TESTER = 0;
+  SUT = 1;
+}
+
+message DeviceInfo {
+  bytes device_id = 1;
+  DeviceRole role = 2;
+}
+
+message Response {
+  int32 result_code = 1;
+  oneof payload {
+    DeviceInfo device_info = 2;
+  }
+}
+
+enum RequestType {
+  GET_DEVICE_INFO = 0;
+}
+
+message Request {
+  Request request = 1;
+}

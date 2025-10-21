@@ -58,6 +58,7 @@ static void uart_tx_thread(void *p1, void *p2, void *p3) {
     // Wait for a message from the queue
     if (k_msgq_get(&uart_tx_msgq, &msg, K_FOREVER) == 0) {
       if (msg.buf && uart_device) {
+        LOG_HEXDUMP_INF(msg.buf->data, msg.buf->len, "COBS Encoded Data");
         // Transmit the COBS encoded data
         for (int i = 0; i < msg.buf->len; i++) {
           uart_poll_out(uart_device, msg.buf->data[i]);

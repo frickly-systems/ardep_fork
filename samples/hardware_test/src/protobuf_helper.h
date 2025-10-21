@@ -13,7 +13,7 @@ bool encode_string(pb_ostream_t *stream,
                    const pb_field_t *field,
                    void *const *arg);
 
-int request_from_proto(const Request *proto);
+int request_from_proto(Request *proto, struct Request *request);
 
 int response_to_proto(const void *response,
                       uint8_t *buffer,

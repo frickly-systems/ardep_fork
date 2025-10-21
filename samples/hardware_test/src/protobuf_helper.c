@@ -5,6 +5,7 @@
  */
 
 #include "src/data.pb.h"
+#include "util.h"
 
 #include <stddef.h>
 
@@ -47,7 +48,23 @@ bool encode_bytes(pb_ostream_t *stream,
   return pb_encode_string(stream, bytes_data->data, bytes_data->length);
 }
 
-int request_from_proto(const Request *proto) { return 0; }
+int request_from_proto(Request *proto, struct Request *request) {
+  if (!proto || !request) {
+    LOG_ERR("Invalid parameters for request_from_proto");
+    return -EINVAL;
+  }
+
+  switch (proto->type) {
+    case RequestType_GET_DEVICE_INFO:
+      request->type = REQUEST_TYPE__GET_DEVICE_INFO;
+      break;
+    default:
+      LOG_ERR("Unknown RequestType: %d", proto->type);
+      return -EINVAL;
+  }
+
+  return 0;
+}
 
 static int response_device_info_to_proto(const struct Response *resp,
                                          uint8_t *buffer,

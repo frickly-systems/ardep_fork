@@ -25,3 +25,11 @@ struct Response {
     struct DeviceInfo device_info;
   } payload;
 };
+
+enum RequestType {
+  REQUEST_TYPE__GET_DEVICE_INFO = 0,
+};
+
+struct Request {
+  enum RequestType type;
+};

@@ -30,5 +30,5 @@ enum RequestType {
 }
 
 message Request {
-  Request request = 1;
+  RequestType type = 1;
 }

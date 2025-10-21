@@ -6,9 +6,12 @@
 
 #include "src/data.pb.h"
 
+#include <stddef.h>
+
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_DECLARE(main);
+#define LOG_MODULE_NAME sut
+LOG_MODULE_DECLARE(LOG_MODULE_NAME);
 
 #include "pb.h"
 #include "pb_decode.h"
@@ -46,6 +49,50 @@ bool encode_bytes(pb_ostream_t *stream,
 
 int request_from_proto(const Request *proto) { return 0; }
 
+static int response_device_info_to_proto(const struct Response *resp,
+                                         uint8_t *buffer,
+                                         size_t buffer_size,
+                                         size_t *message_length) {
+  Response prot_response = Response_init_zero;
+
+  prot_response.result_code = resp->result_code;
+
+  switch (resp->payload.device_info.role) {
+    case DEVICE_ROLE__TESTER:
+      prot_response.payload.device_info.role = DeviceRole_TESTER;
+      break;
+    case DEVICE_ROLE__SUT:
+      prot_response.payload.device_info.role = DeviceRole_SUT;
+      break;
+    default:
+      LOG_ERR("Unknown DeviceRole: %d", resp->payload.device_info.role);
+      return -EINVAL;
+  }
+
+  // BytesData must remain valid during pb_encode call
+  // So we declare it outside the inner scope
+  struct BytesData device_id_data = {
+    .data = resp->payload.device_info.device_id,
+    .length = resp->payload.device_info.device_id_length,
+  };
+
+  // Set which oneof field is active
+  prot_response.which_payload = Response_device_info_tag;
+
+  prot_response.payload.device_info.device_id.funcs.encode = encode_bytes;
+  prot_response.payload.device_info.device_id.arg = &device_id_data;
+
+  pb_ostream_t stream = pb_ostream_from_buffer(buffer, buffer_size);
+
+  if (!pb_encode(&stream, Response_fields, &prot_response)) {
+    LOG_ERR("Failed to encode DeviceInfo response");
+    return -EINVAL;
+  }
+
+  *message_length = stream.bytes_written;
+  return 0;
+}
+
 int response_to_proto(const void *response,
                       uint8_t *buffer,
                       size_t buffer_size,
@@ -56,25 +103,9 @@ int response_to_proto(const void *response,
   prot_response.result_code = resp->result_code;
 
   switch (resp->payload_type) {
-    case RESPONSE_TYPE__DEVICE_INFO: {
-      struct BytesData device_id_data = {
-        .data = resp->payload.device_info.device_id,
-        .length = resp->payload.device_info.device_id_length,
-      };
-
-      prot_response.payload.device_info.device_id.funcs.encode = encode_bytes;
-      prot_response.payload.device_info.device_id.arg = &device_id_data;
-
-      pb_ostream_t stream = pb_ostream_from_buffer(buffer, buffer_size);
-
-      if (!pb_encode(&stream, Response_fields, &prot_response)) {
-        LOG_ERR("Failed to encode DeviceInfo response");
-        return -EINVAL;
-      }
-
-      *message_length = stream.bytes_written;
-      return 0;
-    }
+    case RESPONSE_TYPE__DEVICE_INFO:
+      return response_device_info_to_proto(resp, buffer, buffer_size,
+                                           message_length);
     default:
       LOG_ERR("Unknown response payload type: %d", resp->payload_type);
       return -EINVAL;

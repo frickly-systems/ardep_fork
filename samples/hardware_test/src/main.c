@@ -6,11 +6,11 @@
  */
 
 #include "protobuf_helper.h"
-#include "syscalls/hwinfo.h"
 #include "uart_tx.h"
 #include "util.h"
 #include "zephyr/devicetree.h"
 #include "zephyr/drivers/gpio.h"
+#include "zephyr/drivers/hwinfo.h"
 #include "zephyr/drivers/uart.h"
 #include "zephyr/logging/log.h"
 #include "zephyr/sys/printk.h"
@@ -31,6 +31,7 @@ void can_test(void);
 void lin_test(void);
 
 int main() {
+  LOG_INF("Starting Tester Firmware");
   // console_getline_init();
   // LOG_INF("Tester Firmware started");
 
@@ -107,9 +108,11 @@ void entry(void *p1, void *p2, void *p3) {
       LOG_ERR("Failed to get device ID");
       response.result_code = device_id_len;
       response.payload.device_info.device_id_length = 0;
+      response.payload.device_info.role = DEVICE_ROLE__SUT;
     } else {
       response.result_code = 0;
       response.payload.device_info.device_id_length = device_id_len;
+      response.payload.device_info.role = DEVICE_ROLE__SUT;
       memcpy(response.payload.device_info.device_id, device_id, device_id_len);
     }
 

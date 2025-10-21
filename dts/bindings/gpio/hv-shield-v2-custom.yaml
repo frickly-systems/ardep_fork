@@ -8,6 +8,11 @@ properties:
   "#gpio-cells":
     const: 2
 
+  int-gpios:
+    required: true
+    description: "GPIOs used for HV shield v2 interrupts. Can be shared across multiple hv shields"
+    type: "phandle-array"
+
 gpio-cells:
   - pin
   - flags

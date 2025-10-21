@@ -5,6 +5,7 @@
 
 	hv_shield0: hv_shield0@20 {
 		compatible = "hv-shield-v2-custom";
+		int-gpios = <&gpioe 2 0>, <&gpioe 5 0>;
 		reg = <0x20>;
 		gpio-controller;
 		#gpio-cells = <2>;

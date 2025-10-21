@@ -168,8 +168,10 @@ static int hv_shield_v2_port_get_raw(const struct device* port,
     return -EIO;
   }
 
-  *value = reg_value;
   data->reg_cache.gpio = reg_value;
+
+  // todo: map to logical pin layout
+  *value = reg_value;
 
   return 0;
 }
@@ -180,7 +182,15 @@ static int hv_shield_v2_gpio_set_masked_raw(const struct device* port,
   const struct hv_shield_v2_config* config = port->config;
   struct hv_shield_v2_data* data = port->data;
 
-  uint16_t new_gpio = (data->reg_cache.gpio & ~mask) | (value & mask);
+  // extract output bits from mask and value
+  const uint8_t output_mask = (mask >> HV_SHIELD_V2_OUTPUT_BASE) & 0x003F;
+  const uint8_t output_value = (value >> HV_SHIELD_V2_OUTPUT_BASE) & 0x003F;
+  // shift to correct mcp pin bits
+  const uint16_t mapped_mask = (output_mask << 8);  // Outputs are on pins 8-13
+  const uint16_t mapped_value = (output_value << 8);
+
+  const uint16_t new_gpio =
+      (data->reg_cache.gpio & ~mapped_mask) | (mapped_value & mapped_mask);
 
   if (write_u16_reg(config, 0x12, new_gpio) != 0) {
     return -EIO;
@@ -267,6 +277,7 @@ DEVICE_API(gpio, hv_shield_api) = {
   .port_set_masked_raw = hv_shield_v2_gpio_set_masked_raw,
 };
 
+// todo: .common init
 #define HV_SHIELD_V2_INIT(x)                                               \
   BUILD_ASSERT(DT_INST_PROP_LEN(x, int_gpios) <= 2);                       \
   static const struct hv_shield_v2_config hv_shield_##x##_config = {       \

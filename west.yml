@@ -2,6 +2,8 @@ manifest:
   self:
     path: ardep
     west-commands: scripts/west-commands.yml
+  # Add zephyrs optional group to allow access to nanopb
+  group-filter: [+optional]
 
   remotes:
     - name: zephyrproject-rtos
@@ -22,6 +24,7 @@ manifest:
           - mcuboot
           - mbedtls
           - littlefs
+          - nanopb
     - name: zephboards
       url: https://github.com/dragonlock2/zephyrboards.git
       revision: 9443ad0ebe547a140ec54790687ae8b4d4e0cd34

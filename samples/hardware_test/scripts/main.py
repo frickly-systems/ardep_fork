@@ -35,9 +35,26 @@ def run(device: str, delimiter: int):
         response_raw = com.transmit(
             encode_request(Request(type=RequestType.GET_DEVICE_INFO))
         )
-
         response = decode_response(response_raw)
 
+        log.info(f"Received response: {response}")
+
+        response_raw = com.transmit(
+            encode_request(Request(type=RequestType.SETUP_GPIO_TEST))
+        )
+        response = decode_response(response_raw)
+        log.info(f"Received response: {response}")
+
+        response_raw = com.transmit(
+            encode_request(Request(type=RequestType.EXECUTE_GPIO_TEST))
+        )
+        response = decode_response(response_raw)
+        log.info(f"Received response: {response}")
+
+        response_raw = com.transmit(
+            encode_request(Request(type=RequestType.STOP_GPIO_TEST))
+        )
+        response = decode_response(response_raw)
         log.info(f"Received response: {response}")
 
         time.sleep(1)

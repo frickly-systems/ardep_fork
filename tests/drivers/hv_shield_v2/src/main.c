@@ -9,16 +9,18 @@ DEFINE_FFF_GLOBALS;
 
 static const struct device* i2c_fake = DEVICE_DT_GET(DT_NODELABEL(test_i2c));
 static const struct device* hv_shield = DEVICE_DT_GET(DT_NODELABEL(hv_shield0));
+static const struct device* hv_shield_deferred = DEVICE_DT_GET(
+    DT_NODELABEL(hv_shield5));  // deferred-init hv shield for device init test
 
 ZTEST_SUITE(mcp_driver, NULL, NULL, NULL, NULL, NULL);
 
-// todo: we currently use naming to make this the first test, which is not very
-// good
-ZTEST(mcp_driver, test_before_all_device_init) {
+ZTEST(mcp_driver, test_device_init) {
   zassert_equal(fake_i2c_transfer_fake.call_count, 0);
-  zassert_equal(device_init(hv_shield), 0);
+  zassert_equal(device_init(hv_shield_deferred), 0);
   zassert_equal(fake_i2c_transfer_fake.call_count, 2);
   zassert_equal(fake_i2c_transfer_fake.arg0_val, i2c_fake);
+  zassert_equal(fake_i2c_transfer_fake.arg3_val,
+                0x25);  // address should be right
 
   struct i2c_fake_data* data = fake_i2c_get_fake_data(i2c_fake);
   zassert_equal(data->transfer_msg_history[1].len, 3);  // IOCON write
@@ -32,6 +34,7 @@ ZTEST(mcp_driver, test_set_output_0) {
   zassert_equal(gpio_pin_set(hv_shield, HV_SHIELD_V2_OUTPUT(0), 1), 0);
   zassert_equal(fake_i2c_transfer_fake.call_count, 1);
   zassert_equal(fake_i2c_transfer_fake.arg0_val, i2c_fake);
+  zassert_equal(fake_i2c_transfer_fake.arg3_val, 0x20);
   struct i2c_fake_data* data = fake_i2c_get_fake_data(i2c_fake);
   zassert_equal(data->transfer_msg_history[0].len, 3);
   zassert_equal(data->transfer_msg_history[0].buf[0], 0x12);  // GPIO register

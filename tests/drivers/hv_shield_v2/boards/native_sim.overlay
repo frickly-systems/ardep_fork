@@ -13,10 +13,16 @@
 			reg = <0x20>;
 			gpio-controller;
 			#gpio-cells = <2>;
+		};
+
+		hv_shield5: hv_shield0@25 {
+			compatible = "hv-shield-v2-custom";
+			// int-gpios = <&test_gpio 0 0>, <&test_gpio 1 0>;
+			reg = <0x25>;
+			gpio-controller;
+			#gpio-cells = <2>;
 
 			zephyr,deferred-init;
 		};
 	};
-
-
 };

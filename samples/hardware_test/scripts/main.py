@@ -1,15 +1,17 @@
 import logging
 import sys
+import json
 import time
 import argparse
 from logging import Logger
+from typing import Any
 from serial_communication import (
     SerialCommunication,
     decode_response,
     encode_request,
 )
 from logger_util import APP_PREFIX, get_logger
-from data_types import Request, RequestType
+from data_types import DeviceRole, Request, RequestType, Response
 
 log: Logger = get_logger("main")
 
@@ -25,39 +27,115 @@ def setup_logger(level=logging.INFO):
     logging.getLogger(APP_PREFIX).setLevel(level)
 
 
-def run(device: str, delimiter: int):
-    com = SerialCommunication(
-        device=device,
+results: dict[str, Any] = {}
+
+
+def run(device1: str, device2: str, delimiter: int):
+    com1 = SerialCommunication(
+        device=device1,
+        delimiter=delimiter,
+    )
+
+    com2 = SerialCommunication(
+        device=device2,
         delimiter=delimiter,
     )
 
     while True:
-        response_raw = com.transmit(
+        # Device 1 operations
+        log.info("Communicating with device 1: %s", device1)
+        response_raw: bytes = com1.transmit(
             encode_request(Request(type=RequestType.GET_DEVICE_INFO))
         )
-        response = decode_response(response_raw)
+        response1: Response = decode_response(response_raw)
+        log.info("Device 1 - Received response: %s", response1)
 
-        log.info(f"Received response: {response}")
-
-        response_raw = com.transmit(
-            encode_request(Request(type=RequestType.SETUP_GPIO_TEST))
+        # Device 2 operations
+        log.info("Communicating with device 2: %s", device2)
+        response_raw: bytes = com2.transmit(
+            encode_request(Request(type=RequestType.GET_DEVICE_INFO))
         )
-        response = decode_response(response_raw)
-        log.info(f"Received response: {response}")
+        response2: Response = decode_response(response_raw)
+        log.info("Device 2 - Received response: %s", response2)
 
-        response_raw = com.transmit(
-            encode_request(Request(type=RequestType.EXECUTE_GPIO_TEST))
+        results["device"] = {
+            "sut": (
+                response1.to_dict()
+                if response1.role == DeviceRole.SUT
+                else response2.to_dict()
+            ),
+            "tester": (
+                response1.to_dict()
+                if response1.role == DeviceRole.TESTER
+                else response2.to_dict()
+            ),
+        }
+
+        sut = com1 if response1.role == DeviceRole.SUT else com2
+        tester = com1 if response1.role == DeviceRole.TESTER else com2
+
+        log.info("Setting up UART test on SUT")
+        setup_response_raw: bytes = sut.transmit(
+            encode_request(Request(type=RequestType.SETUP_UART_TEST))
         )
-        response = decode_response(response_raw)
-        log.info(f"Received response: {response}")
+        setup_response_sut: Response = decode_response(setup_response_raw)
+        log.info("SUT - UART Setup Response: %s", setup_response_sut)
 
-        response_raw = com.transmit(
-            encode_request(Request(type=RequestType.STOP_GPIO_TEST))
+        log.info("Setting up UART test on Tester")
+        setup_response_raw: bytes = tester.transmit(
+            encode_request(Request(type=RequestType.SETUP_UART_TEST))
         )
-        response = decode_response(response_raw)
-        log.info(f"Received response: {response}")
+        setup_response_tester: Response = decode_response(setup_response_raw)
+        log.info("Tester - UART Setup Response: %s", setup_response_tester)
 
-        time.sleep(1)
+        results["uart_setup"] = {
+            "sut": setup_response_sut.to_dict(),
+            "tester": setup_response_tester.to_dict(),
+        }
+
+        log.info("Execute UART test on SUT")
+        setup_response_raw: bytes = sut.transmit(
+            encode_request(Request(type=RequestType.EXECUTE_UART_TEST))
+        )
+        setup_response_sut: Response = decode_response(setup_response_raw)
+        log.info("SUT - UART Execute Response: %s", setup_response_sut)
+
+        log.info("Execute UART test on Tester")
+        setup_response_raw: bytes = tester.transmit(
+            encode_request(Request(type=RequestType.EXECUTE_UART_TEST))
+        )
+        setup_response_tester: Response = decode_response(setup_response_raw)
+        log.info("Tester - UART Execute Response: %s", setup_response_tester)
+
+        results["uart_execute"] = {
+            "sut": setup_response_sut.to_dict(),
+            "tester": setup_response_tester.to_dict(),
+        }
+
+        log.info("Stop UART test on SUT")
+        setup_response_raw: bytes = sut.transmit(
+            encode_request(Request(type=RequestType.STOP_UART_TEST))
+        )
+        setup_response_sut: Response = decode_response(setup_response_raw)
+        log.info("SUT - UART Stop Response: %s", setup_response_sut)
+
+        log.info("Stop UART test on Tester")
+        setup_response_raw: bytes = tester.transmit(
+            encode_request(Request(type=RequestType.STOP_UART_TEST))
+        )
+        setup_response_tester: Response = decode_response(setup_response_raw)
+        log.info("Tester - UART Stop Response: %s", setup_response_tester)
+
+        results["uart_stop"] = {
+            "sut": setup_response_sut.to_dict(),
+            "tester": setup_response_tester.to_dict(),
+        }
+
+        log.info("Current Results: %s", results)
+
+        log.info(json.dumps(results, indent=2))
+
+        time.sleep(5)
 
 
 def main():
@@ -65,10 +143,16 @@ def main():
         description="Data display for multi-sensor Zephyr RTOS project"
     )
     parser.add_argument(
-        "-d",
-        "--device",
+        "-d1",
+        "--device1",
         default="/dev/ttyACM1",
-        help="Serial device path (default: /dev/ttyACM1)",
+        help="First serial device path (default: /dev/ttyACM1)",
+    )
+    parser.add_argument(
+        "-d2",
+        "--device2",
+        default="/dev/ttyACM3",
+        help="Second serial device path (default: /dev/ttyACM3)",
     )
     parser.add_argument(
         "-e",
@@ -93,7 +177,7 @@ def main():
         logging.warning("Delimiter must be a byte value (0-255).")
         sys.exit(1)
 
-    run(args.device, args.delimiter)
+    run(args.device1, args.device2, args.delimiter)
 
 
 if __name__ == "__main__":

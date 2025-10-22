@@ -9,13 +9,13 @@
 
 #include <string.h>
 
-bool encode_string(pb_ostream_t *stream,
-                   const pb_field_t *field,
-                   void *const *arg);
+bool encode_string(pb_ostream_t* stream,
+                   const pb_field_t* field,
+                   void* const* arg);
 
-int request_from_proto(Request *proto, struct Request *request);
+int request_from_proto(Request* proto, struct Request* request);
 
-int response_to_proto(const void *response,
-                      uint8_t *buffer,
+int response_to_proto(const void* response,
+                      uint8_t* buffer,
                       size_t buffer_size,
-                      size_t *message_length);
+                      size_t* message_length);

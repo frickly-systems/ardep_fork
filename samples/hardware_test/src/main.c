@@ -20,20 +20,28 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME, CONFIG_APP_LOG_LEVEL);
 
 char logs[5000];
 
-const struct device *test_uart_dev =
+const struct device* test_uart_dev =
     DEVICE_DT_GET(DT_CHOSEN(hw_test_command_uart));
 
-int request_response(const struct Request *request, struct Response *response) {
+int request_response(const struct Request* request, struct Response* response) {
   switch (request->type) {
     case REQUEST_TYPE__GET_DEVICE_INFO:
+      response->payload_type = RESPONSE_TYPE__DEVICE_INFO;
       return handle_device_info_request(request, response);
-    case REQUEST_TYPE__SETUP_GPIO_TEST:
-      return setup_gpio_test(request, response);
-    case REQUEST_TYPE__EXECUTE_GPIO_TEST:
-      return execute_gpio_test(request, response);
-    case REQUEST_TYPE__STOP_GPIO_TEST:
-      return stop_gpio_test(request, response);
 
+    case REQUEST_TYPE__SETUP_UART_TEST:
+      response->payload_type = RESPONSE_TYPE__GPIO;
+      return setup_uart_test(request, response);
+    case REQUEST_TYPE__EXECUTE_UART_TEST:
+      response->payload_type = RESPONSE_TYPE__GPIO;
+      return execute_uart_test(request, response);
+    case REQUEST_TYPE__STOP_UART_TEST:
+      response->payload_type = RESPONSE_TYPE__GPIO;
+      return stop_uart_test(request, response);
+
+    case REQUEST_TYPE__SETUP_GPIO_TEST:
+    case REQUEST_TYPE__EXECUTE_GPIO_TEST:
+    case REQUEST_TYPE__STOP_GPIO_TEST:
     default:
       LOG_ERR("Unknown request type: %d", request->type);
       return -EINVAL;

@@ -21,6 +21,9 @@ class RequestType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     SETUP_GPIO_TEST: _ClassVar[RequestType]
     EXECUTE_GPIO_TEST: _ClassVar[RequestType]
     STOP_GPIO_TEST: _ClassVar[RequestType]
+    SETUP_UART_TEST: _ClassVar[RequestType]
+    EXECUTE_UART_TEST: _ClassVar[RequestType]
+    STOP_UART_TEST: _ClassVar[RequestType]
 IDLE: State
 TESTER: DeviceRole
 SUT: DeviceRole
@@ -28,6 +31,9 @@ GET_DEVICE_INFO: RequestType
 SETUP_GPIO_TEST: RequestType
 EXECUTE_GPIO_TEST: RequestType
 STOP_GPIO_TEST: RequestType
+SETUP_UART_TEST: RequestType
+EXECUTE_UART_TEST: RequestType
+STOP_UART_TEST: RequestType
 
 class DeviceInfo(_message.Message):
     __slots__ = ("device_id",)
@@ -36,22 +42,26 @@ class DeviceInfo(_message.Message):
     def __init__(self, device_id: _Optional[bytes] = ...) -> None: ...
 
 class GPIOResponse(_message.Message):
-    __slots__ = ("errors",)
-    ERRORS_FIELD_NUMBER: _ClassVar[int]
-    errors: str
-    def __init__(self, errors: _Optional[str] = ...) -> None: ...
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class UARTResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
 
 class Response(_message.Message):
-    __slots__ = ("result_code", "role", "device_info", "gpio_response")
+    __slots__ = ("result_code", "role", "device_info", "gpio_response", "uart_response")
     RESULT_CODE_FIELD_NUMBER: _ClassVar[int]
     ROLE_FIELD_NUMBER: _ClassVar[int]
     DEVICE_INFO_FIELD_NUMBER: _ClassVar[int]
     GPIO_RESPONSE_FIELD_NUMBER: _ClassVar[int]
+    UART_RESPONSE_FIELD_NUMBER: _ClassVar[int]
     result_code: int
     role: DeviceRole
     device_info: DeviceInfo
     gpio_response: GPIOResponse
-    def __init__(self, result_code: _Optional[int] = ..., role: _Optional[_Union[DeviceRole, str]] = ..., device_info: _Optional[_Union[DeviceInfo, _Mapping]] = ..., gpio_response: _Optional[_Union[GPIOResponse, _Mapping]] = ...) -> None: ...
+    uart_response: UARTResponse
+    def __init__(self, result_code: _Optional[int] = ..., role: _Optional[_Union[DeviceRole, str]] = ..., device_info: _Optional[_Union[DeviceInfo, _Mapping]] = ..., gpio_response: _Optional[_Union[GPIOResponse, _Mapping]] = ..., uart_response: _Optional[_Union[UARTResponse, _Mapping]] = ...) -> None: ...
 
 class Request(_message.Message):
     __slots__ = ("type",)

@@ -17,8 +17,16 @@ message DeviceInfo {
   bytes device_id = 1;
 }
 
-message GPIOResponse {
-  string errors = 1;
+message GPIOResponse {}
+
+message UART {
+  string device = 1;
+  string receive_data = 2;
+  string send_data = 3;
+}
+
+message UARTResponse {
+  repeated UART uarts = 1;
 }
 
 message Response {
@@ -27,6 +35,7 @@ message Response {
   oneof payload {
     DeviceInfo device_info = 3;
     GPIOResponse gpio_response = 4;
+    UARTResponse uart_response = 5;
   }
 }
 
@@ -35,6 +44,9 @@ enum RequestType {
   SETUP_GPIO_TEST = 1;
   EXECUTE_GPIO_TEST = 2;
   STOP_GPIO_TEST = 3;
+  SETUP_UART_TEST = 4;
+  EXECUTE_UART_TEST = 5;
+  STOP_UART_TEST = 6;
 }
 
 message Request {

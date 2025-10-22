@@ -14,8 +14,8 @@ LOG_MODULE_DECLARE(LOG_MODULE_NAME, CONFIG_APP_LOG_LEVEL);
 
 uint8_t hw_info[60];
 
-int handle_device_info_request(const struct Request *request,
-                               struct Response *response) {
+int handle_device_info_request(const struct Request* request,
+                               struct Response* response) {
   uint8_t device_id[100];
   ssize_t device_id_len = hwinfo_get_device_id(device_id, sizeof(device_id));
   if (device_id_len < 0) {
@@ -23,7 +23,6 @@ int handle_device_info_request(const struct Request *request,
     response->result_code = device_id_len;
     response->payload_type = RESPONSE_TYPE__DEVICE_INFO;
     response->payload.device_info.device_id_length = 0;
-    response->payload.device_info.role = DEVICE_ROLE__SUT;
     return 0;
   }
 
@@ -37,7 +36,6 @@ int handle_device_info_request(const struct Request *request,
 
   response->result_code = 0;
   response->payload_type = RESPONSE_TYPE__DEVICE_INFO;
-  response->payload.device_info.role = DEVICE_ROLE__SUT;
   response->payload.device_info.device_id_length = device_id_len;
   memcpy(response->payload.device_info.device_id, device_id, device_id_len);
 

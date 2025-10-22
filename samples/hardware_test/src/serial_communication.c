@@ -2,6 +2,7 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(serial_comm, CONFIG_APP_LOG_LEVEL);
 
+#include "deps.h"
 #include "pb_decode.h"
 #include "protobuf_helper.h"
 #include "serial_communication.h"
@@ -18,9 +19,9 @@ LOG_MODULE_REGISTER(serial_comm, CONFIG_APP_LOG_LEVEL);
 
 #include <sys/types.h>
 
-static request_response_fn_t *serial_communication_request_handler = NULL;
+static request_response_fn_t* serial_communication_request_handler = NULL;
 
-int rx_callback(const uint8_t *data, size_t length) {
+int rx_callback(const uint8_t* data, size_t length) {
   LOG_HEXDUMP_DBG(data, length, "Decoded protobuf data");
 
   // Decode as Request message
@@ -49,6 +50,7 @@ int rx_callback(const uint8_t *data, size_t length) {
 
   struct Response response;
   memset(&response, 0, sizeof(response));
+  response.role = DEVICE_ROLE;
 
   if (!serial_communication_request_handler) {
     LOG_ERR("No request handler registered");
@@ -70,8 +72,8 @@ int rx_callback(const uint8_t *data, size_t length) {
   return 0;
 }
 
-int serial_communication_init(const struct device *uart,
-                              request_response_fn_t *handler) {
+int serial_communication_init(const struct device* uart,
+                              request_response_fn_t* handler) {
   serial_communication_request_handler = handler;
 
   int ret = uart_rx_init(uart, rx_callback);

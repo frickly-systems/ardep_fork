@@ -1,0 +1,22 @@
+/ {
+	test_i2c: i2c@11112222 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "i2c-fake";
+		reg = <0x11112222 0x1000>;
+		status = "okay";
+		clock-frequency = <100000>;
+
+		hv_shield0: hv_shield0@20 {
+			compatible = "hv-shield-v2-custom";
+			// int-gpios = <&test_gpio 0 0>, <&test_gpio 1 0>;
+			reg = <0x20>;
+			gpio-controller;
+			#gpio-cells = <2>;
+
+			zephyr,deferred-init;
+		};
+	};
+
+
+};

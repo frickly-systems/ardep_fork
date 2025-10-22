@@ -212,6 +212,16 @@ static int hv_shield_v2_gpio_set_masked_raw(const struct device* port,
   return 0;
 }
 
+static int hv_shield_v2_gpio_set_bits_raw(const struct device* port,
+                                          gpio_port_pins_t mask) {
+  return hv_shield_v2_gpio_set_masked_raw(port, mask, mask);
+}
+
+static int hv_shield_v2_gpio_clear_bits_raw(const struct device* port,
+                                            gpio_port_pins_t mask) {
+  return hv_shield_v2_gpio_set_masked_raw(port, mask, 0);
+}
+
 // Note that configuring does nothing on this device
 static int hv_shield_v2_pin_configure(const struct device* dev,
                                       gpio_pin_t pin,
@@ -286,19 +296,22 @@ DEVICE_API(gpio, hv_shield_api) = {
   .pin_configure = hv_shield_v2_pin_configure,
   .port_get_raw = hv_shield_v2_port_get_raw,
   .port_set_masked_raw = hv_shield_v2_gpio_set_masked_raw,
+  .port_set_bits_raw = hv_shield_v2_gpio_set_bits_raw,
+  .port_clear_bits_raw = hv_shield_v2_gpio_clear_bits_raw,
 };
 
-// todo: .common init
+// todo: .common init; todo: interrupt pin stuff
 #define HV_SHIELD_V2_INIT(x)                                               \
-  BUILD_ASSERT(DT_INST_PROP_LEN(x, int_gpios) <= 2);                       \
+  BUILD_ASSERT(DT_INST_PROP_LEN_OR(x, int_gpios, 0) <= 2);                 \
   static const struct hv_shield_v2_config hv_shield_##x##_config = {       \
+    .common = {.port_pin_mask = 0x73F3F},                                  \
     .i2c = I2C_DT_SPEC_INST_GET(x),                                        \
     .int_gpios =                                                           \
         {                                                                  \
           GPIO_DT_SPEC_INST_GET_BY_IDX_OR(x, int_gpios, 0, {0}),           \
           GPIO_DT_SPEC_INST_GET_BY_IDX_OR(x, int_gpios, 1, {0}),           \
         },                                                                 \
-    .int_gpio_count = DT_INST_PROP_LEN(x, int_gpios),                      \
+    .int_gpio_count = DT_INST_PROP_LEN_OR(x, int_gpios, 0),                \
   };                                                                       \
   static struct hv_shield_v2_data hv_shield_##x##_data = {                 \
     .reg_cache =                                                           \

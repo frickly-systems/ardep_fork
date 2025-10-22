@@ -1,0 +1,8 @@
+description: WCH I2C controller
+compatible: "i2c-fake"
+
+include: [i2c-controller.yaml]
+
+properties:
+  reg:
+    required: true

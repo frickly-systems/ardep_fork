@@ -86,6 +86,13 @@ ZTEST(mcp_driver, test_read_inputs_and_faults) {
   zassert_equal((value >> HV_SHIELD_V2_INPUT_BASE) & 0x3F, 0b10010);
   zassert_equal((value >> HV_SHIELD_V2_FAULT_BASE) & 0x7, 0b101);
 
+  read_data[0] = 0x00;
+  read_data[1] = 0xc0;  // Fault 1,2 is high
+  fake_i2c_set_next_read_data(i2c_fake, read_data, sizeof(read_data));
+
+  zassert_equal(gpio_port_get(hv_shield, &value), 0);
+  zassert_equal((value >> HV_SHIELD_V2_FAULT_BASE), 0b110);
+
   // reset
   read_data[0] = 0x00;
   read_data[1] = 0x00;

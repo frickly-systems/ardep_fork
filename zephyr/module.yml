@@ -1,6 +1,16 @@
+name: ardep
 build:
   kconfig: Kconfig
   cmake: .
   settings:
     board_root: .
     dts_root: .
+    module_ext_root: .
+
+runners:
+  - file: scripts/runner/ardep.py
+
+package-managers:
+  pip:
+    requirement-files:
+      - scripts/requirements.txt

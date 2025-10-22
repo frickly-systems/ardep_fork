@@ -184,6 +184,7 @@
 	status = "okay";
 };
 
+/* Needs adc1, see adc.dtsi */
 &vref {
 	status = "okay";
 };

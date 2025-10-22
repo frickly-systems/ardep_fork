@@ -6,6 +6,7 @@ ADC Sample
 This sample shows how to use the ADC peripheral to read an analog input.
 The values that are printed on the console are from the arduino analog pins.
 The values are ordered from A0 to A5.
+It also reads the voltage reference and prints it's value.
 
 Flash and run the example
 -------------------------
@@ -18,9 +19,9 @@ The commands assume that you are in the root of the repo, not the workspace.
 
 Flash the app using dfu-util:
 
-    .. code-block:: bash
+.. code-block:: bash
 
-        west ardep dfu
+    west flash
 
 Sample Output
 =============
@@ -34,6 +35,7 @@ Sample Output
     - adc@50000400, channel 5: 224 = 180 mV
     - adc@50000500, channel 4: 206 = 165 mV
     - adc@50000500, channel 3: 348 = 280 mV
+    VREF reading = 3.309000 V
 
 HV Shield
 =========

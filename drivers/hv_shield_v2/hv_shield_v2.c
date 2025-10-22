@@ -3,6 +3,7 @@
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/gpio/gpio_utils.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
@@ -21,6 +22,8 @@ struct hv_shield_v2_config {
 
 struct hv_shield_v2_data {
   struct gpio_driver_data common;
+  sys_slist_t interrupt_callbacks;
+
   struct {
     uint8_t gpintena;
     uint8_t gpintenb;
@@ -292,12 +295,20 @@ static int hv_shield_v2_pin_configure(const struct device* dev,
   return 0;
 }
 
+static int hv_shield_v2_manage_callback(const struct device* dev,
+                                        struct gpio_callback* cb,
+                                        bool set) {
+  struct hv_shield_v2_data* data = dev->data;
+  return gpio_manage_callback(&data->interrupt_callbacks, cb, set);
+}
+
 DEVICE_API(gpio, hv_shield_api) = {
   .pin_configure = hv_shield_v2_pin_configure,
   .port_get_raw = hv_shield_v2_port_get_raw,
   .port_set_masked_raw = hv_shield_v2_gpio_set_masked_raw,
   .port_set_bits_raw = hv_shield_v2_gpio_set_bits_raw,
   .port_clear_bits_raw = hv_shield_v2_gpio_clear_bits_raw,
+  .manage_callback = hv_shield_v2_manage_callback,
 };
 
 // todo: .common init; todo: interrupt pin stuff

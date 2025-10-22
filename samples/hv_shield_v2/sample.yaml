@@ -5,5 +5,4 @@ common:
   integration_platforms:
     - ardep
 tests:
-  example.hv_shield_v2.default:
-    extra_args: SHIELD=hv_shield_v2
+  example.hv_shield_v2.default: {}

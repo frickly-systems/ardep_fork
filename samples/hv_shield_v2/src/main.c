@@ -6,7 +6,7 @@
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
-// static const struct device *mcp23017 = DEVICE_DT_GET(DT_NODELABEL(mcp23017));
+static const struct device* hv_shield = DEVICE_DT_GET(DT_NODELABEL(hv_shield0));
 
 #define DEFINE_GPIO_ARRAY(node, prop)                                    \
   static const struct gpio_dt_spec prop[] = {                            \
@@ -18,10 +18,10 @@ DEFINE_GPIO_ARRAY(DT_PATH(zephyr_user), input_gpios);
 DEFINE_GPIO_ARRAY(DT_PATH(zephyr_user), fault_gpios);
 
 int main() {
-  // if (!device_is_ready(mcp23017)) {
-  //   LOG_ERR("MCP23017 device not ready");
-  //   return 1;
-  // }
+  if (!device_is_ready(hv_shield)) {
+    LOG_ERR("HV Shield device not ready");
+    return 1;
+  }
 
   LOG_INF("Initializing input GPIOs...");
   for (size_t i = 0; i < ARRAY_SIZE(input_gpios); i++) {

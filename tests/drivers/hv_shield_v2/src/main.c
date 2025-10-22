@@ -25,9 +25,13 @@ ZTEST(mcp_driver, test_device_init) {
   struct i2c_fake_data* data = fake_i2c_get_fake_data(i2c_fake);
   zassert_equal(data->transfer_msg_history[1].len, 3);  // IOCON write
   zassert_equal(data->transfer_msg_history[1].buf[0], 0x0A);
+  zassert_equal(data->transfer_msg_history[1].buf[1], 0x04);
+  zassert_equal(data->transfer_msg_history[1].buf[2], 0x04);
 
   zassert_equal(data->transfer_msg_history[0].len, 3);  // IODIR write
   zassert_equal(data->transfer_msg_history[0].buf[0], 0x00);
+  zassert_equal(data->transfer_msg_history[0].buf[1], 0x40);
+  zassert_equal(data->transfer_msg_history[0].buf[2], 0x7f);
 }
 
 ZTEST(mcp_driver, test_set_output_0) {

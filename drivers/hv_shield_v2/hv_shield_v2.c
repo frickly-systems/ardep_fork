@@ -107,7 +107,7 @@ static int hv_shield_v2_init(const struct device* dev) {
 
   // Write IODIR registers
   write_buffer[0] = 0x00;        // IODIRA register
-  write_buffer[1] = 0b00100000;  // 0-5 as outputs, 6 as input and 7 as output
+  write_buffer[1] = 0b01000000;  // 0-5 as outputs, 6 as input and 7 as output
                                  // because of requirements
   write_buffer[2] =
       0b01111111;  // 0-6 as inputs, 7 as output because of requirements

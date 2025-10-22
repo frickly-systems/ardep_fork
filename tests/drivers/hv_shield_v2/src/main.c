@@ -12,7 +12,9 @@ static const struct device* hv_shield = DEVICE_DT_GET(DT_NODELABEL(hv_shield0));
 
 ZTEST_SUITE(mcp_driver, NULL, NULL, NULL, NULL, NULL);
 
-ZTEST(mcp_driver, before_all_device_init) {
+// todo: we currently use naming to make this the first test, which is not very
+// good
+ZTEST(mcp_driver, test_before_all_device_init) {
   zassert_equal(fake_i2c_transfer_fake.call_count, 0);
   zassert_equal(device_init(hv_shield), 0);
   zassert_equal(fake_i2c_transfer_fake.call_count, 2);

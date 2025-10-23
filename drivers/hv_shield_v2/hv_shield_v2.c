@@ -103,16 +103,8 @@ static int hv_shield_v2_init(const struct device* dev) {
     return -EIO;
   }
 
-  uint8_t write_buffer[3];
-
-  // Write IODIR registers
-  write_buffer[0] = 0x00;        // IODIRA register
-  write_buffer[1] = 0b01000000;  // 0-5 as outputs, 6 as input and 7 as output
-                                 // because of requirements
-  write_buffer[2] =
-      0b01111111;  // 0-6 as inputs, 7 as output because of requirements
-
-  if (i2c_write_dt(&config->i2c, write_buffer, sizeof(write_buffer)) != 0) {
+  // Write IODIR registers (1 is input, 0 is output)
+  if (write_u16_reg(config, 0x00, 0b0111111101000000) != 0) {
     LOG_ERR("Failed to write IODIR registers");
     return -EIO;
   }

@@ -139,9 +139,6 @@ static int hv_shield_v2_init(const struct device* dev) {
     return -ENODEV;
   }
 
-  gpio_init_callback(&data->interrupt_gpio_cb, hv_shield_v2_int_gpio_handler,
-                     0);
-
   for (int i = 0; i < config->int_gpio_count; i++) {
     if (!device_is_ready(config->int_gpios[i].port)) {
       LOG_ERR("INT GPIO %s not ready", config->int_gpios[i].port->name);
@@ -156,6 +153,23 @@ static int hv_shield_v2_init(const struct device* dev) {
     }
 
     // todo: register interrupt
+  }
+
+  if (config->int_gpio_count > 0) {
+    gpio_init_callback(&data->interrupt_gpio_cb, hv_shield_v2_int_gpio_handler,
+                       BIT(config->int_gpios[0].pin));
+    int ret =
+        gpio_add_callback(config->int_gpios[0].port, &data->interrupt_gpio_cb);
+    if (ret != 0) {
+      LOG_ERR("Failed to add INT GPIO callback: %d", ret);
+      return ret;
+    }
+    ret = gpio_pin_interrupt_configure_dt(&config->int_gpios[0],
+                                          GPIO_INT_EDGE_TO_ACTIVE);
+    if (ret != 0) {
+      LOG_ERR("Failed to configure INT GPIO interrupt: %d", ret);
+      return ret;
+    }
   }
 
   // Note, that this driver uses IOCON.BANK=0, which is the default state after

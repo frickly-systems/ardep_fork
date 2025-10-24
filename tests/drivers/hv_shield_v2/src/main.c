@@ -1,4 +1,5 @@
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/gpio/gpio_emul.h>
 #include <zephyr/fff.h>
 #include <zephyr/ztest.h>
 
@@ -11,6 +12,8 @@ static const struct device* i2c_fake = DEVICE_DT_GET(DT_NODELABEL(test_i2c));
 static const struct device* hv_shield = DEVICE_DT_GET(DT_NODELABEL(hv_shield0));
 static const struct device* hv_shield_deferred = DEVICE_DT_GET(
     DT_NODELABEL(hv_shield5));  // deferred-init hv shield for device init test
+
+static const struct device* gpio0 = DEVICE_DT_GET(DT_NODELABEL(gpio0));
 
 ZTEST_SUITE(mcp_driver, NULL, NULL, NULL, NULL, NULL);
 
@@ -155,3 +158,69 @@ ZTEST(mcp_driver, test_configure_inputs) {
   // should not actually configure anything
   zassert_equal(fake_i2c_transfer_fake.call_count, 0);
 }
+
+DECLARE_FAKE_VOID_FUNC(gpio_demo_interrupt,
+                       const struct device*,
+                       struct gpio_callback*,
+                       gpio_port_pins_t);
+DEFINE_FAKE_VOID_FUNC(gpio_demo_interrupt,
+                      const struct device*,
+                      struct gpio_callback*,
+                      gpio_port_pins_t);
+
+ZTEST(mcp_driver, test_interrupts) {
+  struct gpio_callback callback;
+  gpio_init_callback(&callback, gpio_demo_interrupt,
+                     BIT(HV_SHIELD_V2_INPUT(0)));
+  zassert_equal(gpio_add_callback(hv_shield, &callback), 0);
+  zassert_equal(fake_i2c_transfer_fake.call_count, 0);
+
+  zassert_equal(gpio_pin_interrupt_configure(hv_shield, HV_SHIELD_V2_INPUT(0),
+                                             GPIO_INT_EDGE_TO_ACTIVE),
+                0);
+
+  // Interrupts should be configured for the chip
+  zassert_equal(fake_i2c_transfer_fake.call_count, 3);
+  zassert_equal(fake_i2c_transfer_fake.arg0_val, i2c_fake);
+  struct i2c_fake_data* data = fake_i2c_get_fake_data(i2c_fake);
+  zassert_equal(fake_i2c_transfer_fake.call_count, 3);
+  zassert_equal(data->transfer_msg_history[0].len, 3);
+  zassert_equal(data->transfer_msg_history[0].buf[0],
+                0x04);  // GPINTEN register
+  zassert_equal(data->transfer_msg_history[0].buf[1], 0x00);
+  zassert_equal(data->transfer_msg_history[0].buf[2], 0x01);
+
+  zassert_equal(data->transfer_msg_history[1].len, 3);
+  zassert_equal(data->transfer_msg_history[1].buf[0],
+                0x08);  // INTCON register
+  zassert_equal(data->transfer_msg_history[1].buf[1], 0x00);
+  zassert_equal(data->transfer_msg_history[1].buf[2], 0x00);
+
+  zassert_equal(data->transfer_msg_history[2].len, 3);
+  zassert_equal(data->transfer_msg_history[2].buf[0],
+                0x06);  // DEFVAL register
+  zassert_equal(data->transfer_msg_history[2].buf[1], 0x00);
+  zassert_equal(data->transfer_msg_history[2].buf[2], 0x00);
+
+  // intf = 0x0100 to indicate interrupt on pin 8
+  uint8_t read_data[2] = {0x00, 0x01};
+  fake_i2c_set_next_read_data(i2c_fake, read_data, sizeof(read_data));
+  // intcap = 0x0100 as pin 8 should be simulated high now
+  fake_i2c_set_next_read_data(i2c_fake, read_data, sizeof(read_data));
+
+  // trigger interrupt
+  zassert_equal(gpio_emul_input_set(gpio0, 0, 1), 0);
+  k_msleep(1);
+
+  zassert_equal(fake_i2c_transfer_fake.call_count, 5);
+  zassert_equal(gpio_demo_interrupt_fake.call_count, 1);
+  zassert_equal(gpio_demo_interrupt_fake.arg0_val, hv_shield);
+  zassert_equal(gpio_demo_interrupt_fake.arg1_val, &callback);
+  zassert_equal(gpio_demo_interrupt_fake.arg2_val, BIT(HV_SHIELD_V2_INPUT(0)));
+
+  // todo: check calls
+  zassert_equal(gpio_emul_input_set(gpio0, 0, 0), 0);
+}
+
+// todo: test what happens when an interrupt is triggered but no intf is set
+// todo: test level interrupts

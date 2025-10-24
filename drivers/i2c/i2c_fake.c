@@ -150,7 +150,7 @@ static void fake_i2c_reset_rule_before(const struct ztest_unit_test* test,
 #endif /* CONFIG_I2C_RTIO */
   RESET_FAKE(fake_i2c_recover_bus);
 
-  /* Re-install default custom_fake */
+  // Re-install default custom_fake
   fake_i2c_transfer_fake.custom_fake = fake_i2c_transfer_custom;
 }
 

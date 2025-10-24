@@ -92,6 +92,22 @@ static void hv_shield_v2_int_gpio_handler(const struct device* port,
   k_work_submit(&data->on_interrupt_work);
 }
 
+static inline uint32_t hv_shield_v2_internal_pins_to_zephyr_bits(
+    uint16_t hv_shield_pins) {
+  const uint32_t input_values =
+      ((hv_shield_pins >> 8) & 0x3F);  // Inputs are on port b 0-5
+  const uint32_t output_values =
+      (hv_shield_pins & 0x3F);  // Outputs are on port a 0-5
+  const uint32_t fault_values =
+      ((hv_shield_pins >> 6) & 0x1) | (((hv_shield_pins >> 14) & 0x1) << 1) |
+      (((hv_shield_pins >> 15) & 0x1)
+       << 2);  // Faults on bits 6,14,15 mapped to 0..2
+
+  return (input_values << HV_SHIELD_V2_INPUT_BASE) |
+         (output_values << HV_SHIELD_V2_OUTPUT_BASE) |
+         (fault_values << HV_SHIELD_V2_FAULT_BASE);
+}
+
 static void hv_shield_v2_interrupt_work_handler(struct k_work* work) {
   struct hv_shield_v2_data* data =
       CONTAINER_OF(work, struct hv_shield_v2_data, on_interrupt_work);
@@ -125,7 +141,8 @@ static void hv_shield_v2_interrupt_work_handler(struct k_work* work) {
   const uint16_t ints = intf & (level_interrupts | rising_edge_interrupts |
                                 falling_edge_interrupts);
 
-  gpio_fire_callbacks(&data->interrupt_callbacks, dev, ints);
+  gpio_fire_callbacks(&data->interrupt_callbacks, dev,
+                      hv_shield_v2_internal_pins_to_zephyr_bits(ints));
 }
 
 static int hv_shield_v2_init(const struct device* dev) {
@@ -243,19 +260,7 @@ static int hv_shield_v2_port_get_raw(const struct device* port,
 
   data->reg_cache.gpio = reg_value;
 
-  const uint32_t input_values =
-      ((reg_value >> 8) & 0x3F);  // Inputs are on port b 0-5
-  const uint32_t output_values =
-      (reg_value & 0x3F);  // Outputs are on port a 0-5
-  const uint32_t fault_values =
-      ((reg_value >> 6) & 0x1) | (((reg_value >> 14) & 0x1) << 1) |
-      (((reg_value >> 15) & 0x1)
-       << 2);  // Faults on bits 6,14,15 mapped to 0..2
-
-  // todo: check mapping
-  *value = (input_values << HV_SHIELD_V2_INPUT_BASE) |
-           (output_values << HV_SHIELD_V2_OUTPUT_BASE) |
-           (fault_values << HV_SHIELD_V2_FAULT_BASE);
+  *value = hv_shield_v2_internal_pins_to_zephyr_bits(reg_value);
 
   return 0;
 }

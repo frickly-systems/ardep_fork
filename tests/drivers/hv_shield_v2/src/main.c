@@ -183,7 +183,6 @@ ZTEST(mcp_driver, test_interrupts) {
   zassert_equal(fake_i2c_transfer_fake.call_count, 3);
   zassert_equal(fake_i2c_transfer_fake.arg0_val, i2c_fake);
   struct i2c_fake_data* data = fake_i2c_get_fake_data(i2c_fake);
-  zassert_equal(fake_i2c_transfer_fake.call_count, 3);
   zassert_equal(data->transfer_msg_history[0].len, 3);
   zassert_equal(data->transfer_msg_history[0].buf[0],
                 0x04);  // GPINTEN register
@@ -213,6 +212,15 @@ ZTEST(mcp_driver, test_interrupts) {
   k_msleep(1);
 
   zassert_equal(fake_i2c_transfer_fake.call_count, 5);
+  // [1] is the read of INTF, [0] is the write of setting address to INTF
+  // [3] is the read of INTCAP, [2] is the write of setting address to INTCAP
+  zassert_equal(data->transfer_msg_history[0].len, 1);
+  zassert_equal(data->transfer_msg_history[0].buf[0],
+                0x10);  // INTF
+  zassert_equal(data->transfer_msg_history[2].len, 1);
+  zassert_equal(data->transfer_msg_history[2].buf[0],
+                0x0E);  // INTCAP
+
   zassert_equal(gpio_demo_interrupt_fake.call_count, 1);
   zassert_equal(gpio_demo_interrupt_fake.arg0_val, hv_shield);
   zassert_equal(gpio_demo_interrupt_fake.arg1_val, &callback);

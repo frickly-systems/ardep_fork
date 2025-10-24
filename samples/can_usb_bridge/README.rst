@@ -26,19 +26,32 @@ As a *one-time setup*, you need to install the Cannectivity UDEV rule (analogous
 Flash and run the example
 -------------------------
 
-Build the example with:
+Build the example with (select your board revision):
 
-.. code-block::
+.. tabs::
 
-    west build --board ardep ../modules/lib/cannectivity/app -- \
-        -DFILE_SUFFIX=usbd_next \
-        -DEXTRA_CONF_FILE=../../../../ardep/samples/can_usb_bridge/cannectivity.conf \
-        -DEXTRA_DTC_OVERLAY_FILE=../../../../ardep/samples/can_usb_bridge/cannectivity.overlay
-        
-The ``FILE_SUFFIX`` selects the `prj_usbd_next.conf` file from the Cannectivity app folder, which enables the new USB stack.
+    .. tab:: v1.0.0
 
-The ``EXTRA_CONF_FILE`` and ``EXTRA_DTC_OVERLAY_FILE`` options specify the additional configuration and overlay files found in the samples directory.
-The path is relative to the application directory.
+        .. code-block::
+
+            west build --board ardep@1.0.0 ../modules/lib/cannectivity/app -- \
+                -DFILE_SUFFIX=usbd_next \
+                -DEXTRA_CONF_FILE=../../../../ardep/samples/can_usb_bridge/cannectivity_1_0_0.conf \
+                -DEXTRA_DTC_OVERLAY_FILE=../../../../ardep/samples/can_usb_bridge/cannectivity_1_0_0.overlay
+                
+        The ``FILE_SUFFIX`` selects the `prj_usbd_next.conf` file from the Cannectivity app folder, which enables the new USB stack.
+
+        The ``EXTRA_CONF_FILE`` and ``EXTRA_DTC_OVERLAY_FILE`` options specify the additional configuration and overlay files found in the samples directory.
+        The path is relative to the application directory.
+
+
+    .. tab:: v2.0.0
+        .. code-block::
+
+            west build --board ardep@2.0.0 ../modules/lib/cannectivity/app -- \
+                -DFILE_SUFFIX=usbd_next \
+                -DEXTRA_DTC_OVERLAY_FILE=../../../../ardep/samples/can_usb_bridge/cannectivity_2_0_0.overlay
+
 
 
 Flash the app using dfu-util:

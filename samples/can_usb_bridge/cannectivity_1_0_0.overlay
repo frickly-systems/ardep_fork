@@ -6,6 +6,7 @@
  */
 
 / {
+	// Redirect console to UART A
 	chosen {
 		zephyr,console = &uart_a;
 		zephyr,shell-uart = &uart_a;

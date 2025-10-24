@@ -1,0 +1,10 @@
+
+/ {
+	model = "Automotive Rapid Development board";
+	compatible = "misc,ardep";
+
+	chosen {
+		zephyr,console = &uart_a;
+		zephyr,shell-uart = &uart_a;
+    };
+};

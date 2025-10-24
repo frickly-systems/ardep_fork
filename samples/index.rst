@@ -11,6 +11,7 @@ Samples and Demos
    
    adc/*
    can/*
+   can_usb_bridge/*
    config_jumpers/*
    dac/*
    digital_input_interrupt/*

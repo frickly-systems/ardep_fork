@@ -4,6 +4,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
+#include <ardep/dt-bindings/hv-shield-v2.h>
+
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 static const struct device* hv_shield = DEVICE_DT_GET(DT_NODELABEL(hv_shield0));
@@ -17,11 +19,21 @@ DEFINE_GPIO_ARRAY(DT_PATH(zephyr_user), output_gpios);
 DEFINE_GPIO_ARRAY(DT_PATH(zephyr_user), input_gpios);
 DEFINE_GPIO_ARRAY(DT_PATH(zephyr_user), fault_gpios);
 
+struct gpio_callback input_interrupt_cb;
+
+void input_interrupt_handler(const struct device* dev,
+                             struct gpio_callback* cb,
+                             uint32_t pins) {
+  LOG_INF("Input GPIO interrupt on pins: 0x%08x", pins);
+}
+
 int main() {
   if (!device_is_ready(hv_shield)) {
     LOG_ERR("HV Shield device not ready");
     return 1;
   }
+
+  gpio_init_callback(&input_interrupt_cb, input_interrupt_handler, 0xffff);
 
   LOG_INF("Initializing input GPIOs...");
   for (size_t i = 0; i < ARRAY_SIZE(input_gpios); i++) {
@@ -31,6 +43,15 @@ int main() {
               ret);
       return 1;
     }
+  }
+
+  gpio_add_callback(hv_shield, &input_interrupt_cb);
+  int ret =
+      gpio_pin_interrupt_configure_dt(&input_gpios[1], GPIO_INT_EDGE_TO_ACTIVE);
+  if (ret != 0) {
+    LOG_ERR("Failed to configure interrupt for input GPIO pin %d: %d",
+            input_gpios[1].pin, ret);
+    return 1;
   }
 
   LOG_INF("Initializing output GPIOs...");

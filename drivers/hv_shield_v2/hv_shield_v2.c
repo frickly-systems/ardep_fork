@@ -151,8 +151,6 @@ static int hv_shield_v2_init(const struct device* dev) {
               config->int_gpios[i].pin, ret);
       return ret;
     }
-
-    // todo: register interrupt
   }
 
   if (config->int_gpio_count > 0) {
@@ -175,9 +173,9 @@ static int hv_shield_v2_init(const struct device* dev) {
   // Note, that this driver uses IOCON.BANK=0, which is the default state after
   // reset.
 
-  // Set INT pins as open drain output (ODR=1)
-  if (write_iocon(config, 1 << 2) !=
-      0) {  // todo: check if other bits should be set
+  // todo: implement bank-interrupts and remove mirror bit
+  // Set INT pins as open drain output (ODR=1 MIRROR=1)
+  if (write_iocon(config, (1 << 2) | (1 << 6)) != 0) {
     return -EIO;
   }
 

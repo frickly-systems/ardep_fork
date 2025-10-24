@@ -20,8 +20,8 @@ config CAN_TERMINATION_GPIO
 config CAN_MAX_FILTER
 	default 8
 
-rsource "Kconfig.usb"
-rsource "Kconfig.usb_dfu"
+# rsource "Kconfig.usb"
+# rsource "Kconfig.usb_dfu"
 
 if !MCUBOOT
 	# enable building for image slots

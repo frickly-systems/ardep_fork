@@ -6,7 +6,7 @@
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
-static const struct device *mcp23017 = DEVICE_DT_GET(DT_NODELABEL(mcp23017));
+static const struct device* mcp23017 = DEVICE_DT_GET(DT_NODELABEL(mcp23017));
 
 #define DEFINE_GPIO_ARRAY(node, prop)                                    \
   static const struct gpio_dt_spec prop[] = {                            \
@@ -16,6 +16,9 @@ static const struct device *mcp23017 = DEVICE_DT_GET(DT_NODELABEL(mcp23017));
 DEFINE_GPIO_ARRAY(DT_PATH(zephyr_user), output_gpios);
 DEFINE_GPIO_ARRAY(DT_PATH(zephyr_user), input_gpios);
 DEFINE_GPIO_ARRAY(DT_PATH(zephyr_user), fault_gpios);
+
+static const struct gpio_dt_spec mirror_gpio =
+    GPIO_DT_SPEC_GET(DT_PATH(zephyr_user), mirror_gpios);
 
 int main() {
   if (!device_is_ready(mcp23017)) {
@@ -53,20 +56,32 @@ int main() {
     }
   }
 
+  LOG_INF("Initializing mirror GPIO...");
+  int ret = gpio_pin_configure_dt(&mirror_gpio, GPIO_INPUT);
+  if (ret != 0) {
+    LOG_ERR("Failed to configure mirror GPIO pin %d: %d", mirror_gpio.pin, ret);
+    return 1;
+  }
+
   LOG_INF("GPIOs initialized successfully.");
 
   LOG_INF("Entering main loop, toggling output GPIOs and logging inputs");
 
-  uint8_t output_value = 0;
   for (;;) {
+    int mirror_value = gpio_pin_get_dt(&mirror_gpio);
+    if (mirror_value < 0) {
+      LOG_ERR("Failed to read mirror GPIO pin %d: %d", mirror_gpio.pin,
+              mirror_value);
+    } else {
+    }
+    printk("Mirror GPIO value: %d\n", mirror_value);
     for (size_t i = 0; i < ARRAY_SIZE(output_gpios); i++) {
-      int ret = gpio_pin_set_dt(&output_gpios[i], (output_value >> i) & 1);
+      int ret = gpio_pin_set_dt(&output_gpios[i], mirror_value);
       if (ret != 0) {
         LOG_ERR("Failed to set output GPIO pin %d: %d", output_gpios[i].pin,
                 ret);
       }
     }
-    output_value++;
 
     printk("Input GPIO states: ");
     for (size_t i = 0; i < ARRAY_SIZE(input_gpios); i++) {
@@ -94,6 +109,6 @@ int main() {
 
     printk("\n");
 
-    k_msleep(1000);
+    k_msleep(500);
   }
 }

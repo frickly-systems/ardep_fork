@@ -1,4 +1,5 @@
 #include <ardep/dt-bindings/hv-shield-v2.h>
+#include <zephyr/dt-bindings/gpio/arduino-header-r3.h>
 
 / {
   zephyr,user{
@@ -19,5 +20,7 @@
     fault-gpios = <&hv_shield0 HV_SHIELD_V2_FAULT_PINS 0 0>,
                   <&hv_shield0 HV_SHIELD_V2_FAULT_PINS 1 0>,
                   <&hv_shield0 HV_SHIELD_V2_FAULT_PINS 2 0>;
+
+    mirror-gpios = <&arduino_header ARDUINO_HEADER_R3_D7 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
   };
 };

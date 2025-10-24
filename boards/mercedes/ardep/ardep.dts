@@ -21,8 +21,8 @@
 	compatible = "misc,ardep";
 
 	chosen {
-		zephyr,console = &uart_a;
-		zephyr,shell-uart = &uart_a;
+		zephyr,console = &usb_cdc_acm;
+		zephyr,shell-uart = &usb_cdc_acm;
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
 		zephyr,canbus = &can_a;
@@ -197,10 +197,10 @@ zephyr_udc0: &usb {
 	pinctrl-names = "default";
 	status = "okay";
 
-	// usb_cdc_acm: usb-cdc-acm {
-	// 	status = "okay";
-	// 	compatible = "zephyr,cdc-acm-uart";
-	// };
+	usb_cdc_acm: usb-cdc-acm {
+		status = "okay";
+		compatible = "zephyr,cdc-acm-uart";
+	};
 };
 
 

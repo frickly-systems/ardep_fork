@@ -16,7 +16,12 @@ As a *one-time setup*, you need to install the Cannectivity UDEV rule (analogous
     sudo cp {WORKSPACE_ROOT}/modules/lib/cannectivity/99-cannectivity.rules /etc/udev/rules.d/
     sudo udevadm control --reload-rules
     sudo udevadm trigger
-    
+
+.. note::
+
+    Since the app manages the usb stack, there will be no USB-CDC-ACM device present to see the logs.
+    Instead, they are redirected to UART-A (The same UART the bootloader uses).
+
 
 Flash and run the example
 -------------------------

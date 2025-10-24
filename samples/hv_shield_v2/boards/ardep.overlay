@@ -9,12 +9,12 @@
                    <&hv_shield0 HV_SHIELD_V2_OUTPUTS 4 0>,
                    <&hv_shield0 HV_SHIELD_V2_OUTPUTS 5 0>;
 
-    input-gpios = <&hv_shield0 HV_SHIELD_V2_INPUTS 0 0>,
-                  <&hv_shield0 HV_SHIELD_V2_INPUTS 1 0>,
-                  <&hv_shield0 HV_SHIELD_V2_INPUTS 2 0>,
-                  <&hv_shield0 HV_SHIELD_V2_INPUTS 3 0>,
-                  <&hv_shield0 HV_SHIELD_V2_INPUTS 4 0>,
-                  <&hv_shield0 HV_SHIELD_V2_INPUTS 5 0>;
+    input-gpios = <&hv_shield0 HV_SHIELD_V2_INPUTS 0 GPIO_ACTIVE_LOW>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUTS 1 GPIO_ACTIVE_LOW>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUTS 2 GPIO_ACTIVE_LOW>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUTS 3 GPIO_ACTIVE_LOW>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUTS 4 GPIO_ACTIVE_LOW>,
+                  <&hv_shield0 HV_SHIELD_V2_INPUTS 5 GPIO_ACTIVE_LOW>;
 
     fault-gpios = <&hv_shield0 HV_SHIELD_V2_FAULT_PINS 0 0>,
                   <&hv_shield0 HV_SHIELD_V2_FAULT_PINS 1 0>,

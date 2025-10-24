@@ -235,43 +235,58 @@ We will install the `Zephyr SDK <https://docs.zephyrproject.org/4.2.0/develop/to
             
 Enable the DFU-Util to perform firmware upgrades
 ************************************************
+
+.. note::
+
+    This step is only required if you have a board revision < 2.0.0
+
+.. tabs::
+
+    .. tab:: Linux
+
+        .. code-block:: bash
+
+            west ardep create-udev-rule
+            sudo udevadm control --reload-rules
+            sudo udevadm trigger
             
-
-   .. tabs::
-
-        .. tab:: Linux
-
-            .. code-block:: bash
-
-                west ardep create-udev-rule
-                sudo udevadm control --reload-rules
-                sudo udevadm trigger
-                
-            This rule allows ``dfu-util`` to access your ardep board without sudo privileges (required for firmware upgrades via ``dfu-util``).
-            
-            If your ardep board is already connected, unplug and replug it.
-                           
-                    
-        .. tab:: Windows
+        This rule allows ``dfu-util`` to access your ardep board without sudo privileges (required for firmware upgrades via ``dfu-util``).
         
-            We need to install WinUSB drivers for the device in order to be able to use dfu-util.
+        If your ardep board is already connected, unplug and replug it.
+                       
+                
+    .. tab:: Windows
+    
+        We need to install WinUSB drivers for the device in order to be able to use dfu-util.
 
-            You can use the `Zadig <https://zadig.akeo.ie/>`_ tool to install the drivers.
-            
-            If you haven't connected your *ARDEP* board to host, connect it now.
+        You can use the `Zadig <https://zadig.akeo.ie/>`_ tool to install the drivers.
+        
+        If you haven't connected your *ARDEP* board to host, connect it now.
 
-            After starting *Zadig*, ensure the *List all devices* option is turned on in the Options menu.
-            Then, in the dropdown menu, select *Ardep (Interface 0)* install the *WinUSB* driver. Then repeat the step for *Ardep (Interface 2)*.
-            This allows us to set the device into DFU mode.
-            
-            .. image:: windows_install_usb_driver.png
-               :alt: Installing WinUSB driver using Zadig
-            
-            We also need to install a driver for the DFU mode. For this, we need to build a sample application and unsuccessfully try to flash the firmware (see `Build your first app`_).
-            
-            After the initial flash command failed, select the *Ardep board* in the dropdown menu and install the *WinUSB* driver again.
-            
-            Now, flashing the app should succeed.
+        After starting *Zadig*, ensure the *List all devices* option is turned on in the Options menu.
+        Then, in the dropdown menu, select *Ardep (Interface 0)* install the *WinUSB* driver. Then repeat the step for *Ardep (Interface 2)*.
+        This allows us to set the device into DFU mode.
+        
+        .. image:: windows_install_usb_driver.png
+           :alt: Installing WinUSB driver using Zadig
+        
+        We also need to install a driver for the DFU mode. For this, we need to build a sample application and unsuccessfully try to flash the firmware (see `Build your first app`_).
+        
+        After the initial flash command failed, select the *Ardep board* in the dropdown menu and install the *WinUSB* driver again.
+        
+        Now, flashing the app should succeed.
+
+Enable the Black-Magic Debugger on your host
+********************************************
+
+.. note::
+
+    This step is recommended, if you have a board revision >= 2.0.0
+    
+
+Perform the `Connecting to your Computer <https://black-magic.org/getting-started.html#connecting-to-your-computer>`_ Step in the *Getting Started Guide* of the Black-Magic Debugger.
+
+This enables you to use the on-board debugger without root/admin privileges.
 
 
 Build your first app 

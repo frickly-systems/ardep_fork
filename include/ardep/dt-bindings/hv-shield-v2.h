@@ -5,6 +5,6 @@
 
 #define HV_SHIELD_V2_OUTPUTS 0
 #define HV_SHIELD_V2_INPUTS 1
-#define HV_SHIELD_V2_FAULT_PINS 1
+#define HV_SHIELD_V2_FAULT_PINS 2
 
 #endif

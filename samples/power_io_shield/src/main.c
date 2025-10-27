@@ -8,7 +8,7 @@
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
-static const struct device* hv_shield =
+static const struct device* power_io_shield =
     DEVICE_DT_GET(DT_NODELABEL(power_io_shield0));
 
 #define DEFINE_GPIO_ARRAY(node, prop)                                    \
@@ -29,7 +29,7 @@ void input_interrupt_handler(const struct device* dev,
 }
 
 int main() {
-  if (!device_is_ready(hv_shield)) {
+  if (!device_is_ready(power_io_shield)) {
     LOG_ERR("HV Shield device not ready");
     return 1;
   }
@@ -46,7 +46,7 @@ int main() {
     }
   }
 
-  gpio_add_callback(hv_shield, &input_interrupt_cb);
+  gpio_add_callback(power_io_shield, &input_interrupt_cb);
   int ret =
       gpio_pin_interrupt_configure_dt(&input_gpios[1], GPIO_INT_EDGE_TO_ACTIVE);
   if (ret != 0) {

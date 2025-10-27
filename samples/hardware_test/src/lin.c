@@ -44,7 +44,7 @@ static void send_messages() {
     for (int j = 0; j < 4; j++) {
       LOG_INF("%s sending: f", dev->name);
       uart_poll_out(dev, 'f');
-      k_msleep(100);
+      k_msleep(CONFIG_LIN_MESSAGE_DELAY_MS);
     }
   }
 }

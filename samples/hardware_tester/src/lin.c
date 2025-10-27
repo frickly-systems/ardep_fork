@@ -73,7 +73,7 @@ static void setup_uarts() {
 
 static void execute_test() {
   // wait for incoming messages
-  k_msleep(5000);
+  k_msleep(CONFIG_CAN_TEST_DURATION_MS);
 }
 
 static void disable_uart_interrupts() {
@@ -86,5 +86,5 @@ void lin_test(void) {
   setup_uarts();
   execute_test();
   disable_uart_interrupts();
-  k_msleep(500);
+  k_msleep(CONFIG_POST_TEST_DELAY_MS);
 }

@@ -78,7 +78,7 @@ void send_characters() {
     for (int j = 0; j < strlen(message); j++) {
       LOG_INF("%s sending: %c", dev->name, message[j]);
       uart_poll_out(dev, message[j]);
-      k_msleep(5);
+      k_msleep(CONFIG_UART_CHAR_DELAY_MS);
     }
   }
 }
@@ -91,9 +91,9 @@ void disable_uart_interrupts() {
 
 void uart_test(void) {
   setup_uarts();
-  k_msleep(500);
+  k_msleep(CONFIG_UART_PRE_TEST_DELAY_MS);
   send_characters();
-  k_msleep(100);
+  k_msleep(CONFIG_POST_TEST_DELAY_MS);
   disable_uart_interrupts();
-  k_msleep(500);
+  k_msleep(CONFIG_POST_TEST_DELAY_MS);
 }

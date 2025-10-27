@@ -62,7 +62,7 @@ static void send_can_frame(void) {
 static void send_frames(void) {
   for (int i = 0; i < 10; i++) {
     send_can_frame();
-    k_msleep(50);
+    k_msleep(CONFIG_CAN_FRAME_DELAY_MS);
   }
 }
 
@@ -74,10 +74,10 @@ static void stop_can(void) {
 
 void can_test(void) {
   init_can();
-  k_msleep(1000);
+  k_msleep(CONFIG_CAN_PRE_TEST_DELAY_MS);
 
   send_frames();
 
-  k_msleep(300);
+  k_msleep(CONFIG_CAN_POST_TEST_DELAY_MS);
   stop_can();
 }

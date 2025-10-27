@@ -47,9 +47,9 @@ static void gpio_toggle() {
   for (int i = 0; i < ARRAY_SIZE(gpios); i++) {
     LOG_INF("%s pin %d on", gpios[i].port->name, gpios[i].pin);
     gpio_pin_set_dt(&gpios[i], 1);
-    k_msleep(10);
+    k_msleep(CONFIG_GPIO_TOGGLE_DELAY_MS);
     gpio_pin_set_dt(&gpios[i], 0);
-    k_msleep(10);
+    k_msleep(CONFIG_GPIO_TOGGLE_DELAY_MS);
   }
 }
 
@@ -62,8 +62,8 @@ static void disable_gpios() {
 void gpio_test(void) {
   gpio_ready_check();
   gpio_initialize();
-  k_msleep(300);
+  k_msleep(CONFIG_GPIO_PRE_TEST_DELAY_MS);
   gpio_toggle();
-  k_msleep(100);
+  k_msleep(CONFIG_GPIO_POST_TEST_DELAY_MS);
   disable_gpios();
 }

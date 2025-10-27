@@ -59,7 +59,7 @@ static void init_can(void) {
   }
 }
 
-static void run_test(void) { k_msleep(5000); }
+static void run_test(void) { k_msleep(CONFIG_CAN_TEST_DURATION_MS); }
 
 static void stop_can(void) {
   for (int i = 0; i < ARRAY_SIZE(can_devices); i++) {
@@ -73,6 +73,6 @@ void can_test(void) {
 
   run_test();
 
-  k_msleep(300);
+  k_msleep(CONFIG_POST_TEST_DELAY_MS);
   stop_can();
 }

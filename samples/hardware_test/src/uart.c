@@ -73,7 +73,7 @@ static void setup_uarts() {
 
 static void execute_test() {
   // give enough time to work
-  k_msleep(5000);
+  k_msleep(CONFIG_UART_TEST_DURATION_MS);
 }
 
 static void disable_uart_interrupts() {

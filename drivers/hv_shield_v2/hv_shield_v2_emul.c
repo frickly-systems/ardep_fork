@@ -8,9 +8,10 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/util.h>
 
+#include <ardep/drivers/emul/hv_shield_v2.h>
+
 LOG_MODULE_REGISTER(hv_shield_v2_emul, CONFIG_HV_SHIELD_V2_LOG_LEVEL);
 
-// todo
 #define NUM_REGS 27
 
 struct hv_shield_v2_emul_data {
@@ -28,6 +29,16 @@ void hv_shield_v2_emul_set_reg(const struct emul* target,
   data->reg[reg_addr] = val;
 }
 
+void hv_shield_v2_emul_set_u16_reg(const struct emul* target,
+                                   uint8_t reg_addr,
+                                   const uint16_t val) {
+  struct hv_shield_v2_emul_data* data = target->data;
+
+  __ASSERT_NO_MSG(reg_addr + 1 <= NUM_REGS);
+  data->reg[reg_addr] = val & 0xFF;
+  data->reg[reg_addr + 1] = (val >> 8) & 0xFF;
+}
+
 uint8_t hv_shield_v2_emul_get_reg(const struct emul* target, uint8_t reg_addr) {
   struct hv_shield_v2_emul_data* data = target->data;
 
@@ -40,8 +51,6 @@ uint16_t hv_shield_v2_emul_get_u16_reg(const struct emul* target,
   struct hv_shield_v2_emul_data* data = target->data;
 
   __ASSERT_NO_MSG(reg_addr + 1 <= NUM_REGS);
-  // little endian
-  // return (data->reg[reg_addr] << 8) | data->reg[reg_addr + 1];
   return (data->reg[reg_addr + 1] << 8) | data->reg[reg_addr];
 }
 

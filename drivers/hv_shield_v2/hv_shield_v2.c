@@ -11,7 +11,7 @@
 #include <ardep/drivers/hv_shield.h>
 #include <ardep/dt-bindings/hv-shield-v2.h>
 
-LOG_MODULE_REGISTER(hv_shield, CONFIG_HV_SHIELD_V2_LOG_LEVEL);
+LOG_MODULE_REGISTER(hv_shield_v2, CONFIG_HV_SHIELD_V2_LOG_LEVEL);
 
 #define REG_IODIRA 0x00
 #define REG_IOCONA 0x0A

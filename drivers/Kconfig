@@ -7,6 +7,5 @@ menu "Drivers"
 rsource "can/Kconfig"
 rsource "hv_shield/Kconfig"
 rsource "hv_shield_v2/Kconfig"
-rsource "i2c/Kconfig"
 rsource "lin/Kconfig"
 endmenu

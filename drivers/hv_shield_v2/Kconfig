@@ -12,4 +12,10 @@ if HV_SHIELD_V2
     int
     prompt "HV Shield V2 init priority"
     default I2C_INIT_PRIORITY
+
+  config EMUL_HV_SHIELD_V2
+    bool
+    prompt "HV Shield V2 Emulator"
+    depends on EMUL
+    default n
 endif

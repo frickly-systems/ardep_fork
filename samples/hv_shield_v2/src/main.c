@@ -53,6 +53,20 @@ int main() {
             input_gpios[1].pin, ret);
     return 1;
   }
+  ret = gpio_pin_interrupt_configure_dt(&input_gpios[2],
+                                        GPIO_INT_EDGE_TO_INACTIVE);
+  if (ret != 0) {
+    LOG_ERR("Failed to configure interrupt for input GPIO pin %d: %d",
+            input_gpios[2].pin, ret);
+    return 1;
+  }
+
+  ret = gpio_pin_interrupt_configure_dt(&input_gpios[3], GPIO_INT_EDGE_BOTH);
+  if (ret != 0) {
+    LOG_ERR("Failed to configure interrupt for input GPIO pin %d: %d",
+            input_gpios[3].pin, ret);
+    return 1;
+  }
 
   LOG_INF("Initializing output GPIOs...");
   for (size_t i = 0; i < ARRAY_SIZE(output_gpios); i++) {

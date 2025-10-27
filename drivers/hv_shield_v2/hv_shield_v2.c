@@ -413,15 +413,17 @@ static int hv_shield_v2_pin_interrupt_configure(const struct device* port,
   switch (mode) {
     case GPIO_INT_MODE_DISABLED:
       gpinten &= ~BIT(bit);
+      intcon &= ~BIT(bit);  // reset to default of on change
+      defval &= ~BIT(bit);  // reset defval to 0
       break;
     case GPIO_INT_MODE_LEVEL:
       gpinten |= BIT(bit);
       intcon |= BIT(bit);
       switch (trig) {
-        case GPIO_INT_TRIG_LOW:
+        case GPIO_INT_TRIG_HIGH:
           defval &= ~BIT(bit);
           break;
-        case GPIO_INT_TRIG_HIGH:
+        case GPIO_INT_TRIG_LOW:
           defval |= BIT(bit);
           break;
         default:

@@ -159,14 +159,10 @@ ZTEST(mcp_driver, test_configure_inputs) {
   zassert_equal(fake_i2c_transfer_fake.call_count, 0);
 }
 
-DECLARE_FAKE_VOID_FUNC(gpio_demo_interrupt,
-                       const struct device*,
-                       struct gpio_callback*,
-                       gpio_port_pins_t);
-DEFINE_FAKE_VOID_FUNC(gpio_demo_interrupt,
-                      const struct device*,
-                      struct gpio_callback*,
-                      gpio_port_pins_t);
+FAKE_VOID_FUNC(gpio_demo_interrupt,
+               const struct device*,
+               struct gpio_callback*,
+               gpio_port_pins_t);
 
 ZTEST(mcp_driver, test_interrupts) {
   struct gpio_callback callback;
@@ -226,8 +222,19 @@ ZTEST(mcp_driver, test_interrupts) {
   zassert_equal(gpio_demo_interrupt_fake.arg1_val, &callback);
   zassert_equal(gpio_demo_interrupt_fake.arg2_val, BIT(HV_SHIELD_V2_INPUT(0)));
 
-  // todo: check calls
+  // waiting a few ms should not trigger another interrupt
+  k_msleep(5);
+  zassert_equal(fake_i2c_transfer_fake.call_count, 5);
+  zassert_equal(gpio_demo_interrupt_fake.call_count, 1);
+
+  // reset input; only rising edge should trigger
   zassert_equal(gpio_emul_input_set(gpio0, 0, 0), 0);
+  zassert_equal(fake_i2c_transfer_fake.call_count, 5);
+
+  zassert_equal(gpio_remove_callback(hv_shield, &callback), 0);
+  zassert_equal(gpio_pin_interrupt_configure(hv_shield, HV_SHIELD_V2_INPUT(0),
+                                             GPIO_INT_DISABLE),
+                0);
 }
 
 // todo: test what happens when an interrupt is triggered but no intf is set

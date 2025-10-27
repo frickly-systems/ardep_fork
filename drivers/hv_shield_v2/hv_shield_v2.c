@@ -129,20 +129,34 @@ static void hv_shield_v2_interrupt_work_handler(struct k_work* work) {
 
   uint16_t intcap = 0;
   err = read_u16_reg(config, 0x10, &intcap);
+  if (err) {
+    LOG_ERR("Error handling interrupt; could not read INTCAP register: %d",
+            err);
+    return;
+  }
 
   // todo: optimize interrupt detection
-  const uint16_t level_interrupts =
-      data->reg_cache.gpinten & data->reg_cache.intcon;
-  const uint16_t rising_edge_interrupts =
-      data->reg_cache.gpinten & intcap & data->int_trigger_rising;
-  const uint16_t falling_edge_interrupts =
-      data->reg_cache.gpinten & (~intcap) & data->int_trigger_falling;
 
-  const uint16_t ints = intf & (level_interrupts | rising_edge_interrupts |
-                                falling_edge_interrupts);
+  // note that these are ANDed with intf and gpinten later
+  const uint16_t level_interrupts = data->reg_cache.intcon;
+  const uint16_t rising_edge_interrupts = intcap & data->int_trigger_rising;
+  const uint16_t falling_edge_interrupts =
+      (~intcap) & data->int_trigger_falling;
+
+  const uint16_t ints =
+      data->reg_cache.gpinten & intf &
+      (level_interrupts | rising_edge_interrupts | falling_edge_interrupts);
 
   gpio_fire_callbacks(&data->interrupt_callbacks, dev,
                       hv_shield_v2_internal_pins_to_zephyr_bits(ints));
+
+  // todo: test
+  // if any level interrupt is active, resubmit work to check if the level is
+  // still active. If yes the callbacks are fired again, looping until the level
+  // goes inactive
+  if (level_interrupts & ints) {
+    k_work_submit(&data->on_interrupt_work);
+  }
 }
 
 static int hv_shield_v2_init(const struct device* dev) {
@@ -271,7 +285,8 @@ static int hv_shield_v2_gpio_set_masked_raw(const struct device* port,
   const struct hv_shield_v2_config* config = port->config;
   struct hv_shield_v2_data* data = port->data;
 
-  // extract output bits from mask and value
+  // extract output bits from mask and value (0x3F is the mask for the 6 output
+  // bits)
   const uint8_t output_mask = (mask >> HV_SHIELD_V2_OUTPUT_BASE) & 0x003F;
   const uint8_t output_value = (value >> HV_SHIELD_V2_OUTPUT_BASE) & 0x003F;
   // shift to correct mcp pin bits

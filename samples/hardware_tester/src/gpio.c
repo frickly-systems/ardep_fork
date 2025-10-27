@@ -8,9 +8,6 @@
 #include "zephyr/devicetree.h"
 #include "zephyr/drivers/gpio.h"
 #include "zephyr/logging/log.h"
-#include "zephyr/sys/printk.h"
-
-#include <stdio.h>
 
 #include <zephyr/kernel.h>
 

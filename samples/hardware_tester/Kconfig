@@ -23,12 +23,6 @@ config CAN_TEST_DURATION_MS
     help
       Duration for which the CAN tests will run.
 
-config GPIO_PRE_TEST_DELAY_MS
-    int "GPIO pre-test delay in milliseconds"
-    default 100
-    help
-      Delay before starting GPIO tests.
-
 config UART_PRE_TEST_DELAY_MS
     int "UART pre-test delay in milliseconds"
     default 500
@@ -40,6 +34,12 @@ config UART_CHAR_DELAY_MS
     default 5
     help
       Delay between sending individual characters.
+
+config GPIO_PRE_TEST_DELAY_MS
+    int "GPIO pre-test delay in milliseconds"
+    default 100
+    help
+      Delay before starting GPIO tests.
 
 config GPIO_PIN_CHECK_DELAY_MS
     int "GPIO pin check delay in milliseconds"

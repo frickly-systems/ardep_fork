@@ -1,11 +1,10 @@
-if SHIELD_HV_SHIELD_V2
+if SHIELD_POWER_IO_SHIELD
   config GPIO
     default y
-  
+
   config I2C
     default y
 
-  config HV_SHIELD_V2
+  config POWER_IO_SHIELD
     default y
-  
 endif

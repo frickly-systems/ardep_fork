@@ -1,10 +1,10 @@
-#include <ardep/dt-bindings/hv-shield-v2.h>
+#include <ardep/dt-bindings/power-io-shield.h>
 
 &i2c2 {
 	status = "okay";
 
-	hv_shield0: hv_shield0@20 {
-		compatible = "hv-shield-v2-custom";
+	power_io_shield0: power_io_shield0@20 {
+		compatible = "power-io-shield";
 		int-gpios = <&gpioe 2 (GPIO_ACTIVE_LOW|GPIO_PULL_UP)>, <&gpioe 5 (GPIO_ACTIVE_LOW|GPIO_PULL_UP)>;
 		// todo: check if pullup is needed
 		reg = <0x20>;

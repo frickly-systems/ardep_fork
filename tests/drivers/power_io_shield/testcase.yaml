@@ -4,11 +4,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 common:
-  tags: drivers, hv_shield_v2
+  tags: drivers, power_io_shield
   platform_allow:
     - native_sim/native/64
     - native_sim
 
 tests:
-  drivers.hv_shield_v2:
+  drivers.power_io_shield:
     harness: ztest

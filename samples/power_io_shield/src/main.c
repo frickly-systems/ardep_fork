@@ -4,11 +4,12 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include <ardep/dt-bindings/hv-shield-v2.h>
+#include <ardep/dt-bindings/power-io-shield.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
-static const struct device* hv_shield = DEVICE_DT_GET(DT_NODELABEL(hv_shield0));
+static const struct device* hv_shield =
+    DEVICE_DT_GET(DT_NODELABEL(power_io_shield0));
 
 #define DEFINE_GPIO_ARRAY(node, prop)                                    \
   static const struct gpio_dt_spec prop[] = {                            \

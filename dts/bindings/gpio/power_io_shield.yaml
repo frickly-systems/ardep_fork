@@ -1,0 +1,18 @@
+description: Power IO shield gpio nexus driver binding.
+
+compatible: "power-io-shield"
+
+include: [gpio-controller.yaml, i2c-device.yaml]
+
+properties:
+  "#gpio-cells":
+    const: 2
+
+  int-gpios:
+    required: false # todo: true
+    description: "GPIOs used for HV shield v2 interrupts. Can be shared across multiple hv shields"
+    type: "phandle-array"
+
+gpio-cells:
+  - pin
+  - flags

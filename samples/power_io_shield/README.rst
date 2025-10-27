@@ -1,4 +1,4 @@
-.. _hv_shield_v2_sample:
+.. _power_io_shield_sample:
 
 
 HV Shield
@@ -14,7 +14,7 @@ Build the firmware with:
 
 .. code-block:: bash
 
-  west build -b ardep samples/hv_shield_v2
+  west build -b ardep samples/power_io_shield
 
 
 Flash it using dfu-util:

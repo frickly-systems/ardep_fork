@@ -6,6 +6,6 @@
 menu "Drivers"
 rsource "can/Kconfig"
 rsource "hv_shield/Kconfig"
-rsource "hv_shield_v2/Kconfig"
+rsource "power_io_shield/Kconfig"
 rsource "lin/Kconfig"
 endmenu

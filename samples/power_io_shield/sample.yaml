@@ -5,4 +5,4 @@ common:
   integration_platforms:
     - ardep
 tests:
-  example.hv_shield_v2.default: {}
+  example.power_io_shield.default: {}

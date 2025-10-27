@@ -1,4 +1,5 @@
 #include "devices.h"
+#include "regs.h"
 
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/gpio/gpio_emul.h>
@@ -8,6 +9,8 @@
 #include <ardep/drivers/emul/hv_shield_v2.h>
 #include <ardep/drivers/i2c_fake.h>
 #include <ardep/dt-bindings/hv-shield-v2.h>
+
+static const struct device* gpio0 = DEVICE_DT_GET(DT_NODELABEL(gpio0));
 
 FAKE_VOID_FUNC(gpio_demo_interrupt,
                const struct device*,
@@ -29,11 +32,11 @@ ZTEST(mcp_driver_interrupts, test_rising_edge_interrupt) {
                 0);
 
   // Interrupt should be configured for the chip
-  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, 0x04),
+  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, REG_GPINTENA),
                 0x0100);  // gpinten
-  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, 0x08),
+  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, REG_INTCONA),
                 0x0000);  // intcon
-  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, 0x06),
+  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, REG_DEFVALA),
                 0x0000);  // defval
 
   // nothing should happen when not INTF is set
@@ -44,9 +47,10 @@ ZTEST(mcp_driver_interrupts, test_rising_edge_interrupt) {
 
   // set INTF and INTCAP to simulate rising edge interrupt
 
-  hv_shield_v2_emul_set_reg(hv_shield_emul, 0x11, 0x01);  // INTF on input pin 0
-  hv_shield_v2_emul_set_reg(hv_shield_emul, 0x0F,
-                            0x01);  // INTCAP on input pin 0
+  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, REG_INTFA,
+                                0x0100);  // input pin 0
+  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, REG_INTCAPA,
+                                0x0100);  // input pin 0
 
   // set interrupt gpio to 1
   zassert_equal(gpio_emul_input_set(gpio0, 0, 1), 0);
@@ -84,11 +88,11 @@ ZTEST(mcp_driver_interrupts, test_fault_interrupt) {
                 0);
 
   // Interrupt should be configured for the chip
-  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, 0x04),
+  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, REG_GPINTENA),
                 0x4040);  // gpinten
-  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, 0x08),
+  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, REG_INTCONA),
                 0x0000);  // intcon
-  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, 0x06),
+  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, REG_DEFVALA),
                 0x0000);  // defval
 
   // nothing should happen when not INTF is set
@@ -98,10 +102,10 @@ ZTEST(mcp_driver_interrupts, test_fault_interrupt) {
   zassert_equal(gpio_demo_interrupt_fake.call_count, 0);
 
   // set INTF and INTCAP to simulate rising edge interrupt
-  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, 0x10,
-                                0x4040);  // INTF on fault 0 and 1
-  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, 0x0E,
-                                0x4040);  // INTCAP on fault pin 0 and 1
+  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, REG_INTFA,
+                                0x4040);  // fault 0 and 1
+  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, REG_INTCAPA,
+                                0x4040);  // fault 0 and 1
 
   // trigger interrupt pin rising
   zassert_equal(gpio_emul_input_set(gpio0, 0, 1), 0);
@@ -114,8 +118,8 @@ ZTEST(mcp_driver_interrupts, test_fault_interrupt) {
   zassert_equal(gpio_emul_input_set(gpio0, 0, 0), 0);
 
   // reset
-  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, 0x10, 0x0000);
-  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, 0x0E, 0x0000);
+  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, REG_INTFA, 0x0000);
+  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, REG_INTCAPA, 0x0000);
 
   zassert_equal(gpio_remove_callback(hv_shield, &callback), 0);
   zassert_equal(gpio_pin_interrupt_configure(hv_shield, HV_SHIELD_V2_FAULT(0),
@@ -136,8 +140,8 @@ static void demo_interrupt_custom_handler(const struct device* a,
 
   counter--;
   if (counter == 0) {
-    hv_shield_v2_emul_set_reg(hv_shield_emul, 0x11, 0x00);
-    hv_shield_v2_emul_set_reg(hv_shield_emul, 0x0F, 0x00);
+    hv_shield_v2_emul_set_u16_reg(hv_shield_emul, REG_INTFA, 0x0000);
+    hv_shield_v2_emul_set_u16_reg(hv_shield_emul, REG_INTCAPA, 0x0000);
   }
 }
 
@@ -156,11 +160,11 @@ ZTEST(mcp_driver_interrupts, test_level_interrupt) {
                 0);
 
   // Interrupt should be configured for the chip
-  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, 0x04),
+  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, REG_GPINTENA),
                 0x0200);  // gpinten
-  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, 0x08),
+  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, REG_INTCONA),
                 0x0200);  // intcon
-  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, 0x06),
+  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, REG_DEFVALA),
                 0x0000);  // defval
 
   // nothing should happen when not INTF is set
@@ -170,9 +174,10 @@ ZTEST(mcp_driver_interrupts, test_level_interrupt) {
   zassert_equal(gpio_demo_interrupt_fake.call_count, 0);
 
   // set INTF and INTCAP to simulate level high interrupt
-  hv_shield_v2_emul_set_reg(hv_shield_emul, 0x11, 0x02);  // INTF on input pin 1
-  hv_shield_v2_emul_set_reg(hv_shield_emul, 0x0F,
-                            0x02);  // INTCAP on input pin 1
+  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, REG_INTFA,
+                                0x0200);  // input pin 1
+  hv_shield_v2_emul_set_u16_reg(hv_shield_emul, REG_INTCAPA,
+                                0x0200);  // input pin 1
 
   // set interrupt gpio to 1
   zassert_equal(gpio_emul_input_set(gpio0, 0, 1), 0);
@@ -186,8 +191,10 @@ ZTEST(mcp_driver_interrupts, test_level_interrupt) {
   zassert_true(counter == 0);
 
   // check that the registers were reset
-  zassert_equal(hv_shield_v2_emul_get_reg(hv_shield_emul, 0x11), 0x00);
-  zassert_equal(hv_shield_v2_emul_get_reg(hv_shield_emul, 0x0F), 0x00);
+  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, REG_INTFA),
+                0x0000);
+  zassert_equal(hv_shield_v2_emul_get_u16_reg(hv_shield_emul, REG_INTCAPA),
+                0x0000);
   k_msleep(1);
   zassert_equal(gpio_emul_input_set(gpio0, 0, 0), 0);
 

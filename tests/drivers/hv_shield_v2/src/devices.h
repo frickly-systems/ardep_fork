@@ -6,5 +6,3 @@
 static const struct device* hv_shield = DEVICE_DT_GET(DT_NODELABEL(hv_shield0));
 static const struct emul* hv_shield_emul =
     EMUL_DT_GET(DT_NODELABEL(hv_shield0));
-
-static const struct device* gpio0 = DEVICE_DT_GET(DT_NODELABEL(gpio0));

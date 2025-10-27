@@ -21,7 +21,6 @@ class SerialMessage:
     def __init__(self, message: str):
         try:
             if message.startswith("***") and message.endswith("***"):
-                log.info("Found Boot banner: %s", message)
                 raise BootBannerFound(message)
 
             raw_timestamp, raw_level, raw_device, raw_message = message.split(" ", 3)
@@ -29,6 +28,8 @@ class SerialMessage:
             self.log_level = raw_level.strip("<>")
             self.device = raw_device.strip(":")
             self.payload = raw_message.strip()
+        except BootBannerFound:
+            raise
         except Exception as e:
             log.error('Error parsing message "%s". Error: %s', message, e)
             raise

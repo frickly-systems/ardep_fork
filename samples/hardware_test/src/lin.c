@@ -29,6 +29,11 @@ static void setup_uarts() {
     const struct device* dev = lin_devices[i];
     if (!device_is_ready(dev)) {
       LOG_ERR("%s: UART device not ready", dev->name);
+      continue;
+    }
+
+    char byte;
+    while (uart_fifo_read(dev, &byte, 1) == 1) {
     }
   }
 }

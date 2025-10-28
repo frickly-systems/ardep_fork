@@ -31,4 +31,4 @@ manifest:
     - name: cannectivity
       url: https://github.com/CANnectivity/cannectivity.git
       revision: v1.2.1
-      path: modules/lib/cannectivity # adjust the path as needed
+      path: modules/lib/cannectivity

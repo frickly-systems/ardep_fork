@@ -75,6 +75,8 @@ Configure it as follows to enable it:
 
 
 .. warning::
+   
+    For users of the *ARDEPv1* board:
 
     Since we don't use the default USB PID/VID of the ARDEP board, the default ARDEP DFU will not work for firmware updates.
     Put the device in bootloader mode to flash another firmware.

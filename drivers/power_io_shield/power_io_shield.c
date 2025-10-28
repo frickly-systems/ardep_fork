@@ -49,6 +49,9 @@ struct power_io_shield_data {
                                               // ISR safe, we have to write the
                                               // config in a work queue item if
                                               // it is called in an ISR
+
+  struct k_sem lock;  // we use semaphore because we can use it in the ISR-safe
+                      // pin_interrupt_configure
 };
 
 static void power_io_shield_write_interrupt_config_work_handler(
@@ -154,16 +157,18 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
   const struct device* dev = data->device;
   const struct power_io_shield_config* config = dev->config;
 
+  k_sem_take(&data->lock, K_FOREVER);
+
   uint16_t intf = 0;
   int err = read_u16_reg(config, 0x0E, &intf);
   if (err) {
     LOG_ERR("Error handling interrupt; could not read register: %d", err);
-    return;
+    goto cleanup;
   }
 
   if (!intf) {
     LOG_DBG("Interrupt was not for this IC");
-    return;
+    goto cleanup;
   }
 
   uint16_t intcap = 0;
@@ -171,7 +176,7 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
   if (err) {
     LOG_ERR("Error handling interrupt; could not read INTCAP register: %d",
             err);
-    return;
+    goto cleanup;
   }
 
   // note that these are ANDed with intf and gpinten later
@@ -194,6 +199,9 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
     LOG_DBG("Reschedule");
     k_work_submit(&data->on_interrupt_work);
   }
+
+cleanup:
+  k_sem_give(&data->lock);
 }
 
 static int power_io_shield_port_get_raw(const struct device* port,
@@ -201,15 +209,18 @@ static int power_io_shield_port_get_raw(const struct device* port,
   const struct power_io_shield_config* config = port->config;
   struct power_io_shield_data* data = port->data;
 
+  k_sem_take(&data->lock, K_FOREVER);
+
   uint16_t reg_value;
   if (read_u16_reg(config, REG_GPIOA, &reg_value) != 0) {
+    k_sem_give(&data->lock);
     return -EIO;
   }
 
   data->reg_cache.gpio = reg_value;
-
   *value = power_io_shield_internal_pins_to_zephyr_bits(reg_value);
 
+  k_sem_give(&data->lock);
   return 0;
 }
 
@@ -227,15 +238,19 @@ static int power_io_shield_gpio_set_masked_raw(const struct device* port,
   const uint16_t mapped_mask = output_mask;  // Outputs are on pins 0-5
   const uint16_t mapped_value = output_value;
 
+  k_sem_take(&data->lock, K_FOREVER);
+
   const uint16_t new_gpio =
       (data->reg_cache.gpio & ~mapped_mask) | (mapped_value & mapped_mask);
 
   if (write_u16_reg(config, REG_GPIOA, new_gpio) != 0) {
+    k_sem_give(&data->lock);
     return -EIO;
   }
 
   data->reg_cache.gpio = new_gpio;
 
+  k_sem_give(&data->lock);
   return 0;
 }
 
@@ -290,6 +305,8 @@ static int power_io_shield_pin_configure(const struct device* dev,
         return -ENOTSUP;
       }
 
+      k_sem_take(&data->lock, K_FOREVER);
+
       // write gpio if it should be initialized high/low
       if (flags & GPIO_OUTPUT_INIT_HIGH) {
         data->reg_cache.gpio |= (1 << bit);
@@ -297,7 +314,11 @@ static int power_io_shield_pin_configure(const struct device* dev,
         data->reg_cache.gpio &= ~(1 << bit);
       }
 
-      if (write_u16_reg(config, REG_GPIOA, data->reg_cache.gpio) != 0) {
+      int ret = write_u16_reg(config, REG_GPIOA, data->reg_cache.gpio);
+
+      k_sem_give(&data->lock);
+
+      if (ret != 0) {
         return -EIO;
       }
 
@@ -338,6 +359,37 @@ static int power_io_shield_pin_interrupt_configure(const struct device* port,
     LOG_ERR("Interrupts can only be configured on input and fault pins");
     return -ENOTSUP;
   }
+
+  // verify input to prevent gotos later
+  if (mode == GPIO_INT_MODE_LEVEL) {
+    switch (trig) {
+      case GPIO_INT_TRIG_HIGH:
+      case GPIO_INT_TRIG_LOW:
+        break;
+      default:
+        LOG_ERR("Invalid trigger for level mode interrupt");
+        return -EINVAL;
+    }
+  } else if (mode == GPIO_INT_MODE_EDGE) {
+    switch (trig) {
+      case GPIO_INT_TRIG_HIGH:
+      case GPIO_INT_TRIG_LOW:
+      case GPIO_INT_TRIG_BOTH:
+        break;
+      default:
+        LOG_ERR("Invalid trigger for edge interrupt");
+        return -EINVAL;
+    }
+  } else if (mode != GPIO_INT_MODE_DISABLED) {
+    LOG_ERR("Invalid mode provided");
+    return -EINVAL;
+  }
+
+  int err = k_sem_take(&data->lock, k_is_in_isr() ? K_NO_WAIT : K_FOREVER);
+  if (err < 0) {
+    return err;
+  }
+
   uint8_t bit = power_io_shield_pin_to_bit(pin);
 
   uint16_t defval = data->reg_cache.defval;
@@ -362,8 +414,8 @@ static int power_io_shield_pin_interrupt_configure(const struct device* port,
           defval |= BIT(bit);
           break;
         default:
-          LOG_ERR("Invalid trigger for level interrupt");
-          return -EINVAL;
+          // unreachable
+          break;
       }
       break;
     case GPIO_INT_MODE_EDGE:
@@ -383,32 +435,35 @@ static int power_io_shield_pin_interrupt_configure(const struct device* port,
           data->int_trigger_falling |= BIT(bit);
           break;
         default:
-          LOG_ERR("Invalid trigger for edge interrupt");
-          return -EINVAL;
+          // unreachable
+          break;
       }
       break;
     default:
-      LOG_ERR("Invalid interrupt mode");
-      return -EINVAL;
+      // unreachable
+      break;
   }
 
   data->reg_cache.defval = defval;
   data->reg_cache.intcon = intcon;
   data->reg_cache.gpinten = gpinten;
 
+  k_sem_give(&data->lock);
+
+  int ret = 0;
   // call power_io_shield_write_interrupt_config_work_handler either through
   // workqueue (if we are in isr) or directly
   if (k_is_in_isr()) {
     int ret = k_work_submit(&data->write_interrupt_config_work);
-    if (ret < 0) {
-      return ret;
+    if (ret > 0) {  // ignore warnings
+      ret = 0;
     }
   } else {
     power_io_shield_write_interrupt_config_work_handler(
         &data->write_interrupt_config_work);
   }
 
-  return 0;
+  return ret;
 }
 
 static void power_io_shield_write_interrupt_config_work_handler(
@@ -417,6 +472,8 @@ static void power_io_shield_write_interrupt_config_work_handler(
       work, struct power_io_shield_data, write_interrupt_config_work);
   const struct device* dev = data->device;
   const struct power_io_shield_config* config = dev->config;
+
+  k_sem_take(&data->lock, K_FOREVER);
 
   int err = write_u16_reg(config, REG_DEFVALA, data->reg_cache.defval);
   if (err != 0) {
@@ -430,6 +487,8 @@ static void power_io_shield_write_interrupt_config_work_handler(
   if (err != 0) {
     LOG_ERR("Could not write register: %d", err);
   }
+
+  k_sem_give(&data->lock);
 }
 
 static int power_io_shield_init(const struct device* dev) {
@@ -495,6 +554,12 @@ static int power_io_shield_init(const struct device* dev) {
   k_work_init(&data->on_interrupt_work, power_io_shield_interrupt_work_handler);
   k_work_init(&data->write_interrupt_config_work,
               power_io_shield_write_interrupt_config_work_handler);
+
+  int ret = k_sem_init(&data->lock, 1, 1);
+  if (ret < 0) {
+    LOG_ERR("Could not initialize semaphore");
+    return ret;
+  }
 
   return 0;
 }

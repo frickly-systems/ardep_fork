@@ -54,24 +54,8 @@ GDB Server
 Debugging Workflow
 ==================
 
-Start a debug session with ``west debug`` or by invoking ``arm-none-eabi-gdb`` manually against the GDB interface while the debugger is connected to the host.
 
-During debugging it is possible that the gdb server may spawn new threads or processes lables as ``inferiors``. If that happens, you may require to reload the debug symbols for this inferior using the ``file`` command (e.g. ``file buil/zephyr/zephyr.elf``).
-
-Currently, when startig a debug session, there is a problem with two threads/inferiors are spawned. To work around this problem issue the following commands after starting the debug session with ``west debug``:
-
-  .. code-block:: gdb
-
-     step
-     file {path/to/build/zephyr/zephyr.elf}
-     break main
-     continue
-     clear
-     
-
-Notice that when you hit a breakpoint, you have to remove it with ``clear`` so the program can continue execution.
-Use temporary breakpoints ``tbreak`` to avoid this issue.
-
+See :ref:`debugging` for more information.
 
 Firmware Updates
 ================

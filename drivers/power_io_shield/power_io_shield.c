@@ -54,16 +54,6 @@ struct power_io_shield_data {
 static void power_io_shield_write_interrupt_config_work_handler(
     struct k_work* work);
 
-static int write_iocon(const struct power_io_shield_config* config,
-                       uint8_t value) {
-  uint8_t buf[3] = {REG_IOCONA, value, value};
-  int ret = i2c_write_dt(&config->i2c, buf, sizeof(buf));
-  if (ret) {
-    LOG_ERR("Failed to write IOCON register " STRINGIFY(REG_IOCONA)": %d", ret);
-  }
-  return ret;
-}
-
 static int write_u16_reg(const struct power_io_shield_config* config,
                          uint8_t reg_addr,
                          uint16_t value) {
@@ -89,13 +79,48 @@ static int read_u16_reg(const struct power_io_shield_config* config,
   return 0;
 }
 
-static void power_io_shield_int_gpio_handler(const struct device* port,
-                                             struct gpio_callback* cb,
-                                             gpio_port_pins_t pins) {
-  struct power_io_shield_data* data =
-      CONTAINER_OF(cb, struct power_io_shield_data, interrupt_gpio_cb);
+static int write_iocon(const struct power_io_shield_config* config,
+                       uint8_t value) {
+  return write_u16_reg(config, REG_IOCONA, (value << 8) | value);
+}
 
-  k_work_submit(&data->on_interrupt_work);
+static int power_io_shield_pin_to_bit(uint8_t pin) {
+  uint8_t pin_base = pin & POWER_IO_SHIELD_BASE_MASK;
+  uint8_t pin_index = pin & ~POWER_IO_SHIELD_BASE_MASK;
+
+  switch (pin_base) {
+    case POWER_IO_SHIELD_INPUT_BASE:
+      if (pin_index >= 6) {
+        LOG_ERR("Invalid input pin index: %d", pin_index);
+        break;
+      }
+      return pin_index + 8;  // Inputs are on port b 0-5
+
+    case POWER_IO_SHIELD_OUTPUT_BASE:
+      if (pin_index >= 6) {
+        LOG_ERR("Invalid output pin index: %d", pin_index);
+        break;
+      }
+      return pin_index;  // Outputs are on port a 0-5
+
+    case POWER_IO_SHIELD_FAULT_BASE:  // Fault (treated as input)
+      switch (pin_index) {
+        case 0:
+          return 6;
+        case 1:
+          return 14;
+        case 2:
+          return 15;
+        default:
+          LOG_ERR("Invalid fault pin index: %d", pin_index);
+          break;
+      }
+
+    default:
+      break;
+  }
+
+  return -ENOTSUP;
 }
 
 static inline uint32_t power_io_shield_internal_pins_to_zephyr_bits(
@@ -112,6 +137,15 @@ static inline uint32_t power_io_shield_internal_pins_to_zephyr_bits(
   return (input_values << POWER_IO_SHIELD_INPUT_BASE) |
          (output_values << POWER_IO_SHIELD_OUTPUT_BASE) |
          (fault_values << POWER_IO_SHIELD_FAULT_BASE);
+}
+
+static void power_io_shield_int_gpio_handler(const struct device* port,
+                                             struct gpio_callback* cb,
+                                             gpio_port_pins_t pins) {
+  struct power_io_shield_data* data =
+      CONTAINER_OF(cb, struct power_io_shield_data, interrupt_gpio_cb);
+
+  k_work_submit(&data->on_interrupt_work);
 }
 
 static void power_io_shield_interrupt_work_handler(struct k_work* work) {
@@ -160,112 +194,6 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
     LOG_DBG("Reschedule");
     k_work_submit(&data->on_interrupt_work);
   }
-}
-
-static int power_io_shield_init(const struct device* dev) {
-  const struct power_io_shield_config* config = dev->config;
-  struct power_io_shield_data* data = dev->data;
-
-  data->device = dev;
-
-  if (!device_is_ready(config->i2c.bus)) {
-    LOG_ERR("I2C bus %s not ready", config->i2c.bus->name);
-    return -ENODEV;
-  }
-
-  for (int i = 0; i < config->int_gpio_count; i++) {
-    if (!device_is_ready(config->int_gpios[i].port)) {
-      LOG_ERR("INT GPIO %s not ready", config->int_gpios[i].port->name);
-      return -ENODEV;
-    }
-
-    int ret = gpio_pin_configure_dt(&config->int_gpios[i], GPIO_INPUT);
-    if (ret != 0) {
-      LOG_ERR("Failed to configure INT GPIO pin %d: %d",
-              config->int_gpios[i].pin, ret);
-      return ret;
-    }
-  }
-
-  if (config->int_gpio_count > 0) {
-    gpio_init_callback(&data->interrupt_gpio_cb,
-                       power_io_shield_int_gpio_handler,
-                       BIT(config->int_gpios[0].pin));
-    int ret =
-        gpio_add_callback(config->int_gpios[0].port, &data->interrupt_gpio_cb);
-    if (ret != 0) {
-      LOG_ERR("Failed to add INT GPIO callback: %d", ret);
-      return ret;
-    }
-    ret = gpio_pin_interrupt_configure_dt(&config->int_gpios[0],
-                                          GPIO_INT_EDGE_TO_ACTIVE);
-    if (ret != 0) {
-      LOG_ERR("Failed to configure INT GPIO interrupt: %d", ret);
-      return ret;
-    }
-  }
-
-  // Note, that this driver uses IOCON.BANK=0, which is the default state
-  // after reset.
-
-  // todo: implement bank-interrupts and remove mirror bit
-  // Set INT pins as open drain output (ODR=1 MIRROR=1)
-  if (write_iocon(config, (1 << 2) | (1 << 6)) != 0) {
-    return -EIO;
-  }
-
-  // Write IODIR registers (1 is input, 0 is output)
-  if (write_u16_reg(config, REG_IODIRA, 0b0111111101000000) != 0) {
-    LOG_ERR("Failed to write IODIR registers");
-    return -EIO;
-  }
-
-  LOG_INF("HV Shield v2 initialized on I2C address 0x%02x", config->i2c.addr);
-
-  k_work_init(&data->on_interrupt_work, power_io_shield_interrupt_work_handler);
-  k_work_init(&data->write_interrupt_config_work,
-              power_io_shield_write_interrupt_config_work_handler);
-
-  return 0;
-}
-
-static int power_io_shield_pin_to_bit(uint8_t pin) {
-  uint8_t pin_base = pin & POWER_IO_SHIELD_BASE_MASK;
-  uint8_t pin_index = pin & ~POWER_IO_SHIELD_BASE_MASK;
-
-  switch (pin_base) {
-    case POWER_IO_SHIELD_INPUT_BASE:
-      if (pin_index >= 6) {
-        LOG_ERR("Invalid input pin index: %d", pin_index);
-        break;
-      }
-      return pin_index + 8;  // Inputs are on port b 0-5
-
-    case POWER_IO_SHIELD_OUTPUT_BASE:
-      if (pin_index >= 6) {
-        LOG_ERR("Invalid output pin index: %d", pin_index);
-        break;
-      }
-      return pin_index;  // Outputs are on port a 0-5
-
-    case POWER_IO_SHIELD_FAULT_BASE:  // Fault (treated as input)
-      switch (pin_index) {
-        case 0:
-          return 6;
-        case 1:
-          return 14;
-        case 2:
-          return 15;
-        default:
-          LOG_ERR("Invalid fault pin index: %d", pin_index);
-          break;
-      }
-
-    default:
-      break;
-  }
-
-  return -ENOTSUP;
 }
 
 static int power_io_shield_port_get_raw(const struct device* port,
@@ -361,7 +289,8 @@ static int power_io_shield_pin_configure(const struct device* dev,
         LOG_ERR("Open drain/source not supported on output pin %d", pin_index);
         return -ENOTSUP;
       }
-      // todo: check if this is the right flag to test
+
+      // write gpio if it should be initialized high/low
       if (flags & GPIO_OUTPUT_INIT_HIGH) {
         data->reg_cache.gpio |= (1 << bit);
       } else {
@@ -501,6 +430,73 @@ static void power_io_shield_write_interrupt_config_work_handler(
   if (err != 0) {
     LOG_ERR("Could not write register: %d", err);
   }
+}
+
+static int power_io_shield_init(const struct device* dev) {
+  const struct power_io_shield_config* config = dev->config;
+  struct power_io_shield_data* data = dev->data;
+
+  data->device = dev;
+
+  if (!device_is_ready(config->i2c.bus)) {
+    LOG_ERR("I2C bus %s not ready", config->i2c.bus->name);
+    return -ENODEV;
+  }
+
+  for (int i = 0; i < config->int_gpio_count; i++) {
+    if (!device_is_ready(config->int_gpios[i].port)) {
+      LOG_ERR("INT GPIO %s not ready", config->int_gpios[i].port->name);
+      return -ENODEV;
+    }
+
+    int ret = gpio_pin_configure_dt(&config->int_gpios[i], GPIO_INPUT);
+    if (ret != 0) {
+      LOG_ERR("Failed to configure INT GPIO pin %d: %d",
+              config->int_gpios[i].pin, ret);
+      return ret;
+    }
+  }
+
+  if (config->int_gpio_count > 0) {
+    gpio_init_callback(&data->interrupt_gpio_cb,
+                       power_io_shield_int_gpio_handler,
+                       BIT(config->int_gpios[0].pin));
+    int ret =
+        gpio_add_callback(config->int_gpios[0].port, &data->interrupt_gpio_cb);
+    if (ret != 0) {
+      LOG_ERR("Failed to add INT GPIO callback: %d", ret);
+      return ret;
+    }
+    ret = gpio_pin_interrupt_configure_dt(&config->int_gpios[0],
+                                          GPIO_INT_EDGE_TO_ACTIVE);
+    if (ret != 0) {
+      LOG_ERR("Failed to configure INT GPIO interrupt: %d", ret);
+      return ret;
+    }
+  }
+
+  // Note, that this driver uses IOCON.BANK=0, which is the default state
+  // after reset.
+
+  // todo: implement bank-interrupts and remove mirror bit
+  // Set INT pins as open drain output (ODR=1 MIRROR=1)
+  if (write_iocon(config, (1 << 2) | (1 << 6)) != 0) {
+    return -EIO;
+  }
+
+  // Write IODIR registers (1 is input, 0 is output)
+  if (write_u16_reg(config, REG_IODIRA, 0b0111111101000000) != 0) {
+    LOG_ERR("Failed to write IODIR registers");
+    return -EIO;
+  }
+
+  LOG_INF("HV Shield v2 initialized on I2C address 0x%02x", config->i2c.addr);
+
+  k_work_init(&data->on_interrupt_work, power_io_shield_interrupt_work_handler);
+  k_work_init(&data->write_interrupt_config_work,
+              power_io_shield_write_interrupt_config_work_handler);
+
+  return 0;
 }
 
 DEVICE_API(gpio, power_io_shield_api) = {

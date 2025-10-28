@@ -324,7 +324,6 @@ static int power_io_shield_pin_configure(const struct device* dev,
 
       break;
 
-    // todo: do fault pins have to be something else?
     case POWER_IO_SHIELD_FAULT_BASE:  // Fault (treated as input)
       if (flags & GPIO_OUTPUT) {
         LOG_ERR("Cannot configure fault pin %d as output", pin_index);
@@ -537,8 +536,8 @@ static int power_io_shield_init(const struct device* dev) {
   // Note, that this driver uses IOCON.BANK=0, which is the default state
   // after reset.
 
-  // todo: implement bank-interrupts and remove mirror bit
-  // Set INT pins as open drain output (ODR=1 MIRROR=1)
+  // Set INT pins as open drain output, also mirror interrupts to use only one
+  // interrupt pin (ODR=1, MIRROR=1)
   if (write_iocon(config, (1 << 2) | (1 << 6)) != 0) {
     return -EIO;
   }
@@ -574,7 +573,6 @@ DEVICE_API(gpio, power_io_shield_api) = {
   .pin_interrupt_configure = power_io_shield_pin_interrupt_configure,
 };
 
-// todo: .common init; todo: interrupt pin stuff
 #define POWER_IO_SHIELD_INIT(x)                                               \
   BUILD_ASSERT(DT_INST_PROP_LEN_OR(x, int_gpios, 0) <= 2);                    \
   static const struct power_io_shield_config power_io_shield_##x##_config = { \
@@ -588,6 +586,7 @@ DEVICE_API(gpio, power_io_shield_api) = {
     .int_gpio_count = DT_INST_PROP_LEN_OR(x, int_gpios, 0),                   \
   };                                                                          \
   static struct power_io_shield_data power_io_shield_##x##_data = {           \
+    .common = {.invert = 0},                                                  \
     .reg_cache =                                                              \
         {                                                                     \
           .gpinten = 0,                                                       \

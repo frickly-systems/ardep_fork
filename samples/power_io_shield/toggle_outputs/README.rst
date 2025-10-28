@@ -1,4 +1,4 @@
-.. _power_io_shield_sample:
+.. _power_io_shield_toggle_outputs_sample:
 
 
 HV Shield
@@ -14,7 +14,7 @@ Build the firmware with:
 
 .. code-block:: bash
 
-  west build -b ardep samples/power_io_shield
+  west build -b ardep samples/power_io_shield/toggle_outputs
 
 
 Flash it using dfu-util:

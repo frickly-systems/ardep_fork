@@ -133,8 +133,6 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
     return;
   }
 
-  // todo: optimize interrupt detection
-
   // note that these are ANDed with intf and gpinten later
   const uint16_t level_interrupts = data->reg_cache.intcon;
   const uint16_t rising_edge_interrupts = intcap & data->int_trigger_rising;

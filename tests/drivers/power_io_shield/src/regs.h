@@ -3,6 +3,6 @@
 #define REG_DEFVALA 0x06
 #define REG_INTCONA 0x08
 #define REG_IOCONA 0x0A
-#define REG_INTCAPA 0x0E
-#define REG_INTFA 0x10
+#define REG_INTFA 0x0E
+#define REG_INTCAPA 0x10
 #define REG_GPIOA 0x12

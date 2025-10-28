@@ -45,7 +45,7 @@ ZTEST(mcp_driver_interrupts, test_rising_edge_interrupt) {
 
   // nothing should happen when not INTF is set
   zassert_equal(gpio_emul_input_set(gpio0, 0, 1), 0);
-  k_msleep(1);
+  k_yield();
   zassert_equal(gpio_emul_input_set(gpio0, 0, 0), 0);
   zassert_equal(gpio_demo_interrupt_fake.call_count, 0);
 
@@ -58,15 +58,15 @@ ZTEST(mcp_driver_interrupts, test_rising_edge_interrupt) {
 
   // set interrupt gpio to 1
   zassert_equal(gpio_emul_input_set(gpio0, 0, 1), 0);
-  k_msleep(1);
+  k_yield();
   zassert_equal(gpio_demo_interrupt_fake.call_count, 1);
   zassert_equal(gpio_demo_interrupt_fake.arg0_val, power_io_shield);
   zassert_equal(gpio_demo_interrupt_fake.arg1_val, &callback);
   zassert_equal(gpio_demo_interrupt_fake.arg2_val,
                 BIT(POWER_IO_SHIELD_INPUT(0)));
-  k_msleep(10);
+  k_msleep(10);  // wait a bit to check that no further ISR calls happen
   zassert_equal(gpio_emul_input_set(gpio0, 0, 0), 0);
-  k_msleep(1);
+  k_msleep(10);
   zassert_equal(gpio_demo_interrupt_fake.call_count, 1);
 
   // reset
@@ -109,7 +109,7 @@ ZTEST(mcp_driver_interrupts, test_fault_interrupt) {
 
   // nothing should happen when not INTF is set
   zassert_equal(gpio_emul_input_set(gpio0, 0, 1), 0);
-  k_msleep(1);
+  k_yield();
   zassert_equal(gpio_emul_input_set(gpio0, 0, 0), 0);
   zassert_equal(gpio_demo_interrupt_fake.call_count, 0);
 
@@ -121,7 +121,7 @@ ZTEST(mcp_driver_interrupts, test_fault_interrupt) {
 
   // trigger interrupt pin rising
   zassert_equal(gpio_emul_input_set(gpio0, 0, 1), 0);
-  k_msleep(1);
+  k_yield();
   zassert_equal(gpio_demo_interrupt_fake.call_count, 1);
   zassert_equal(gpio_demo_interrupt_fake.arg0_val, power_io_shield);
   zassert_equal(gpio_demo_interrupt_fake.arg1_val, &callback);
@@ -187,7 +187,7 @@ ZTEST(mcp_driver_interrupts, test_level_interrupt) {
 
   // nothing should happen when not INTF is set
   zassert_equal(gpio_emul_input_set(gpio0, 0, 1), 0);
-  k_msleep(1);
+  k_yield();
   zassert_equal(gpio_emul_input_set(gpio0, 0, 0), 0);
   zassert_equal(gpio_demo_interrupt_fake.call_count, 0);
 

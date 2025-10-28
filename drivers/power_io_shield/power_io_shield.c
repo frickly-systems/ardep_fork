@@ -113,7 +113,6 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
   const struct device* dev = data->device;
   const struct power_io_shield_config* config = dev->config;
 
-  // todo: read registers
   uint16_t intf = 0;
   int err = read_u16_reg(config, 0x0E, &intf);
   if (err) {
@@ -149,11 +148,11 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
   gpio_fire_callbacks(&data->interrupt_callbacks, dev,
                       power_io_shield_internal_pins_to_zephyr_bits(ints));
 
-  // todo: test
-  // if any level interrupt is active, resubmit work to check if the level is
+  // If any level interrupt is active, resubmit work to check if the level is
   // still active. If yes the callbacks are fired again, looping until the level
   // goes inactive
   if (level_interrupts & ints) {
+    LOG_DBG("Reschedule");
     k_work_submit(&data->on_interrupt_work);
   }
 }

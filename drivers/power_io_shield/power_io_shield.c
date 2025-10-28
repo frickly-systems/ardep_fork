@@ -45,7 +45,14 @@ struct power_io_shield_data {
   uint16_t int_trigger_falling;
 
   struct k_work on_interrupt_work;
+  struct k_work write_interrupt_config_work;  // to keep pin_interrupt_configure
+                                              // ISR safe, we have to write the
+                                              // config in a work queue item if
+                                              // it is called in an ISR
 };
+
+static void power_io_shield_write_interrupt_config_work_handler(
+    struct k_work* work);
 
 static int write_iocon(const struct power_io_shield_config* config,
                        uint8_t value) {
@@ -147,8 +154,8 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
                       power_io_shield_internal_pins_to_zephyr_bits(ints));
 
   // If any level interrupt is active, resubmit work to check if the level is
-  // still active. If yes the callbacks are fired again, looping until the level
-  // goes inactive
+  // still active. If yes the callbacks are fired again, looping until the
+  // level goes inactive
   if (level_interrupts & ints) {
     LOG_DBG("Reschedule");
     k_work_submit(&data->on_interrupt_work);
@@ -198,8 +205,8 @@ static int power_io_shield_init(const struct device* dev) {
     }
   }
 
-  // Note, that this driver uses IOCON.BANK=0, which is the default state after
-  // reset.
+  // Note, that this driver uses IOCON.BANK=0, which is the default state
+  // after reset.
 
   // todo: implement bank-interrupts and remove mirror bit
   // Set INT pins as open drain output (ODR=1 MIRROR=1)
@@ -216,6 +223,8 @@ static int power_io_shield_init(const struct device* dev) {
   LOG_INF("HV Shield v2 initialized on I2C address 0x%02x", config->i2c.addr);
 
   k_work_init(&data->on_interrupt_work, power_io_shield_interrupt_work_handler);
+  k_work_init(&data->write_interrupt_config_work,
+              power_io_shield_write_interrupt_config_work_handler);
 
   return 0;
 }
@@ -282,8 +291,8 @@ static int power_io_shield_gpio_set_masked_raw(const struct device* port,
   const struct power_io_shield_config* config = port->config;
   struct power_io_shield_data* data = port->data;
 
-  // extract output bits from mask and value (0x3F is the mask for the 6 output
-  // bits)
+  // extract output bits from mask and value (0x3F is the mask for the 6
+  // output bits)
   const uint8_t output_mask = (mask >> POWER_IO_SHIELD_OUTPUT_BASE) & 0x003F;
   const uint8_t output_value = (value >> POWER_IO_SHIELD_OUTPUT_BASE) & 0x003F;
   // shift to correct mcp pin bits
@@ -454,21 +463,44 @@ static int power_io_shield_pin_interrupt_configure(const struct device* port,
       return -EINVAL;
   }
 
-  if (write_u16_reg(port->config, REG_DEFVALA, defval) != 0) {
-    return -EIO;
-  }
-  if (write_u16_reg(port->config, REG_INTCONA, intcon) != 0) {
-    return -EIO;
-  }
-  if (write_u16_reg(port->config, REG_GPINTENA, gpinten) != 0) {
-    return -EIO;
-  }
-
   data->reg_cache.defval = defval;
   data->reg_cache.intcon = intcon;
   data->reg_cache.gpinten = gpinten;
 
+  // call power_io_shield_write_interrupt_config_work_handler either through
+  // workqueue (if we are in isr) or directly
+  if (k_is_in_isr()) {
+    int ret = k_work_submit(&data->write_interrupt_config_work);
+    if (ret < 0) {
+      return ret;
+    }
+  } else {
+    power_io_shield_write_interrupt_config_work_handler(
+        &data->write_interrupt_config_work);
+  }
+
   return 0;
+}
+
+static void power_io_shield_write_interrupt_config_work_handler(
+    struct k_work* work) {
+  struct power_io_shield_data* data = CONTAINER_OF(
+      work, struct power_io_shield_data, write_interrupt_config_work);
+  const struct device* dev = data->device;
+  const struct power_io_shield_config* config = dev->config;
+
+  int err = write_u16_reg(config, REG_DEFVALA, data->reg_cache.defval);
+  if (err != 0) {
+    LOG_ERR("Could not write register: %d", err);
+  }
+  err = write_u16_reg(config, REG_INTCONA, data->reg_cache.intcon);
+  if (err != 0) {
+    LOG_ERR("Could not write register: %d", err);
+  }
+  err = write_u16_reg(config, REG_GPINTENA, data->reg_cache.gpinten);
+  if (err != 0) {
+    LOG_ERR("Could not write register: %d", err);
+  }
 }
 
 DEVICE_API(gpio, power_io_shield_api) = {

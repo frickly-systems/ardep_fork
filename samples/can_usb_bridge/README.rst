@@ -30,7 +30,7 @@ Build the example with (select your board revision):
 
 .. tabs::
 
-    .. tab:: v1.0.0
+    .. tab:: Ardep v1.0.0
 
         .. code-block::
 
@@ -45,7 +45,7 @@ Build the example with (select your board revision):
         The path is relative to the application directory.
 
 
-    .. tab:: v2.0.0
+    .. tab:: Ardep v2.0.0 and later
         .. code-block::
 
             west build --board ardep@2.0.0 ../modules/lib/cannectivity/app -- \

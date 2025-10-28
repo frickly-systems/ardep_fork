@@ -61,6 +61,11 @@ On ``UART-A`` you will see the following output:
     *** Booting Zephyr OS build zephyr-vx.y.z ***
     I: Starting bootloader
     I: Waiting for USB DFU
+    
+
+.. note::
+
+    ``UART-A`` is the output that is forwarded by the on-board debugger.
 
 Upgrading the firmware
 ======================

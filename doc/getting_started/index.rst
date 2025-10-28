@@ -321,6 +321,10 @@ Build the :ref:`led_sample` with:
 
                         cd $Env:HOMEPATH\ardep-workspace\ardep
                         west build --board ardep samples\led
+                        
+.. note::
+
+    If you're using an older version of the board, append the board version to the boards name (e.g. ``--board ardep@a1.0.0`` or ``--board ardep@1`` for version 1 of the board).
 
 Flash the app using dfu-util:
 

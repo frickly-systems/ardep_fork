@@ -18,6 +18,10 @@ On-Board Debugger (OBD)
     - The Probe is connected to uart-a of the board and provides a two way CDC-ACM for the UART
     - The probe provides a GDB server that can be connected to via a second USB CDC-ACM interface. Use `west debug` or connect manually. See [here](https://black-magic.org/usage/gdb-commands.html) for more information.
 
+How to debug
+=============
+
+.. todo
 
 
 Update the Debugger

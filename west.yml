@@ -27,4 +27,4 @@ manifest:
       revision: 9443ad0ebe547a140ec54790687ae8b4d4e0cd34
     - name: iso14229
       remote: frickly-systems
-      revision: zephyr
+      revision: 59868b10f497498523fa0d57c0f54f7ff63d9b9c

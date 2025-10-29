@@ -1,4 +1,9 @@
-// todo: License
+/*
+ * Copyright (C) Frickly Systems GmbH
+ * Copyright (C) MBition GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef ARDEP_INCLUDE_DT_BINDINGS_POWER_IO_SHIELD_H_
 #define ARDEP_INCLUDE_DT_BINDINGS_POWER_IO_SHIELD_H_

@@ -8,6 +8,7 @@
 #define POWER_IO_SHIELD_OUTPUT_BASE 0x08
 #define POWER_IO_SHIELD_FAULT_BASE 0x10
 
+// mask to extract base from pin number
 #define POWER_IO_SHIELD_BASE_MASK 0xf8
 
 #define POWER_IO_SHIELD_INPUT(pin) (POWER_IO_SHIELD_INPUT_BASE | pin)

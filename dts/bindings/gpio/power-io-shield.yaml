@@ -10,7 +10,7 @@ properties:
 
   int-gpios:
     required: false
-    description: "GPIOs used for HV shield v2 interrupts. Can be shared across multiple hv shields"
+    description: "GPIOs used for power io shield interrupts. Can be shared across multiple power io shields"
     type: "phandle-array"
 
 gpio-cells:

@@ -61,7 +61,7 @@ struct power_io_shield_data {
 static void power_io_shield_write_interrupt_config_work_handler(
     struct k_work* work);
 
-// todo: doc little/big endinan
+// Write two adjacent 8-bit registers as one little-endian 16-bit value
 static int write_u16_reg(const struct power_io_shield_config* config,
                          uint8_t reg_addr,
                          uint16_t value) {
@@ -74,6 +74,7 @@ static int write_u16_reg(const struct power_io_shield_config* config,
   return ret;
 }
 
+// Read two adjacent 8-bit registers as one little-endian 16-bit value
 static int read_u16_reg(const struct power_io_shield_config* config,
                         uint8_t reg_addr,
                         uint16_t* value) {
@@ -126,7 +127,7 @@ static int power_io_shield_zephyr_pin_to_gpio_bit(uint8_t pin) {
 
 static inline uint32_t power_io_shield_internal_pins_to_zephyr_bits(
     uint16_t hv_shield_pins) {
-  // map hv_shield_pins to 0..5/0..2 (for faults)
+  // map hv_shield_pins to 0..5 (0..2 for faults)
   const uint32_t input_values =
       (hv_shield_pins & POWER_IO_SHIELD_INPUT_PINS_MASK) >>
       POWER_IO_SHIELD_INPUT_PINS_START;
@@ -198,7 +199,6 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
   // still active. If yes the callbacks are fired again, looping until the
   // level goes inactive
   if (level_interrupts & ints) {
-    LOG_DBG("Reschedule");
     k_work_submit(&data->on_interrupt_work);
   }
 
@@ -249,7 +249,6 @@ static int power_io_shield_gpio_set_masked_raw(const struct device* port,
   const uint16_t new_gpio =
       (data->reg_cache.gpio & ~mapped_mask) | (mapped_value & mapped_mask);
 
-  // todo: check if we should not write input pin values
   if (write_u16_reg(config, REG_GPIOA, new_gpio) != 0) {
     k_sem_give(&data->lock);
     return -EIO;

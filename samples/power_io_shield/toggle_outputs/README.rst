@@ -4,8 +4,7 @@
 HV Shield
 #########
 
-TODO: EDIT
-This firmware demonstrates the HV Shield v2 driver using one HV (High voltage) GPIO and HV DAC.
+This firmware demonstrates the Power IO Shield's output capabilities by toggling the output pins as a binary counter.
 
 Flash and run
 =============
@@ -27,5 +26,4 @@ Flash it using dfu-util:
 Expected behavior
 =================
 
-TODO
-The HV Shield puts out a slow sawtooth on AO36 and toggles D1
+The Power IO Shield's output pins should count up in binary every second. The inputs and faults are also logged once every second

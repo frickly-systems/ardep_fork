@@ -4,8 +4,7 @@
 HV Shield
 #########
 
-TODO: EDIT
-This firmware demonstrates the HV Shield v2 driver using one HV (High voltage) GPIO and HV DAC.
+This firmware demonstrates the Interrupt capabilities of the Power IO Shield by registering a few different interrupts and logging events
 
 Flash and run
 =============
@@ -14,7 +13,7 @@ Build the firmware with:
 
 .. code-block:: bash
 
-  west build -b ardep samples/power_io_shield
+  west build -b ardep samples/power_io_shield/interrupts/
 
 
 Flash it using dfu-util:
@@ -27,5 +26,5 @@ Flash it using dfu-util:
 Expected behavior
 =================
 
-TODO
-The HV Shield puts out a slow sawtooth on AO36 and toggles D1
+A log is displayed when input pin 0 is detects a raising edge, input pin 1 detects a falling edge, input pin 2 detects any edge or as long as pin 3 is high
+It also logs the state of all inputs and fault pins every second

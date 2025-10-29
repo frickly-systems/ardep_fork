@@ -1,4 +1,4 @@
-target extended-remote /dev/ttyACM0
+target extended-remote /dev/ttyBmpGdb
 
 monitor auto_scan
 

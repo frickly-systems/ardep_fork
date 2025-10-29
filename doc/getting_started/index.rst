@@ -40,7 +40,7 @@ Install the additional dependencies for the ardep board:
     .. code-block:: bash
 
         sudo apt update
-        sudo apt install --no-install-recommends iproute2 dfu-util git-lfs
+        sudo apt install --no-install-recommends iproute2 dfu-util git-lfs gdb-multiarch
 
    .. tab:: Windows
    

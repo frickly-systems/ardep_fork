@@ -36,11 +36,6 @@ The ARDEP mainboard integrates a `Black Magic Probe <https://black-magic.org/ind
 
 - Two USB CDC ACM interfaces provided to the host system
 
-  - ``uart-a`` bridge for a bidirectional serial console
+  - ``uart-a`` bridge for a bidirectional serial console at ``/dev/ttyBmpTarg``
 
-  - Integrated GDB server for firmware debugging
-
-.. note::
-
-  Under linux, the gdb server usually has the lower numbered device node (e.g. ``/dev/ttyACM0``) while the UART console is assigned to the higher numbered one (e.g. ``/dev/ttyACM1``). Verify this by checking the device logs with ``dmesg`` after connecting the debugger.
-
+  - Integrated GDB server for firmware debugging at ``/dev/ttyBmpGdb``

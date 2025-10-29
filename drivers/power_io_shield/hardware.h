@@ -1,3 +1,9 @@
+/* Copyright (C) Frickly Systems GmbH
+ * Copyright (C) MBition GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Defines for Power I/O Shield hardware pin mapping
 #define POWER_IO_SHIELD_OUTPUT_PINS_START 0
 #define POWER_IO_SHIELD_OUTPUT_PINS_MASK 0x003F

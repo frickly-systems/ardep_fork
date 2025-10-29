@@ -16,6 +16,13 @@ Ardep v2.0.0 and later
       The gdb version provided by the zephyr-sdk does not work correctly with the `Black Magic Probe <https://black-magic.org/index.html>`_.
 
       Therefore the ``west debug`` command will not work.
+      
+      Instead, use the ``gdb-multiarch`` or ``arm-none-eabi-gdb`` you installed in the :ref:`getting_started` guide.
+      
+
+   .. note::
+
+      Depending on you system, you might have ``gdb-multiarch`` or ``arm-none-eabi-gdb`` installed. Both work the same way. Just substitute the command name accordingly.
 
    Ardep v2.0.0 and later come with an on-board debugger (OBD) based on the `Black Magic Probe (BMP) <https://black-magic.org/index.html>`_  project.
 
@@ -23,7 +30,7 @@ Ardep v2.0.0 and later
    
    For an overview of the host interface, see :ref:`on_board_debugger`.
    
-   After you connected the debugger to the host via USB-C, start the debugger session with ``gdb-multiarch /path/to/build/zephyr/zephyr.elf`` and run the following instructions to correctly configure the debugger:
+   After you connected the debugger to the host via USB-C, start the debugger session with ``arm-none-eabi-gdb /path/to/build/zephyr/zephyr.elf`` and run the following instructions to correctly configure the debugger:
    
    
    .. code-block:: sh
@@ -36,20 +43,15 @@ Ardep v2.0.0 and later
 
    Replace ``/dev/ttyACM0`` with the correct device node for your system.
    
-   A gdbinit script file is included in the root of the repository as ``debug.gdbinit``. You can use it to automate the startup process with ``gdb-multiarch -x debug.gdbinit /path/to/build/zephyr/zephyr.elf``.
+   A gdbinit script file is included in the root of the repository as ``debug.gdbinit``. You can use it to automate the startup process with ``arm-none-eabi-gdb -x debug.gdbinit /path/to/build/zephyr/zephyr.elf``.
 
    See the `BMP Guide <https://black-magic.org/usage/gdb-commands.html>`_ for more information.
-
-   .. note::
-
-      We recommend using a distribution package that provides ``gdb-multiarch`` or ``arm-none-eabi-gdb`` as the gdb version provided by the zephyr-sdk does not work with the BMP.
-      
 
       
 Firmware Updates
 ----------------
 
-The Black Magic Probe firmware can be refreshed using the dedicated ``bmputil-cli`` utility or an external programmer.
+The Black Magic Probe firmware can be updated using the dedicated ``bmputil-cli`` utility or an external programmer.
 
 bmputil-cli
 ^^^^^^^^^^^

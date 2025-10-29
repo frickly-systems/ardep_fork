@@ -44,11 +44,15 @@ Install the additional dependencies for the ardep board:
 
    .. tab:: Windows
    
-        Install the latest `dfu-util <https://dfu-util.sourceforge.net/>`_ from the `release page <https://dfu-util.sourceforge.net/releases/>`_ (e.g. *dfu-util-X.YY-binaries.tar.xz*), extract the archive and ensure the executables are in your *$PATH*. [2]_
+        - Install the latest `dfu-util <https://dfu-util.sourceforge.net/>`_ from the `release page <https://dfu-util.sourceforge.net/releases/>`_ (e.g. *dfu-util-X.YY-binaries.tar.xz*), extract the archive and ensure the executables are in your *$PATH*. [2]_
 
-        Open a new *command prompt* or *powershell* and run ``dfu-util --version`` to check that the command is available.
-        
-    
+          Open a new *command prompt* or *powershell* and run ``dfu-util --version`` to check that the command is available.
+          
+        - Install the latest `ARM toolchain <https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads>`_ for a current version of GDB. On the download page, select the latest *AArch32 bare-metal target (arm-none-eabi)* toolchain (e.g. *arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi.exe*) and install it.
+
+          It is recommended, that you add the *bin* directory of the installation to your *$PATH* for easier access to the executables (e.g. the path ``C:\Program Files (x86)\Arm GNU Toolchain arm-none-eabi\14.3 rel1\bin``). [2]_
+
+
 Set up your workspace
 *********************
 
@@ -288,14 +292,6 @@ Perform the `Connecting to your Computer <https://black-magic.org/getting-starte
 
 This enables you to use the on-board debugger without root/admin privileges.
 
-[[
-    Von https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads 
-    ``AArch32 bare-metal target (arm-none-eabi)`` runterladen
-    z.B. arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi.exe 
-    und installieren
-    
-    ggf. zum Pfad hinzufügen ``C:\Program Files (x86)\Arm GNU Toolchain arm-none-eabi\14.3 rel1\bin``, dann ist es einfacher die Executable zu starten
-]]
 
 
 Build your first app 

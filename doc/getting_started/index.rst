@@ -288,6 +288,15 @@ Perform the `Connecting to your Computer <https://black-magic.org/getting-starte
 
 This enables you to use the on-board debugger without root/admin privileges.
 
+[[
+    Von https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads 
+    ``AArch32 bare-metal target (arm-none-eabi)`` runterladen
+    z.B. arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi.exe 
+    und installieren
+    
+    ggf. zum Pfad hinzufügen ``C:\Program Files (x86)\Arm GNU Toolchain arm-none-eabi\14.3 rel1\bin``, dann ist es einfacher die Executable zu starten
+]]
+
 
 Build your first app 
 ********************

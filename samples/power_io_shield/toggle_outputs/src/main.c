@@ -67,16 +67,21 @@ int main() {
 
   uint8_t output_value = 0;
   for (;;) {
+    printk("Output GPIO target: ");
     for (size_t i = 0; i < ARRAY_SIZE(output_gpios); i++) {
-      int ret = gpio_pin_set_dt(&output_gpios[i], (output_value >> i) & 1);
+      bool value = (output_value >> i) & 1;
+      printk("%d ", value);
+
+      int ret = gpio_pin_set_dt(&output_gpios[i], value);
       if (ret != 0) {
         LOG_ERR("Failed to set output GPIO pin %d: %d", output_gpios[i].pin,
                 ret);
       }
     }
     output_value++;
+    printk("\n");
 
-    printk("Input GPIO states: ");
+    printk("Input GPIO states:  ");
     for (size_t i = 0; i < ARRAY_SIZE(input_gpios); i++) {
       int ret = gpio_pin_get_dt(&input_gpios[i]);
       if (ret < 0) {
@@ -88,7 +93,7 @@ int main() {
     }
     printk("\n");
 
-    printk("Fault GPIO states: ");
+    printk("Fault GPIO states:  ");
     for (size_t i = 0; i < ARRAY_SIZE(fault_gpios); i++) {
       int ret = gpio_pin_get_dt(&fault_gpios[i]);
       if (ret < 0) {

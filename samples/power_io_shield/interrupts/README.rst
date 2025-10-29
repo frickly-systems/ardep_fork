@@ -1,8 +1,8 @@
 .. _power_io_shield_interrupts_sample:
 
 
-HV Shield
-#########
+Interrupts Sample
+#################
 
 This firmware demonstrates the Interrupt capabilities of the Power IO Shield by registering a few different interrupts and logging events
 

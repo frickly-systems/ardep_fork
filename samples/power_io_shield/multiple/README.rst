@@ -1,8 +1,8 @@
 .. _power_io_shield_multiple_sample:
 
 
-HV Shield
-#########
+Multiple shields sample
+#######################
 
 This firmware demonstrates how to use multiple Power IO Shields with the Ardep platform.
 It configures 2 Power IO Shields, one set to addres 0 and the other to address 1.
@@ -27,4 +27,7 @@ Flash it using dfu-util:
 Expected behavior
 =================
 
-todo
+Both Power IO Shields' outputs should count up in binary every second. The inputs and faults are also logged once every second.
+
+.. note::
+  Don't forget to connect a suitable power supply to the Power IO Shield to see the outputs toggling. See :ref:`power_io_shield_power_supply` for more information

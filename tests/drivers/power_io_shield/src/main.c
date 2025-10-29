@@ -119,3 +119,19 @@ ZTEST(mcp_driver, test_configure_inputs) {
                                        POWER_IO_SHIELD_INPUT(0), GPIO_OUTPUT),
                     0);
 }
+
+ZTEST(mcp_driver, test_setting_input_pin_is_ignored) {
+  zassert_equal(gpio_pin_set(power_io_shield, POWER_IO_SHIELD_INPUT(0), 1), 0);
+  zassert_equal(gpio_pin_set(power_io_shield, POWER_IO_SHIELD_INPUT(4), 1), 0);
+  zassert_equal(
+      power_io_shield_emul_get_u16_reg(power_io_shield_emul, REG_GPIOA),
+      0x0000);
+}
+
+ZTEST(mcp_driver, test_setting_fault_pin_is_ignored) {
+  zassert_equal(gpio_pin_set(power_io_shield, POWER_IO_SHIELD_FAULT(0), 1), 0);
+  zassert_equal(gpio_pin_set(power_io_shield, POWER_IO_SHIELD_FAULT(2), 1), 0);
+  zassert_equal(
+      power_io_shield_emul_get_u16_reg(power_io_shield_emul, REG_GPIOA),
+      0x0000);
+}

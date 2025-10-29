@@ -21,6 +21,14 @@ static void after_each() { RESET_FAKE(gpio_demo_interrupt); }
 
 ZTEST_SUITE(mcp_driver_interrupts, NULL, NULL, NULL, after_each, NULL);
 
+ZTEST(mcp_driver_interrupts,
+      test_configuring_output_as_interrput_is_not_supported) {
+  zassert_equal(
+      gpio_pin_interrupt_configure(power_io_shield, POWER_IO_SHIELD_OUTPUT(0),
+                                   GPIO_INT_EDGE_TO_ACTIVE),
+      -ENOTSUP);
+}
+
 ZTEST(mcp_driver_interrupts, test_rising_edge_interrupt) {
   struct gpio_callback callback;
   gpio_init_callback(&callback, gpio_demo_interrupt,

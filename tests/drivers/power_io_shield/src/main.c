@@ -7,7 +7,6 @@
 #include <zephyr/ztest.h>
 
 #include <ardep/drivers/emul/power_io_shield.h>
-#include <ardep/drivers/i2c_fake.h>
 #include <ardep/dt-bindings/power-io-shield.h>
 
 DEFINE_FFF_GLOBALS;

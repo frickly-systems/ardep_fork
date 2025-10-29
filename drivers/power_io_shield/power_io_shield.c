@@ -125,19 +125,21 @@ static int power_io_shield_zephyr_pin_to_gpio_bit(uint8_t pin) {
   return 0;
 }
 
-static inline uint32_t power_io_shield_internal_pins_to_zephyr_bits(
-    uint16_t hv_shield_pins) {
-  // map hv_shield_pins to 0..5 (0..2 for faults)
+// Other direction as power_io_shield_zephyr_pin_to_gpio_bit, gets a bitmask of
+// mcp pins and returns a bitmask of zephyr pins
+static inline uint32_t power_io_shield_gpio_bits_to_zephyr_bits(
+    uint16_t mcp_pin_bits) {
+  // map mcp_pin_bits to 0..5 (0..2 for faults)
   const uint32_t input_values =
-      (hv_shield_pins & POWER_IO_SHIELD_INPUT_PINS_MASK) >>
+      (mcp_pin_bits & POWER_IO_SHIELD_INPUT_PINS_MASK) >>
       POWER_IO_SHIELD_INPUT_PINS_START;
   const uint32_t output_values =
-      (hv_shield_pins & POWER_IO_SHIELD_OUTPUT_PINS_MASK) >>
+      (mcp_pin_bits & POWER_IO_SHIELD_OUTPUT_PINS_MASK) >>
       POWER_IO_SHIELD_OUTPUT_PINS_START;
   const uint32_t fault_values =
-      ((hv_shield_pins >> POWER_IO_SHIELD_FAULT0_PIN) & 0x1) |
-      (((hv_shield_pins >> POWER_IO_SHIELD_FAULT1_PIN) & 0x1) << 1) |
-      (((hv_shield_pins >> POWER_IO_SHIELD_FAULT2_PIN) & 0x1) << 2);
+      ((mcp_pin_bits >> POWER_IO_SHIELD_FAULT0_PIN) & 0x1) |
+      (((mcp_pin_bits >> POWER_IO_SHIELD_FAULT1_PIN) & 0x1) << 1) |
+      (((mcp_pin_bits >> POWER_IO_SHIELD_FAULT2_PIN) & 0x1) << 2);
 
   // map bits to zephyr pin positions
   return (input_values << POWER_IO_SHIELD_INPUT_BASE) |
@@ -193,7 +195,7 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
       (level_interrupts | rising_edge_interrupts | falling_edge_interrupts);
 
   gpio_fire_callbacks(&data->interrupt_callbacks, dev,
-                      power_io_shield_internal_pins_to_zephyr_bits(ints));
+                      power_io_shield_gpio_bits_to_zephyr_bits(ints));
 
   // If any level interrupt is active, resubmit work to check if the level is
   // still active. If yes the callbacks are fired again, looping until the
@@ -220,7 +222,7 @@ static int power_io_shield_port_get_raw(const struct device* port,
   }
 
   data->reg_cache.gpio = reg_value;
-  *value = power_io_shield_internal_pins_to_zephyr_bits(reg_value);
+  *value = power_io_shield_gpio_bits_to_zephyr_bits(reg_value);
 
   k_sem_give(&data->lock);
   return 0;

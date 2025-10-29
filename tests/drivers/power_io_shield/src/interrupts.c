@@ -7,7 +7,6 @@
 #include <zephyr/ztest.h>
 
 #include <ardep/drivers/emul/power_io_shield.h>
-#include <ardep/drivers/i2c_fake.h>
 #include <ardep/dt-bindings/power-io-shield.h>
 
 static const struct device* gpio0 = DEVICE_DT_GET(DT_NODELABEL(gpio0));

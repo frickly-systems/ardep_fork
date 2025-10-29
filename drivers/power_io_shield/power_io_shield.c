@@ -1,5 +1,7 @@
 #define DT_DRV_COMPAT power_io_shield
 
+#include "hardware.h"
+
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
@@ -16,6 +18,8 @@ LOG_MODULE_REGISTER(power_io_shield, CONFIG_POWER_IO_SHIELD_LOG_LEVEL);
 #define REG_IOCONA 0x0A
 
 #define REG_INTCONA 0x08
+#define REG_INTFA 0x0E
+#define REG_INTCAPA 0x10
 #define REG_DEFVALA 0x06
 #define REG_GPINTENA 0x04
 #define REG_GPIOA 0x12
@@ -57,6 +61,7 @@ struct power_io_shield_data {
 static void power_io_shield_write_interrupt_config_work_handler(
     struct k_work* work);
 
+// todo: doc little/big endinan
 static int write_u16_reg(const struct power_io_shield_config* config,
                          uint8_t reg_addr,
                          uint16_t value) {
@@ -87,35 +92,28 @@ static int write_iocon(const struct power_io_shield_config* config,
   return write_u16_reg(config, REG_IOCONA, (value << 8) | value);
 }
 
-static int power_io_shield_pin_to_bit(uint8_t pin) {
+// Map zephyr pin number to mcp gpio bit number. Note that the gpio api already
+// verifies that the pin number is valid through the config's common field
+static int power_io_shield_zephyr_pin_to_gpio_bit(uint8_t pin) {
   uint8_t pin_base = pin & POWER_IO_SHIELD_BASE_MASK;
   uint8_t pin_index = pin & ~POWER_IO_SHIELD_BASE_MASK;
 
   switch (pin_base) {
     case POWER_IO_SHIELD_INPUT_BASE:
-      if (pin_index >= 6) {
-        LOG_ERR("Invalid input pin index: %d", pin_index);
-        break;
-      }
-      return pin_index + 8;  // Inputs are on port b 0-5
+      return pin_index + POWER_IO_SHIELD_INPUT_PINS_START;
 
     case POWER_IO_SHIELD_OUTPUT_BASE:
-      if (pin_index >= 6) {
-        LOG_ERR("Invalid output pin index: %d", pin_index);
-        break;
-      }
-      return pin_index;  // Outputs are on port a 0-5
+      return pin_index + POWER_IO_SHIELD_OUTPUT_PINS_START;
 
-    case POWER_IO_SHIELD_FAULT_BASE:  // Fault (treated as input)
+    case POWER_IO_SHIELD_FAULT_BASE:
       switch (pin_index) {
         case 0:
-          return 6;
+          return POWER_IO_SHIELD_FAULT0_PIN;
         case 1:
-          return 14;
+          return POWER_IO_SHIELD_FAULT1_PIN;
         case 2:
-          return 15;
+          return POWER_IO_SHIELD_FAULT2_PIN;
         default:
-          LOG_ERR("Invalid fault pin index: %d", pin_index);
           break;
       }
 
@@ -123,20 +121,24 @@ static int power_io_shield_pin_to_bit(uint8_t pin) {
       break;
   }
 
-  return -ENOTSUP;
+  return 0;
 }
 
 static inline uint32_t power_io_shield_internal_pins_to_zephyr_bits(
     uint16_t hv_shield_pins) {
+  // map hv_shield_pins to 0..5/0..2 (for faults)
   const uint32_t input_values =
-      ((hv_shield_pins >> 8) & 0x3F);  // Inputs are on port b 0-5
+      (hv_shield_pins & POWER_IO_SHIELD_INPUT_PINS_MASK) >>
+      POWER_IO_SHIELD_INPUT_PINS_START;
   const uint32_t output_values =
-      (hv_shield_pins & 0x3F);  // Outputs are on port a 0-5
+      (hv_shield_pins & POWER_IO_SHIELD_OUTPUT_PINS_MASK) >>
+      POWER_IO_SHIELD_OUTPUT_PINS_START;
   const uint32_t fault_values =
-      ((hv_shield_pins >> 6) & 0x1) | (((hv_shield_pins >> 14) & 0x1) << 1) |
-      (((hv_shield_pins >> 15) & 0x1)
-       << 2);  // Faults on bits 6,14,15 mapped to 0..2
+      ((hv_shield_pins >> POWER_IO_SHIELD_FAULT0_PIN) & 0x1) |
+      (((hv_shield_pins >> POWER_IO_SHIELD_FAULT1_PIN) & 0x1) << 1) |
+      (((hv_shield_pins >> POWER_IO_SHIELD_FAULT2_PIN) & 0x1) << 2);
 
+  // map bits to zephyr pin positions
   return (input_values << POWER_IO_SHIELD_INPUT_BASE) |
          (output_values << POWER_IO_SHIELD_OUTPUT_BASE) |
          (fault_values << POWER_IO_SHIELD_FAULT_BASE);
@@ -160,7 +162,7 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
   k_sem_take(&data->lock, K_FOREVER);
 
   uint16_t intf = 0;
-  int err = read_u16_reg(config, 0x0E, &intf);
+  int err = read_u16_reg(config, REG_INTFA, &intf);
   if (err) {
     LOG_ERR("Error handling interrupt; could not read register: %d", err);
     goto cleanup;
@@ -172,7 +174,7 @@ static void power_io_shield_interrupt_work_handler(struct k_work* work) {
   }
 
   uint16_t intcap = 0;
-  err = read_u16_reg(config, 0x10, &intcap);
+  err = read_u16_reg(config, REG_INTCAPA, &intcap);
   if (err) {
     LOG_ERR("Error handling interrupt; could not read INTCAP register: %d",
             err);
@@ -230,19 +232,24 @@ static int power_io_shield_gpio_set_masked_raw(const struct device* port,
   const struct power_io_shield_config* config = port->config;
   struct power_io_shield_data* data = port->data;
 
-  // extract output bits from mask and value (0x3F is the mask for the 6
-  // output bits)
-  const uint8_t output_mask = (mask >> POWER_IO_SHIELD_OUTPUT_BASE) & 0x003F;
-  const uint8_t output_value = (value >> POWER_IO_SHIELD_OUTPUT_BASE) & 0x003F;
-  // shift to correct mcp pin bits
-  const uint16_t mapped_mask = output_mask;  // Outputs are on pins 0-5
-  const uint16_t mapped_value = output_value;
+  // extract output bits from mask and value
+  const uint8_t output_mask = mask >> POWER_IO_SHIELD_OUTPUT_BASE;
+  const uint8_t output_value = value >> POWER_IO_SHIELD_OUTPUT_BASE;
+  // shift to correct mcp pin bits and finally mask
+  const uint16_t mapped_mask =
+      (output_mask << POWER_IO_SHIELD_OUTPUT_PINS_START) &
+      POWER_IO_SHIELD_OUTPUT_PINS_MASK;
+  const uint16_t mapped_value =
+      (output_value << POWER_IO_SHIELD_OUTPUT_PINS_START) &
+      POWER_IO_SHIELD_OUTPUT_PINS_MASK;
 
   k_sem_take(&data->lock, K_FOREVER);
 
+  // apply new values where mask is set
   const uint16_t new_gpio =
       (data->reg_cache.gpio & ~mapped_mask) | (mapped_value & mapped_mask);
 
+  // todo: check if we should not write input pin values
   if (write_u16_reg(config, REG_GPIOA, new_gpio) != 0) {
     k_sem_give(&data->lock);
     return -EIO;
@@ -271,7 +278,7 @@ static int power_io_shield_pin_configure(const struct device* dev,
   const struct power_io_shield_config* config = dev->config;
   struct power_io_shield_data* data = dev->data;
 
-  uint8_t bit = power_io_shield_pin_to_bit(pin);
+  uint8_t bit = power_io_shield_zephyr_pin_to_gpio_bit(pin);
   if (bit < 0) {
     return bit;
   }
@@ -389,7 +396,7 @@ static int power_io_shield_pin_interrupt_configure(const struct device* port,
     return err;
   }
 
-  uint8_t bit = power_io_shield_pin_to_bit(pin);
+  uint8_t bit = power_io_shield_zephyr_pin_to_gpio_bit(pin);
 
   uint16_t defval = data->reg_cache.defval;
   uint16_t intcon =
@@ -454,7 +461,8 @@ static int power_io_shield_pin_interrupt_configure(const struct device* port,
   // workqueue (if we are in isr) or directly
   if (k_is_in_isr()) {
     int ret = k_work_submit(&data->write_interrupt_config_work);
-    if (ret > 0) {  // ignore warnings
+    // ignore warnings
+    if (ret > 0) {
       ret = 0;
     }
   } else {
@@ -543,7 +551,14 @@ static int power_io_shield_init(const struct device* dev) {
   }
 
   // Write IODIR registers (1 is input, 0 is output)
-  if (write_u16_reg(config, REG_IODIRA, 0b0111111101000000) != 0) {
+  // note the 0x7f7f mask as the pin 7 of each port is not allowed to be set as
+  // input
+  static const uint16_t iodir_value =
+      (POWER_IO_SHIELD_INPUT_PINS_MASK | BIT(POWER_IO_SHIELD_FAULT0_PIN) |
+       BIT(POWER_IO_SHIELD_FAULT1_PIN) | BIT(POWER_IO_SHIELD_FAULT2_PIN)) &
+      0x7f7f;
+
+  if (write_u16_reg(config, REG_IODIRA, iodir_value) != 0) {
     LOG_ERR("Failed to write IODIR registers");
     return -EIO;
   }

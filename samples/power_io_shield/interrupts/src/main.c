@@ -124,7 +124,7 @@ int main() {
 
   LOG_INF("GPIOs initialized successfully.");
 
-  LOG_INF("Entering main loop, toggling output GPIOs and logging inputs");
+  LOG_INF("Entering main loop, logging input GPIOs");
 
   for (;;) {
     printk("Input GPIO states: ");

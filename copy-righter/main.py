@@ -4,6 +4,7 @@ from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess, run
 from cmake import CmakeProcessor
 from c import CProcessor
+from python import PythonProcessor
 
 
 from config import Config
@@ -36,13 +37,14 @@ def main():
             for file_path in file_list:
                 print(f"  {file_path}")
 
-    for cmake_files in paths.paths.get("CMakeLists.txt", []):
-        processor = CmakeProcessor(cmake_files)
-        processor.run(config)
+    for cmake_file in paths.paths.get("CMakeLists.txt", []):
+        CmakeProcessor(cmake_file).run(config)
 
-    for h_files in paths.paths.get(".h", []):
-        processor = CProcessor(h_files)
-        processor.run(config)
+    for c_header in paths.paths.get(".h", []):
+        CProcessor(c_header).run(config)
+
+    for python_file in paths.paths.get(".py", []):
+        PythonProcessor(python_file).run(config)
 
 
 if __name__ == "__main__":

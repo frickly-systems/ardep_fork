@@ -15,17 +15,6 @@ LOG_MODULE_REGISTER(uds, CONFIG_UDS_LOG_LEVEL);
 #include <ardep/uds.h>
 #include <iso14229.h>
 
-/**
- * @brief Associated events with other data required to handle them
- */
-struct uds_event_handler_data {
-  UDSEvent_t event;
-  uds_get_check_fn get_check;
-  uds_get_action_fn get_action;
-  UDSErr_t default_nrc;
-  enum uds_registration_type_t registration_type;
-};
-
 // Wraps the logic to check and execute action on the event
 static UDSErr_t uds_check_and_act_on_event(
     struct uds_context* context,

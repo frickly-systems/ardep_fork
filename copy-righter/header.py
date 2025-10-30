@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable, Tuple
+from typing import Iterable, Sequence, Tuple, Union
 
 COMPANY_NAME = "Frickly Systems GmbH"
 LICENSE_IDENTIFIER = "SPDX-License-Identifier: Apache-2.0"
@@ -17,11 +17,11 @@ class Header:
     def __init__(
         self,
         *,
-        company: str = COMPANY_NAME,
+        companies: Union[Iterable[str], str, None] = None,
         license_identifier: str = LICENSE_IDENTIFIER,
         lines: Iterable[str] | None = None,
     ):
-        self.company = company
+        self.companies = self._coerce_companies(companies)
         self.license_identifier = license_identifier
         self._lines: list[str] = []
         if lines is not None:
@@ -44,7 +44,10 @@ class Header:
     def has_copyright(self) -> bool:
         """Return True if at least one copyright holder is present."""
         _, holders, _, _ = self._analyse()
-        return bool(holders)
+        return all(
+            any(self._company_in_holder(holder, company) for holder in holders)
+            for company in self.companies
+        )
 
     def get_formatted(self) -> Tuple[list[str], bool]:
         """
@@ -54,9 +57,9 @@ class Header:
         normalized, holders, other, has_license = self._analyse()
 
         new_holders = holders[:]
-        if not any(self.company in holder for holder in new_holders):
-            style = self._determine_notice_style(new_holders)
-            new_holders.append(self._build_notice(style, self.company))
+        style = self._determine_notice_style(new_holders)
+        for company in self._missing_companies(new_holders):
+            new_holders.append(self._build_notice(style, company))
 
         result: list[str] = []
         if new_holders:
@@ -100,6 +103,26 @@ class Header:
 
     def _normalize_line(self, line: str) -> str:
         return line.rstrip("\n")
+
+    def _missing_companies(self, holders: Sequence[str]) -> list[str]:
+        missing: list[str] = []
+        for company in self.companies:
+            if not any(self._company_in_holder(holder, company) for holder in holders):
+                missing.append(company)
+        return missing
+
+    def _company_in_holder(self, holder: str, company: str) -> bool:
+        return company in holder
+
+    def _coerce_companies(
+        self, companies: Union[Iterable[str], str, None]
+    ) -> list[str]:
+        if companies is None:
+            return [COMPANY_NAME]
+        if isinstance(companies, str):
+            return [companies]
+        collected = [company for company in companies if company]
+        return collected or [COMPANY_NAME]
 
     def is_license_line(self, line: str) -> bool:
         return "SPDX-License-Identifier:" in line

@@ -61,6 +61,8 @@ class CmakeProcessor(CopyrightProcessor):
         new_lines: list[str] = []
         if shebang:
             new_lines.append(shebang)
+            if rendered_header:
+                new_lines.append("#\n")
 
         new_lines.extend(rendered_header)
 

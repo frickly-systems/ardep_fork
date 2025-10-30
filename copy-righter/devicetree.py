@@ -58,9 +58,9 @@ class DevicetreeProcessor(CopyrightProcessor):
                 comment_style = "single"
                 header_lines, idx = self._collect_single_comment(lines, idx)
                 break
+            # Devicetree files use C-style comments; stop header collection at the first
+            # non-comment (e.g. #include) directive.
             if stripped.startswith("#"):
-                comment_style = "hash"
-                header_lines, idx = self._collect_hash_comment(lines, idx)
                 break
             if stripped.strip():
                 break
@@ -73,8 +73,6 @@ class DevicetreeProcessor(CopyrightProcessor):
             header.add_lines(self._strip_block_comment_lines(header_lines))
         elif comment_style == "single":
             header.add_lines(self._strip_single_comment_lines(header_lines))
-        elif comment_style == "hash":
-            header.add_lines(self._strip_hash_comment_lines(header_lines))
         else:
             header.add_lines([line.rstrip("\n") for line in header_lines])
 
@@ -113,17 +111,6 @@ class DevicetreeProcessor(CopyrightProcessor):
         while idx < len(lines):
             stripped = lines[idx].lstrip()
             if not stripped.startswith("//"):
-                break
-            collected.append(lines[idx])
-            idx += 1
-        return collected, idx
-
-    def _collect_hash_comment(self, lines: list[str], start: int) -> tuple[list[str], int]:
-        collected: list[str] = []
-        idx = start
-        while idx < len(lines):
-            stripped = lines[idx].lstrip()
-            if not stripped.startswith("#"):
                 break
             collected.append(lines[idx])
             idx += 1

@@ -1,7 +1,11 @@
 import logging
 import time
 from serial import Serial
-from serial_message import BootBannerFound, SerialMessage
+
+try:
+    from .serial_message import BootBannerFound, SerialMessage
+except ImportError:
+    from serial_message import BootBannerFound, SerialMessage  # type: ignore
 
 log = logging.getLogger(__name__ + ".idle")
 
@@ -24,9 +28,7 @@ class IdleChecker:
     def _wait_until_idle(self, serial_port: Serial):
         for attempt in range(1, self.MAX_ATTEMPTS + 1):
             serial_port.writelines([b"idle\n"])
-            log.debug(
-                "Sent idle request on %s (attempt %d)", serial_port.port, attempt
-            )
+            log.debug("Sent idle request on %s (attempt %d)", serial_port.port, attempt)
             should_retry = False
 
             while True:

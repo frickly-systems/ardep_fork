@@ -93,6 +93,16 @@ def test_header_no_changes_when_complete():
     ]
 
 
+def test_header_respects_explicit_license_override():
+    header = Header(license_identifier="MIT")
+    header.add_lines(["", "Existing info"])
+
+    formatted, changed = header.get_formatted()
+
+    assert changed is True
+    assert "SPDX-License-Identifier: MIT" in formatted
+
+
 def test_header_adds_missing_companies_in_order():
     companies = ["Frickly Systems GmbH", "MBition GmbH", "Another Corp"]
     header = Header(companies=companies)

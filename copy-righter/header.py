@@ -4,7 +4,8 @@ from datetime import datetime
 from typing import Iterable, Sequence, Tuple, Union
 
 COMPANY_NAME = "Frickly Systems GmbH"
-LICENSE_IDENTIFIER = "SPDX-License-Identifier: Apache-2.0"
+LICENSE_TOKEN = "SPDX-License-Identifier: "
+DEFAULT_LICENSE = "Apache-2.0"
 
 
 class Header:
@@ -18,11 +19,12 @@ class Header:
         self,
         *,
         companies: Union[Iterable[str], str, None] = None,
-        license_identifier: str = LICENSE_IDENTIFIER,
+        license_identifier: str | None = None,
         lines: Iterable[str] | None = None,
     ):
         self.companies = self._coerce_companies(companies)
-        self.license_identifier = license_identifier
+        self._explicit_license = license_identifier is not None
+        self.license_identifier = (license_identifier or DEFAULT_LICENSE).strip()
         self._lines: list[str] = []
         if lines is not None:
             self.add_lines(lines)
@@ -66,7 +68,7 @@ class Header:
             result.extend(new_holders)
             result.append("")
 
-        result.append(self.license_identifier)
+        result.append(f"{LICENSE_TOKEN}{self.license_identifier}")
 
         cleaned_other = self._trim_blank_edges(other)
         if cleaned_other:
@@ -93,6 +95,10 @@ class Header:
                 continue
             if self.is_license_line(stripped):
                 has_license = True
+                if not self._explicit_license:
+                    extracted = self._extract_license_value(stripped)
+                    if extracted:
+                        self.license_identifier = extracted
                 continue
             if self._style_from_comment(stripped) is not None:
                 holders.append(stripped)
@@ -125,7 +131,12 @@ class Header:
         return collected or [COMPANY_NAME]
 
     def is_license_line(self, line: str) -> bool:
-        return "SPDX-License-Identifier:" in line
+        return line.startswith(LICENSE_TOKEN)
+
+    def _extract_license_value(self, line: str) -> str:
+        if not self.is_license_line(line):
+            return ""
+        return line[len(LICENSE_TOKEN):].strip()
 
     def is_holder_line(self, line: str) -> bool:
         return self._style_from_comment(line.strip()) is not None

@@ -14,10 +14,10 @@ from python import PythonProcessor  # type: ignore  # pylint: disable=import-err
 from config import Config  # type: ignore  # pylint: disable=import-error
 
 
-def _run_processor(processor_cls, content: str, suffix: str) -> str:
+def _run_processor(processor_cls, content: str, suffix: str, **kwargs) -> str:
     tmp_path = PROJECT_ROOT / "tests" / f"_temp_test_file{suffix}"
     tmp_path.write_text(content, encoding="utf-8")
-    processor = processor_cls(str(tmp_path))
+    processor = processor_cls(str(tmp_path), **kwargs)
     processor.run(Config(dry_run=False, verbose=False))
     result = tmp_path.read_text(encoding="utf-8")
     tmp_path.unlink()
@@ -138,3 +138,18 @@ def test_devicetree_processor_formats_block_comment():
     )
 
     assert result == expected
+
+
+def test_processors_honor_custom_license_identifier():
+    original_py = "# header\n"
+    original_dts = "/dts-v1/;\n"
+
+    result_py = _run_processor(
+        PythonProcessor, original_py, ".py", license_identifier="MIT"
+    )
+    result_dts = _run_processor(
+        DevicetreeProcessor, original_dts, ".dts", license_identifier="MIT"
+    )
+
+    assert "SPDX-License-Identifier: MIT" in result_py
+    assert "SPDX-License-Identifier: MIT" in result_dts

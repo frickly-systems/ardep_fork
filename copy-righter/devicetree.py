@@ -18,7 +18,7 @@ class DevicetreeProcessor(CopyrightProcessor):
         path: str,
         *,
         companies: list[str] | None = None,
-        license_identifier: str = "SPDX-License-Identifier: Apache-2.0",
+        license_identifier: str | None = None,
     ):
         super().__init__(path)
         self.companies = companies or DEFAULT_COMPANIES

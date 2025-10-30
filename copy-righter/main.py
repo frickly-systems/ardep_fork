@@ -42,10 +42,8 @@ def main():
 
     paths: PathsToProcess = PathsToProcess(str(base_path))
 
-    companies = args.copyrights or ["Frickly Systems GmbH"]
-    license_identifier = (
-        args.license_identifier or "SPDX-License-Identifier: Apache-2.0"
-    )
+    companies = [entry.strip() for entry in (args.copyrights or ["Frickly Systems GmbH"])]
+    license_identifier = args.license_identifier.strip() if args.license_identifier else None
 
     if config.verbose:
         print("Files to process:")

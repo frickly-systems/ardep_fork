@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from config import Config
-from header import is_holder_line, is_license_line, rewrite_header
+from header import Header
 from util import CopyrightProcessor
 
 
@@ -42,248 +42,141 @@ class CProcessor(CopyrightProcessor):
         Path(self.path).write_text("".join(lines), encoding="utf-8")
 
     def _process_lines(self, lines: list[str]) -> tuple[list[str], bool]:
-        original = lines[:]
-        working: list[str] = lines[:]
-
-        if not working:
-            working = []
-
-        shebang: str | None = None
-        if working and working[0].startswith("#!"):
-            shebang = self._ensure_trailing_newline(working.pop(0))
-
-        while working and not working[0].strip():
-            working.pop(0)
-        self._consume_legacy_hash_header(working)
-        while working and not working[0].strip():
-            working.pop(0)
-
-        comment_style = self._detect_comment_style(working)
-        header_lines, rest_lines = self._split_header(working, comment_style)
-        rest_lines = self._strip_legacy_hash_header(rest_lines)
-        rest_lines = self._strip_legacy_comment_header(rest_lines, comment_style)
-        header_content = self._parse_header_content(comment_style, header_lines)
-        rewritten_content, _ = rewrite_header(header_content)
-        if shebang and comment_style == CommentStyle.BLOCK:
-            if not rewritten_content or rewritten_content[0].strip():
-                rewritten_content = [""] + rewritten_content
-        rendered_header = self._render_header(comment_style, rewritten_content)
-
-        final_lines: list[str] = []
-        if shebang:
-            final_lines.append(shebang)
-            if comment_style == CommentStyle.SINGLE:
-                final_lines.append("//\n")
-
-        final_lines.extend(rendered_header)
-
-        gap_line = self._gap_line_for_rest(rest_lines, comment_style)
-        if gap_line:
-            final_lines.append(gap_line)
-
-        final_lines.extend(rest_lines)
-        if final_lines and not final_lines[-1].endswith("\n"):
-            final_lines[-1] = f"{final_lines[-1]}\n"
-
-        changed = final_lines != original
-        return final_lines, changed
-
-    def _detect_comment_style(self, lines: list[str]) -> str:
-        for line in lines[:20]:
-            stripped = line.strip()
-            if not stripped:
-                continue
-            if stripped.startswith("//"):
-                return CommentStyle.SINGLE
-            if stripped.startswith("/*") or stripped.startswith("*") or stripped.startswith("*/"):
-                return CommentStyle.BLOCK
-        return CommentStyle.BLOCK
-
-    def _split_header(self, lines: list[str], style: str) -> tuple[list[str], list[str]]:
-        if not lines:
-            return [], []
-
-        if style == CommentStyle.SINGLE:
-            header: list[str] = []
-            idx = 0
-            while idx < len(lines) and lines[idx].lstrip().startswith("//"):
-                header.append(lines[idx])
-                idx += 1
-            return header, lines[idx:]
-
         idx = 0
-        if not lines[0].lstrip().startswith("/*"):
-            return [], lines
-        header: list[str] = []
+        shebang: str | None = None
+
+        if idx < len(lines) and lines[idx].startswith("#!"):
+            shebang = self._ensure_newline(lines[idx])
+            idx += 1
+
+        while idx < len(lines) and lines[idx].strip() == "":
+            idx += 1
+
+        if idx >= len(lines):
+            comment_style = CommentStyle.BLOCK
+            header_lines: list[str] = []
+            header_end = idx
+        else:
+            stripped = lines[idx].lstrip()
+            if stripped.startswith("//"):
+                comment_style = CommentStyle.SINGLE
+                header_lines, header_end = self._collect_single_comment(lines, idx)
+            elif stripped.startswith("/*"):
+                comment_style = CommentStyle.BLOCK
+                header_lines, header_end = self._collect_block_comment(lines, idx)
+            else:
+                comment_style = CommentStyle.BLOCK
+                header_lines = []
+                header_end = idx
+
+        header = Header()
+        if header_lines:
+            if comment_style == CommentStyle.SINGLE:
+                header.add_lines(self._strip_single_comment_prefix(line) for line in header_lines)
+            else:
+                header.add_lines(self._strip_block_comment_lines(header_lines))
+
+        formatted_header, _ = header.get_formatted()
+        rendered_header = self._render_header(formatted_header, comment_style)
+
+        rest_lines = lines[header_end:]
+
+        new_lines: list[str] = []
+        if shebang:
+            new_lines.append(shebang)
+        new_lines.extend(rendered_header)
+        if rest_lines and rest_lines[0].strip():
+            new_lines.append("\n")
+        new_lines.extend(rest_lines)
+
+        if new_lines and not new_lines[-1].endswith("\n"):
+            new_lines[-1] = f"{new_lines[-1]}\n"
+
+        changed = new_lines != lines
+        return new_lines, changed
+
+    def _collect_single_comment(self, lines: list[str], start: int) -> tuple[list[str], int]:
+        collected: list[str] = []
+        idx = start
         while idx < len(lines):
-            header.append(lines[idx])
+            stripped = lines[idx].lstrip()
+            if not stripped.startswith("//"):
+                break
+            collected.append(lines[idx])
+            idx += 1
+        return collected, idx
+
+    def _collect_block_comment(self, lines: list[str], start: int) -> tuple[list[str], int]:
+        collected: list[str] = []
+        idx = start
+        while idx < len(lines):
+            collected.append(lines[idx])
             if "*/" in lines[idx]:
                 idx += 1
                 break
             idx += 1
-        return header, lines[idx:]
+        return collected, idx
 
-    def _parse_header_content(self, style: str, header_lines: list[str]) -> list[str]:
-        if not header_lines:
+    def _strip_single_comment_prefix(self, line: str) -> str:
+        stripped = line.lstrip()
+        if not stripped.startswith("//"):
+            return ""
+        content = stripped[2:]
+        if content.startswith(" "):
+            content = content[1:]
+        return content.rstrip("\n")
+
+    def _strip_block_comment_lines(self, lines: list[str]) -> list[str]:
+        if not lines:
             return []
 
-        if style == CommentStyle.SINGLE:
-            content: list[str] = []
-            for line in header_lines:
-                stripped = line.lstrip()
-                if not stripped.startswith("//"):
-                    continue
-                text = stripped[2:]
-                if text.startswith(" "):
-                    text = text[1:]
-                content.append(text.rstrip("\n"))
-            return content
+        result: list[str] = []
+        first = lines[0]
+        after = first.split("/*", 1)[1] if "/*" in first else ""
 
-        content: list[str] = []
-        for idx, line in enumerate(header_lines):
-            stripped = line.rstrip("\n")
-            if idx == 0:
-                after = stripped.split("/*", 1)[1] if "/*" in stripped else ""
-                after = after.strip().rstrip("*/").strip()
-                if after:
-                    content.append(after)
-                continue
-            if "*/" in stripped:
-                before = stripped.split("*/", 1)[0].strip()
+        if "*/" in after:
+            inner = after.split("*/", 1)[0].strip()
+            if inner:
+                result.append(inner)
+            return result
+
+        initial = after.strip()
+        if initial:
+            result.append(initial)
+
+        for body_line in lines[1:]:
+            if "*/" in body_line:
+                before = body_line.split("*/", 1)[0].strip()
                 if before.startswith("*"):
                     before = before[1:].lstrip()
                 if before:
-                    content.append(before)
+                    result.append(before)
                 break
-            stripped = stripped.strip()
+            stripped = body_line.strip()
             if stripped.startswith("*"):
-                text = stripped[1:].lstrip()
-                content.append(text)
-            else:
-                content.append(stripped)
-        return content
+                stripped = stripped[1:].lstrip()
+            result.append(stripped)
 
-    def _render_header(self, style: str, content: list[str]) -> list[str]:
+        return result
+
+    def _render_header(self, entries: list[str], style: str) -> list[str]:
         if style == CommentStyle.SINGLE:
-            lines: list[str] = []
-            for entry in content:
-                text = entry.rstrip()
-                if text:
-                    lines.append(f"// {text}\n")
+            rendered: list[str] = []
+            for entry in entries:
+                if entry:
+                    rendered.append(f"// {entry}\n")
                 else:
-                    lines.append("//\n")
-            return lines
+                    rendered.append("//\n")
+            return rendered
 
-        lines: list[str] = ["/*\n"]
-        for entry in content:
-            text = entry.rstrip()
-            if text:
-                lines.append(f" * {text}\n")
+        rendered = ["/*\n"]
+        for entry in entries:
+            if entry:
+                rendered.append(f" * {entry}\n")
             else:
-                lines.append(" *\n")
-        lines.append(" */\n")
-        return lines
+                rendered.append(" *\n")
+        rendered.append(" */\n")
+        return rendered
 
-    def _gap_line_for_rest(self, rest_lines: list[str], style: str) -> str | None:
-        if not rest_lines:
-            return None
-        if rest_lines[0].strip() == "":
-            return None
-
-        first_idx = 0
-        while first_idx < len(rest_lines) and rest_lines[first_idx].strip() == "":
-            first_idx += 1
-        if first_idx > 0:
-            return None
-
-        first_line = rest_lines[0].lstrip()
-        if style == CommentStyle.SINGLE and (
-            first_line.startswith("//") or first_line.startswith("/*")
-        ):
-            return "//\n"
-        return "\n"
-
-    def _strip_legacy_hash_header(self, lines: list[str]) -> list[str]:
-        idx = 0
-        while idx < len(lines):
-            stripped = lines[idx].strip()
-            if stripped == "":
-                idx += 1
-                continue
-            if stripped == "#":
-                idx += 1
-                continue
-            if stripped.startswith("# SPDX-License-Identifier:"):
-                idx += 1
-                continue
-            if stripped.startswith("# SPDX-FileCopyrightText:"):
-                idx += 1
-                continue
-            break
-        return lines[idx:]
-
-    def _consume_legacy_hash_header(self, lines: list[str]) -> None:
-        while lines:
-            stripped = lines[0].strip()
-            if stripped == "":
-                lines.pop(0)
-                continue
-            if stripped == "#":
-                lines.pop(0)
-                continue
-            if stripped.startswith("# SPDX-License-Identifier:"):
-                lines.pop(0)
-                continue
-            if stripped.startswith("# SPDX-FileCopyrightText:"):
-                lines.pop(0)
-                continue
-            break
-
-    def _strip_legacy_comment_header(
-        self, lines: list[str], default_style: str
-    ) -> list[str]:
-        if not lines:
-            return lines
-
-        stripped = lines[0].lstrip()
-        if stripped.startswith("/*"):
-            header, remainder = self._split_header(lines, CommentStyle.BLOCK)
-            if header and self._is_redundant_header(CommentStyle.BLOCK, header):
-                return self._strip_leading_blank(remainder)
-            return lines
-
-        if stripped.startswith("//"):
-            header, remainder = self._split_header(lines, CommentStyle.SINGLE)
-            if header and self._is_redundant_header(CommentStyle.SINGLE, header):
-                return self._strip_leading_blank(remainder)
-            return lines
-
-        if default_style == CommentStyle.SINGLE and stripped.startswith("#"):
-            # Treat legacy hash header already handled
-            return lines
-
-        return lines
-
-    def _is_redundant_header(self, style: str, header_lines: list[str]) -> bool:
-        content = self._parse_header_content(style, header_lines)
-        if not content:
-            return True
-        for entry in content:
-            stripped = entry.strip()
-            if stripped == "":
-                continue
-            if is_license_line(stripped):
-                continue
-            if is_holder_line(stripped):
-                continue
-            return False
-        return True
-
-    def _strip_leading_blank(self, lines: list[str]) -> list[str]:
-        idx = 0
-        while idx < len(lines) and lines[idx].strip() == "":
-            idx += 1
-        return lines[idx:]
-
-    def _ensure_trailing_newline(self, line: str) -> str:
+    def _ensure_newline(self, line: str) -> str:
         return line if line.endswith("\n") else f"{line}\n"

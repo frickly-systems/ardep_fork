@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from config import Config
-from header import rewrite_header
+from header import Header
 from util import CopyrightProcessor
 
 
@@ -33,57 +33,46 @@ class CmakeProcessor(CopyrightProcessor):
             print(f"[UPDATED] {self.path}")
 
     def _process_lines(self, lines: list[str]) -> list[str]:
-        original = lines[:]
-        working = lines[:]
-
-        shebang: str | None = None
-        if working and working[0].startswith("#!"):
-            shebang = self._ensure_newline(working.pop(0))
-
-        while working and not working[0].strip():
-            working.pop(0)
-
-        header_lines, rest_lines = self._split_header(working)
-        plain_header = [self._strip_comment_prefix(line) for line in header_lines]
-        rewritten_header, _ = rewrite_header(plain_header)
-        rendered_header = [self._format_comment_line(entry) for entry in rewritten_header]
-
-        rest_lines = self._strip_redundant_hash_header(rest_lines)
-
-        final_lines: list[str] = []
-        if shebang:
-            final_lines.append(shebang)
-            final_lines.append("#\n")
-
-        final_lines.extend(rendered_header)
-
-        gap_line = self._gap_line_for_rest(rest_lines)
-        if gap_line:
-            final_lines.append(gap_line)
-
-        final_lines.extend(rest_lines)
-
-        if final_lines and not final_lines[-1].endswith("\n"):
-            final_lines[-1] = f"{final_lines[-1]}\n"
-
-        return final_lines
-
-    def _split_header(self, lines: list[str]) -> tuple[list[str], list[str]]:
-        header: list[str] = []
         idx = 0
-        limit = min(20, len(lines))
-        while idx < len(lines) and idx < limit:
-            stripped = lines[idx].strip()
-            if not stripped:
-                header.append(lines[idx])
-                idx += 1
-                continue
+        shebang: str | None = None
+        if idx < len(lines) and lines[idx].startswith("#!"):
+            shebang = self._ensure_newline(lines[idx])
+            idx += 1
+
+        header_start = idx
+        header_lines: list[str] = []
+        while idx < len(lines):
+            stripped = lines[idx].lstrip()
             if stripped.startswith("#"):
-                header.append(lines[idx])
+                header_lines.append(lines[idx])
                 idx += 1
-                continue
-            break
-        return header, lines[idx:]
+            else:
+                break
+
+        rest_lines = lines[idx:]
+
+        header = Header()
+        if header_lines:
+            for raw in header_lines:
+                header.add_line(self._strip_comment_prefix(raw))
+        formatted_header, _ = header.get_formatted()
+        rendered_header = [self._format_comment_line(entry) for entry in formatted_header]
+
+        new_lines: list[str] = []
+        if shebang:
+            new_lines.append(shebang)
+
+        new_lines.extend(rendered_header)
+
+        if rest_lines:
+            if rest_lines[0].strip():
+                new_lines.append("\n")
+        new_lines.extend(rest_lines)
+
+        if new_lines and not new_lines[-1].endswith("\n"):
+            new_lines[-1] = f"{new_lines[-1]}\n"
+
+        return new_lines
 
     def _strip_comment_prefix(self, line: str) -> str:
         stripped = line.lstrip()
@@ -98,47 +87,6 @@ class CmakeProcessor(CopyrightProcessor):
         if entry:
             return f"# {entry}\n"
         return "#\n"
-
-    def _gap_line_for_rest(self, rest_lines: list[str]) -> str | None:
-        if not rest_lines:
-            return None
-        if rest_lines[0].strip() == "":
-            return None
-
-        first_idx = 0
-        while first_idx < len(rest_lines) and rest_lines[first_idx].strip() == "":
-            first_idx += 1
-        if first_idx > 0:
-            return None
-
-        first_line = rest_lines[0].lstrip()
-        if first_line.startswith("#"):
-            return "#\n"
-        return "\n"
-
-    def _strip_redundant_hash_header(self, lines: list[str]) -> list[str]:
-        idx = 0
-        while idx < len(lines):
-            stripped = lines[idx].strip()
-            if stripped == "":
-                idx += 1
-                continue
-            if stripped.startswith("#"):
-                content = self._strip_comment_prefix(lines[idx])
-                if not content:
-                    idx += 1
-                    continue
-                if content.startswith("SPDX-License-Identifier:"):
-                    idx += 1
-                    continue
-                if content.startswith("SPDX-FileCopyrightText:"):
-                    idx += 1
-                    continue
-                if content.startswith("Copyright (C)"):
-                    idx += 1
-                    continue
-            break
-        return lines[idx:]
 
     def _ensure_newline(self, line: str) -> str:
         return line if line.endswith("\n") else f"{line}\n"

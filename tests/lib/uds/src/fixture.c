@@ -9,6 +9,7 @@
 #include "fixture.h"
 #include "iso14229.h"
 
+#include <errno.h>
 #include <string.h>
 
 #include <zephyr/drivers/can.h>
@@ -17,8 +18,6 @@
 #include <zephyr/fs/littlefs.h>
 #include <zephyr/storage/flash_map.h>
 #include <zephyr/ztest.h>
-
-#include <errno.h>
 
 DEFINE_FFF_GLOBALS;
 
@@ -251,38 +250,38 @@ static void *uds_setup(void) {
   return &fixture;
 }
 
-  FS_LITTLEFS_DECLARE_DEFAULT_CONFIG(lfs_storage);
+FS_LITTLEFS_DECLARE_DEFAULT_CONFIG(lfs_storage);
 
-  static struct fs_mount_t fixture_fs_mount = {
-    .type = FS_LITTLEFS,
-    .fs_data = &lfs_storage,
-    .storage_dev = (void *)FIXED_PARTITION_ID(storage_partition),
-    .mnt_point = "/lfs",
-  };
+static struct fs_mount_t fixture_fs_mount = {
+  .type = FS_LITTLEFS,
+  .fs_data = &lfs_storage,
+  .storage_dev = (void *)FIXED_PARTITION_ID(storage_partition),
+  .mnt_point = "/lfs",
+};
 
-  extern int fixture_fs_wipe(void) {
-    const struct flash_area *fa;
-    int rc = flash_area_open(FIXED_PARTITION_ID(storage_partition), &fa);
+extern int fixture_fs_wipe(void) {
+  const struct flash_area *fa;
+  int rc = flash_area_open(FIXED_PARTITION_ID(storage_partition), &fa);
 
-    if (rc < 0) {
-      return rc;
-    }
-
-    rc = flash_area_erase(fa, 0, fa->fa_size);
-    flash_area_close(fa);
-
+  if (rc < 0) {
     return rc;
   }
 
-  static void fixture_fs_mount_or_fail(void) {
-    fs_unmount(&fixture_fs_mount);
+  rc = flash_area_erase(fa, 0, fa->fa_size);
+  flash_area_close(fa);
 
-    int rc = fixture_fs_wipe();
-    zassert_true(rc >= 0, "flash erase failed (%d)", rc);
+  return rc;
+}
 
-    rc = fs_mount(&fixture_fs_mount);
-    zassert_equal(rc, 0, "fs_mount failed (%d)", rc);
-  }
+static void fixture_fs_mount_or_fail(void) {
+  fs_unmount(&fixture_fs_mount);
+
+  int rc = fixture_fs_wipe();
+  zassert_true(rc >= 0, "flash erase failed (%d)", rc);
+
+  rc = fs_mount(&fixture_fs_mount);
+  zassert_equal(rc, 0, "fs_mount failed (%d)", rc);
+}
 
 static void uds_before(void *f) {
   struct lib_uds_fixture *fixture = f;

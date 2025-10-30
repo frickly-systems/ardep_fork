@@ -3,6 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess, run
 from cmake import CmakeProcessor
+from c import CProcessor
 
 
 from config import Config
@@ -37,6 +38,10 @@ def main():
 
     for cmake_files in paths.paths.get("CMakeLists.txt", []):
         processor = CmakeProcessor(cmake_files)
+        processor.run(config)
+
+    for h_files in paths.paths.get(".h", []):
+        processor = CProcessor(h_files)
         processor.run(config)
 
 

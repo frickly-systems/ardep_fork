@@ -118,7 +118,7 @@ class Header:
         return missing
 
     def _company_in_holder(self, holder: str, company: str) -> bool:
-        return company in holder
+        return company.lower() in holder.lower()
 
     def _coerce_companies(
         self, companies: Union[Iterable[str], str, None]
@@ -142,6 +142,11 @@ class Header:
         return self._style_from_comment(line.strip()) is not None
 
     def _determine_notice_style(self, holders: list[str]) -> str:
+        for holder in holders:
+            if any(company.lower() in holder.lower() for company in self.companies):
+                style = self._style_from_comment(holder)
+                if style is not None:
+                    return style
         for holder in holders:
             style = self._style_from_comment(holder)
             if style is not None:

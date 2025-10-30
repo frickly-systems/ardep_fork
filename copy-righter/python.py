@@ -57,7 +57,10 @@ class PythonProcessor(CopyrightProcessor):
                 idx += 1
                 if current.startswith("# ///") and len(metadata_lines) > 1:
                     break
-            if idx < len(lines) and not lines[idx].strip():
+            if idx < len(lines) and lines[idx].strip() == "#":
+                metadata_lines.append(lines[idx])
+                idx += 1
+            elif idx < len(lines) and not lines[idx].strip():
                 metadata_lines.append(lines[idx])
                 idx += 1
         while idx < len(lines):

@@ -153,3 +153,24 @@ def test_processors_honor_custom_license_identifier():
 
     assert "SPDX-License-Identifier: MIT" in result_py
     assert "SPDX-License-Identifier: MIT" in result_dts
+
+
+def test_python_processor_preserves_script_metadata():
+    original = (
+        "#!/usr/bin/env -S uv run --script\n"
+        "# /// script\n"
+        "# dependencies = [\n"
+        "#    \"can-isotp==2.0.3\",\n"
+        "#    \"udsoncan==1.21.2\",\n"
+        "# ]\n"
+        "# ///\n"
+        "#\n"
+        "# Copyright (C) Frickly Systems GmbH\n"
+        "# Copyright (C) MBition GmbH\n"
+        "#\n"
+        "# SPDX-License-Identifier: Apache-2.0\n"
+    )
+
+    result = _run_processor(PythonProcessor, original, ".py")
+
+    assert result == original

@@ -47,7 +47,19 @@ class PythonProcessor(CopyrightProcessor):
             shebang = self._ensure_newline(lines[idx])
             idx += 1
 
+        metadata_lines: list[str] = []
         header_lines: list[str] = []
+
+        if idx < len(lines) and lines[idx].lstrip().startswith("# ///"):
+            while idx < len(lines):
+                metadata_lines.append(lines[idx])
+                current = lines[idx].lstrip()
+                idx += 1
+                if current.startswith("# ///") and len(metadata_lines) > 1:
+                    break
+            if idx < len(lines) and not lines[idx].strip():
+                metadata_lines.append(lines[idx])
+                idx += 1
         while idx < len(lines):
             stripped = lines[idx].lstrip()
             if stripped.startswith("#"):
@@ -68,8 +80,10 @@ class PythonProcessor(CopyrightProcessor):
         new_lines: list[str] = []
         if shebang:
             new_lines.append(shebang)
-            if rendered_header:
-                new_lines.append("#\n")
+        if metadata_lines:
+            new_lines.extend(metadata_lines)
+        elif shebang and rendered_header:
+            new_lines.append("#\n")
 
         new_lines.extend(rendered_header)
 

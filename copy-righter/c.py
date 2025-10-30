@@ -1,33 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 
 from config import Config
+from header import is_holder_line, is_license_line, rewrite_header
 from util import CopyrightProcessor
-
-
-LICENSE_TEXT = "SPDX-License-Identifier: Apache-2.0"
-COMPANY = "Frickly Systems GmbH"
 
 
 class CommentStyle:
     SINGLE = "single"
     BLOCK = "block"
-
-
-class NoticeStyle:
-    SIMPLE = "simple"
-    SIMPLE_YEAR = "simple_year"
-    SPDX = "spdx"
-    SPDX_YEAR = "spdx_year"
-
-
-@dataclass
-class Holder:
-    index: int
-    text: str
 
 
 class CProcessor(CopyrightProcessor):
@@ -81,11 +63,10 @@ class CProcessor(CopyrightProcessor):
         rest_lines = self._strip_legacy_hash_header(rest_lines)
         rest_lines = self._strip_legacy_comment_header(rest_lines, comment_style)
         header_content = self._parse_header_content(comment_style, header_lines)
-        rewritten_content, content_changed = self._rewrite_header_content(header_content)
+        rewritten_content, _ = rewrite_header(header_content)
         if shebang and comment_style == CommentStyle.BLOCK:
             if not rewritten_content or rewritten_content[0].strip():
                 rewritten_content = [""] + rewritten_content
-                content_changed = True
         rendered_header = self._render_header(comment_style, rewritten_content)
 
         final_lines: list[str] = []
@@ -104,7 +85,7 @@ class CProcessor(CopyrightProcessor):
         if final_lines and not final_lines[-1].endswith("\n"):
             final_lines[-1] = f"{final_lines[-1]}\n"
 
-        changed = final_lines != original or content_changed
+        changed = final_lines != original
         return final_lines, changed
 
     def _detect_comment_style(self, lines: list[str]) -> str:
@@ -181,43 +162,6 @@ class CProcessor(CopyrightProcessor):
             else:
                 content.append(stripped)
         return content
-
-    def _rewrite_header_content(self, content: list[str]) -> tuple[list[str], bool]:
-        holders: list[Holder] = []
-        other: list[str] = []
-        license_line: str | None = None
-
-        for idx, entry in enumerate(content):
-            stripped = entry.strip()
-            if self._is_license_line(stripped):
-                license_line = entry
-                continue
-            if not stripped:
-                continue
-            if self._style_from_comment(stripped) is not None:
-                holders.append(Holder(index=idx, text=stripped))
-            else:
-                other.append(entry)
-
-        if not any(COMPANY in holder.text for holder in holders):
-            style = self._determine_notice_style(holders)
-            holders.append(Holder(index=len(holders), text=self._build_notice(style)))
-
-        license_line = license_line or LICENSE_TEXT
-
-        new_content: list[str] = [holder.text for holder in holders]
-        if holders:
-            new_content.append("")
-        new_content.append(license_line)
-
-        if other:
-            if not new_content[-1] == "":
-                new_content.append("")
-            new_content.extend(other)
-
-        new_content = self._squash_blanks(new_content)
-        changed = new_content != content
-        return new_content, changed
 
     def _render_header(self, style: str, content: list[str]) -> list[str]:
         if style == CommentStyle.SINGLE:
@@ -328,11 +272,9 @@ class CProcessor(CopyrightProcessor):
             stripped = entry.strip()
             if stripped == "":
                 continue
-            if stripped.startswith("SPDX-License-Identifier:"):
+            if is_license_line(stripped):
                 continue
-            if stripped.startswith("SPDX-FileCopyrightText:"):
-                continue
-            if stripped.startswith("Copyright (C)"):
+            if is_holder_line(stripped):
                 continue
             return False
         return True
@@ -345,54 +287,3 @@ class CProcessor(CopyrightProcessor):
 
     def _ensure_trailing_newline(self, line: str) -> str:
         return line if line.endswith("\n") else f"{line}\n"
-
-    def _is_license_line(self, text: str) -> bool:
-        return "SPDX-License-Identifier:" in text
-
-    def _determine_notice_style(self, holders: list[Holder]) -> str:
-        for holder in holders:
-            style = self._style_from_comment(holder.text)
-            if style is not None:
-                return style
-        return NoticeStyle.SPDX_YEAR
-
-    def _style_from_comment(self, comment: str) -> str | None:
-        if comment.startswith("SPDX-FileCopyrightText:"):
-            return (
-                NoticeStyle.SPDX_YEAR
-                if self._contains_year(comment)
-                else NoticeStyle.SPDX
-            )
-        if comment.startswith("Copyright (C)"):
-            return (
-                NoticeStyle.SIMPLE_YEAR
-                if self._contains_year(comment)
-                else NoticeStyle.SIMPLE
-            )
-        return None
-
-    def _contains_year(self, text: str) -> bool:
-        return any(
-            part.isdigit() and len(part) == 4 for part in text.replace("-", " ").split()
-        )
-
-    def _build_notice(self, style: str) -> str:
-        year = datetime.now().year
-        if style == NoticeStyle.SIMPLE:
-            return f"Copyright (C) {COMPANY}"
-        if style == NoticeStyle.SIMPLE_YEAR:
-            return f"Copyright (C) {year} {COMPANY}"
-        if style == NoticeStyle.SPDX:
-            return f"SPDX-FileCopyrightText: Copyright (C) {COMPANY}"
-        return f"SPDX-FileCopyrightText: Copyright (C) {year} {COMPANY}"
-
-    def _squash_blanks(self, entries: list[str]) -> list[str]:
-        squashed: list[str] = []
-        previous_blank = False
-        for entry in entries:
-            is_blank = not entry.strip()
-            if is_blank and previous_blank:
-                continue
-            squashed.append(entry)
-            previous_blank = is_blank
-        return squashed

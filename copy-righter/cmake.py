@@ -7,11 +7,15 @@ from header import Header
 from util import CopyrightProcessor
 
 
+DEFAULT_COMPANIES = ["Frickly Systems GmbH"]
+
+
 class CmakeProcessor(CopyrightProcessor):
     path: str
 
     def __init__(self, path: str):
         super().__init__(path)
+        self.companies = DEFAULT_COMPANIES
 
     def run(self, config: Config):
         lines = self._read_lines()
@@ -51,7 +55,7 @@ class CmakeProcessor(CopyrightProcessor):
 
         rest_lines = lines[idx:]
 
-        header = Header()
+        header = Header(companies=self.companies)
         if header_lines:
             for raw in header_lines:
                 header.add_line(self._strip_comment_prefix(raw))

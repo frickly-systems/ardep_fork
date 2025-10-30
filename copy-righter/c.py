@@ -11,12 +11,14 @@ class CommentStyle:
     SINGLE = "single"
     BLOCK = "block"
 
+DEFAULT_COMPANIES = ["Frickly Systems GmbH"]
 
 class CProcessor(CopyrightProcessor):
     path: str
 
     def __init__(self, path: str):
         super().__init__(path)
+        self.companies = DEFAULT_COMPANIES
 
     def run(self, config: Config):
         original_lines = self._read_lines()
@@ -69,7 +71,7 @@ class CProcessor(CopyrightProcessor):
                 header_lines = []
                 header_end = idx
 
-        header = Header()
+        header = Header(companies=self.companies)
         if header_lines:
             if comment_style == CommentStyle.SINGLE:
                 header.add_lines(self._strip_single_comment_prefix(line) for line in header_lines)

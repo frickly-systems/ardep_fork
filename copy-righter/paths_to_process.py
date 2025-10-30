@@ -29,6 +29,7 @@ class PathsToProcess:
             ".yaml",
             ".yml",
             ".py",
+            ".overlay",
         }
         excluded_yaml_names = {
             "sample.yml",

@@ -13,12 +13,20 @@ class CommentStyle:
 
 DEFAULT_COMPANIES = ["Frickly Systems GmbH"]
 
+
 class CProcessor(CopyrightProcessor):
     path: str
 
-    def __init__(self, path: str):
+    def __init__(
+        self,
+        path: str,
+        *,
+        companies: list[str] | None = None,
+        license_identifier: str = "SPDX-License-Identifier: Apache-2.0",
+    ):
         super().__init__(path)
-        self.companies = DEFAULT_COMPANIES
+        self.companies = companies or DEFAULT_COMPANIES
+        self.license_identifier = license_identifier
 
     def run(self, config: Config):
         original_lines = self._read_lines()
@@ -71,7 +79,7 @@ class CProcessor(CopyrightProcessor):
                 header_lines = []
                 header_end = idx
 
-        header = Header(companies=self.companies)
+        header = Header(companies=self.companies, license_identifier=self.license_identifier)
         if header_lines:
             if comment_style == CommentStyle.SINGLE:
                 header.add_lines(self._strip_single_comment_prefix(line) for line in header_lines)

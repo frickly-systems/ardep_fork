@@ -7,15 +7,19 @@ from header import Header
 from util import CopyrightProcessor
 
 
-DEFAULT_COMPANIES = ["Frickly Systems GmbH"]
-
-
 class CmakeProcessor(CopyrightProcessor):
     path: str
 
-    def __init__(self, path: str):
+    def __init__(
+        self,
+        path: str,
+        *,
+        companies: list[str] | None = None,
+        license_identifier: str = "SPDX-License-Identifier: Apache-2.0",
+    ):
         super().__init__(path)
-        self.companies = DEFAULT_COMPANIES
+        self.companies = companies or ["Frickly Systems GmbH"]
+        self.license_identifier = license_identifier
 
     def run(self, config: Config):
         lines = self._read_lines()
@@ -55,7 +59,7 @@ class CmakeProcessor(CopyrightProcessor):
 
         rest_lines = lines[idx:]
 
-        header = Header(companies=self.companies)
+        header = Header(companies=self.companies, license_identifier=self.license_identifier)
         if header_lines:
             for raw in header_lines:
                 header.add_line(self._strip_comment_prefix(raw))

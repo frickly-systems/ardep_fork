@@ -17,8 +17,8 @@ jobs:
       - name: Run clang-format
         working-directory: ardep
         run: |
-          sudo apt-get install clang-format-21
-          find . -name '*.c' -o -name '*.h' | xargs clang-format-21 -i
+          sudo apt-get install clang-format-20
+          find . -name '*.c' -o -name '*.h' | xargs clang-format-20 -i
           git diff --exit-code
   build:
     strategy:

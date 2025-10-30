@@ -40,15 +40,19 @@ Install the additional dependencies for the ardep board:
     .. code-block:: bash
 
         sudo apt update
-        sudo apt install --no-install-recommends iproute2 dfu-util git-lfs
+        sudo apt install --no-install-recommends iproute2 dfu-util git-lfs gdb-multiarch
 
    .. tab:: Windows
    
-        Install the latest `dfu-util <https://dfu-util.sourceforge.net/>`_ from the `release page <https://dfu-util.sourceforge.net/releases/>`_ (e.g. *dfu-util-X.YY-binaries.tar.xz*), extract the archive and ensure the executables are in your *$PATH*. [2]_
+        - Install the latest `dfu-util <https://dfu-util.sourceforge.net/>`_ from the `release page <https://dfu-util.sourceforge.net/releases/>`_ (e.g. *dfu-util-X.YY-binaries.tar.xz*), extract the archive and ensure the executables are in your *$PATH*. [2]_
 
-        Open a new *command prompt* or *powershell* and run ``dfu-util --version`` to check that the command is available.
-        
-    
+          Open a new *command prompt* or *powershell* and run ``dfu-util --version`` to check that the command is available.
+          
+        - Install the latest `ARM toolchain <https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads>`_ for a current version of GDB. On the download page, select the latest *AArch32 bare-metal target (arm-none-eabi)* toolchain (e.g. *arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi.exe*) and install it.
+
+          It is recommended, that you add the *bin* directory of the installation to your *$PATH* for easier access to the executables (e.g. the path ``C:\Program Files (x86)\Arm GNU Toolchain arm-none-eabi\14.3 rel1\bin``). [2]_
+
+
 Set up your workspace
 *********************
 
@@ -289,6 +293,7 @@ Perform the `Connecting to your Computer <https://black-magic.org/getting-starte
 This enables you to use the on-board debugger without root/admin privileges.
 
 
+
 Build your first app 
 ********************
 
@@ -321,6 +326,10 @@ Build the :ref:`led_sample` with:
 
                         cd $Env:HOMEPATH\ardep-workspace\ardep
                         west build --board ardep samples\led
+                        
+.. note::
+
+    If you're using an older version of the board, append the board version to the boards name (e.g. ``--board ardep@a1.0.0`` or ``--board ardep@1`` for version 1 of the board).
 
 Flash the app using dfu-util:
 

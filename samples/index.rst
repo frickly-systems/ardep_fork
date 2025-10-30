@@ -8,22 +8,5 @@ Samples and Demos
    :caption: contents:
    :maxdepth: 1
    :glob:
-   
-   adc/*
-   can/*
-   can_usb_bridge/*
-   config_jumpers/*
-   dac/*
-   digital_input_interrupt/*
-   gpio_expander/*
-   hardware_test/*
-   hardware_tester/*
-   hv_shield/*
-   iso14229/*
-   led/*
-   lin/*
-   lin2can/*
-   uart/*
-   uds/*
-   uds_legacy/*
 
+   */*

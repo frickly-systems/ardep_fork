@@ -5,6 +5,7 @@ from subprocess import CalledProcessError, CompletedProcess, run
 from cmake import CmakeProcessor
 from c import CProcessor
 from python import PythonProcessor
+from devicetree import DevicetreeProcessor
 
 
 from config import Config
@@ -60,17 +61,13 @@ def main():
             license_identifier=license_identifier,
         ).run(config)
 
-    for c_header in (
-        paths.paths.get(".h", [])
-        + paths.paths.get(".hpp", [])
-        + paths.paths.get(".c", [])
-        + paths.paths.get(".cpp", [])
-    ):
-        CProcessor(
-            c_header,
-            companies=companies,
-            license_identifier=license_identifier,
-        ).run(config)
+    for c_suffix in (".h", ".hpp", ".c", ".cpp"):
+        for c_file in paths.paths.get(c_suffix, []):
+            CProcessor(
+                c_file,
+                companies=companies,
+                license_identifier=license_identifier,
+            ).run(config)
 
     for python_file in paths.paths.get(".py", []):
         PythonProcessor(
@@ -78,6 +75,14 @@ def main():
             companies=companies,
             license_identifier=license_identifier,
         ).run(config)
+
+    for dts_suffix in (".dts", ".dtsi", ".overlay"):
+        for dt_file in paths.paths.get(dts_suffix, []):
+            DevicetreeProcessor(
+                dt_file,
+                companies=companies,
+                license_identifier=license_identifier,
+            ).run(config)
 
 
 if __name__ == "__main__":

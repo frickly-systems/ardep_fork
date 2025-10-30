@@ -9,6 +9,7 @@ if project_root_str not in sys.path:
 
 from c import CProcessor  # type: ignore  # pylint: disable=import-error
 from cmake import CmakeProcessor  # type: ignore  # pylint: disable=import-error
+from devicetree import DevicetreeProcessor  # type: ignore  # pylint: disable=import-error
 from python import PythonProcessor  # type: ignore  # pylint: disable=import-error
 from config import Config  # type: ignore  # pylint: disable=import-error
 
@@ -113,6 +114,27 @@ def test_python_processor_handles_shebang():
         "# SPDX-License-Identifier: Apache-2.0\n"
         "\n"
         "print('hi')\n"
+    )
+
+    assert result == expected
+
+
+def test_devicetree_processor_formats_block_comment():
+    original = """/*\n * Test header\n */\n/dts-v1/;\n"""
+
+    result = _run_processor(DevicetreeProcessor, original, ".dts")
+
+    year = datetime.now().year
+    expected = (
+        "/*\n"
+        f" * SPDX-FileCopyrightText: Copyright (C) {year} Frickly Systems GmbH\n"
+        " *\n"
+        " * SPDX-License-Identifier: Apache-2.0\n"
+        " *\n"
+        " * Test header\n"
+        " */\n"
+        "\n"
+        "/dts-v1/;\n"
     )
 
     assert result == expected

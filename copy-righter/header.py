@@ -151,7 +151,8 @@ class Header:
     def _style_from_comment(self, comment: str) -> str | None:
         if comment.startswith("SPDX-FileCopyrightText:"):
             return "spdx_year" if self._contains_year(comment) else "spdx"
-        if comment.startswith("Copyright (C)"):
+        lowered = comment.lower()
+        if lowered.startswith("copyright (c)"):
             return "simple_year" if self._contains_year(comment) else "simple"
         return None
 

@@ -103,6 +103,24 @@ def test_header_respects_explicit_license_override():
     assert "SPDX-License-Identifier: MIT" in formatted
 
 
+def test_header_preserves_lowercase_c_holders():
+    companies = ["Frickly Systems GmbH", "MBition GmbH"]
+    header = Header(companies=companies)
+    header.add_lines(
+        [
+            "Copyright (c) 2019 STMicroelectronics.",
+            "Copyright (C) Frickly Systems GmbH",
+            "",
+            "SPDX-License-Identifier: Apache-2.0",
+        ]
+    )
+
+    formatted, changed = header.get_formatted()
+
+    assert formatted[0].startswith("Copyright (c) 2019 STMicroelectronics")
+    assert "Copyright (C) MBition GmbH" in formatted
+
+
 def test_header_adds_missing_companies_in_order():
     companies = ["Frickly Systems GmbH", "MBition GmbH", "Another Corp"]
     header = Header(companies=companies)

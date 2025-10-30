@@ -38,10 +38,8 @@ void uart_test(void);
 void can_test(void);
 void lin_test(void);
 
-static void execute_command(const char* command);
 static void command_receiver_thread(void* p1, void* p2, void* p3);
 static void command_dispatch_thread(void* p1, void* p2, void* p3);
-static void handle_console_input(void);
 
 int main() {
   console_getline_init();

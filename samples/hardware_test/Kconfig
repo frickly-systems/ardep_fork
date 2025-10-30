@@ -17,6 +17,12 @@ config UART_TEST_DURATION_MS
     help
       Duration for which the UART tests will run.
 
+config LIN_PRE_TEST_DELAY_MS
+    int "LIN pre-test delay in milliseconds"
+    default 1000
+    help
+      Delay before starting LIN frame transmission.
+
 config LIN_MESSAGE_DELAY_MS
     int "LIN message delay in milliseconds"
     default 100

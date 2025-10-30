@@ -17,6 +17,12 @@ config POST_TEST_DELAY_MS
     help
       Delay after tests are finished and before the device is stopped (if applicable).
 
+config LIN_TEST_DURATION_MS
+    int "LIN test duration in milliseconds"
+    default 5000
+    help
+      Duration for which the LIN tests will run.
+
 config CAN_TEST_DURATION_MS
     int "CAN test duration in milliseconds"
     default 5000

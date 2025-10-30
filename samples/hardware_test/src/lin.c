@@ -51,5 +51,6 @@ static void send_messages() {
 
 void lin_test(void) {
   setup_uarts();
+  k_msleep(CONFIG_LIN_PRE_TEST_DELAY_MS);
   send_messages();
 }

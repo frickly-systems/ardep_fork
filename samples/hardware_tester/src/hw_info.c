@@ -29,8 +29,4 @@ void log_hardware_info(void) {
   }
 
   LOG_INF("id: %s", hex_string);
-
-  k_msleep(10000);
-
-  LOG_INF("2d: %s", hex_string);
 }

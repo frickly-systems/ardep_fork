@@ -41,6 +41,12 @@ def main():
         help="Set copyright notice style (default: spdx-year)",
     )
 
+    parser.add_argument(
+        "--update-copyrights",
+        action="store_true",
+        help="Update copyrights to the new format",
+    )
+
     args: Namespace = parser.parse_args()
 
     config: Config = Config.from_args(args)

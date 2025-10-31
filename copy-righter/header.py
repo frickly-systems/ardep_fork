@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Iterable, Sequence, Tuple, Union
+from util import Config
 
 COMPANY_NAME = "Frickly Systems GmbH"
 LICENSE_TOKEN = "SPDX-License-Identifier: "
@@ -15,18 +16,25 @@ class Header:
     company's copyright notice.
     """
 
+    config: Config
+    companies: list[str]
+    license_identifier: str
+
+    _explicit_license: bool
+    _lines: list[str]
+
     def __init__(
         self,
+        config: Config,
         *,
         companies: Union[Iterable[str], str, None] = None,
         license_identifier: str | None = None,
         lines: Iterable[str] | None = None,
-        notice_style: str | None = None,
     ):
         self.companies = self._coerce_companies(companies)
         self._explicit_license = license_identifier is not None
         self.license_identifier = (license_identifier or DEFAULT_LICENSE).strip()
-        self._preferred_style = notice_style
+        self.config = config
         self._lines: list[str] = []
         if lines is not None:
             self.add_lines(lines)
@@ -139,7 +147,7 @@ class Header:
     def _extract_license_value(self, line: str) -> str:
         if not self.is_license_line(line):
             return ""
-        return line[len(LICENSE_TOKEN):].strip()
+        return line[len(LICENSE_TOKEN) :].strip()
 
     def is_holder_line(self, line: str) -> bool:
         return self._style_from_comment(line.strip()) is not None

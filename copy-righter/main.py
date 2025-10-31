@@ -55,7 +55,6 @@ def main():
     license_identifier = (
         args.license_identifier.strip() if args.license_identifier else None
     )
-    notice_style = args.notice_style
 
     if config.verbose:
         print("Files to process:")
@@ -69,8 +68,8 @@ def main():
             cmake_file,
             companies=companies,
             license_identifier=license_identifier,
-            notice_style=notice_style,
-        ).run(config)
+            config=config,
+        ).run()
 
     for c_suffix in (".h", ".hpp", ".c", ".cpp"):
         for c_file in paths.paths.get(c_suffix, []):
@@ -78,16 +77,16 @@ def main():
                 c_file,
                 companies=companies,
                 license_identifier=license_identifier,
-                notice_style=notice_style,
-            ).run(config)
+                config=config,
+            ).run()
 
     for python_file in paths.paths.get(".py", []):
         PythonProcessor(
             python_file,
             companies=companies,
             license_identifier=license_identifier,
-            notice_style=notice_style,
-        ).run(config)
+            config=config,
+        ).run()
 
     for dts_suffix in (".dts", ".dtsi", ".overlay"):
         for dt_file in paths.paths.get(dts_suffix, []):
@@ -95,8 +94,8 @@ def main():
                 dt_file,
                 companies=companies,
                 license_identifier=license_identifier,
-                notice_style=notice_style,
-            ).run(config)
+                config=config,
+            ).run()
 
 
 if __name__ == "__main__":

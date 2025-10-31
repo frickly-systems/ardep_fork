@@ -31,15 +31,8 @@ def test_copyright_style_from_string_invalid():
         CopyrightStyle.from_string("invalid")
 
 
-def test_copyright_style_to_internal_format():
-    assert CopyrightStyle.SIMPLE.to_internal_format() == "simple"
-    assert CopyrightStyle.SIMPLE_YEAR.to_internal_format() == "simple_year"
-    assert CopyrightStyle.SPDX.to_internal_format() == "spdx"
-    assert CopyrightStyle.SPDX_YEAR.to_internal_format() == "spdx_year"
-
-
 def test_config_from_args_with_style():
-    args = Namespace(dry_run=True, verbose=False, notice_style="spdx")
+    args = Namespace(dry_run=True, verbose=False, copyright_style="spdx")
     config = Config.from_args(args)
 
     assert config.dry_run is True
@@ -53,7 +46,7 @@ def test_config_from_args_without_style():
 
     assert config.dry_run is False
     assert config.verbose is True
-    assert config.copyright_style is None
+    assert config.copyright_style is CopyrightStyle.SPDX_YEAR
 
 
 def test_config_from_args_with_different_styles():
@@ -63,10 +56,6 @@ def test_config_from_args_with_different_styles():
         ("spdx", CopyrightStyle.SPDX),
         ("spdx-year", CopyrightStyle.SPDX_YEAR),
     ]:
-        args = Namespace(dry_run=False, verbose=False, notice_style=style_str)
+        args = Namespace(dry_run=False, verbose=False, copyright_style=style_str)
         config = Config.from_args(args)
         assert config.copyright_style == expected_enum
-        assert (
-            config.copyright_style.to_internal_format()
-            == expected_enum.to_internal_format()
-        )

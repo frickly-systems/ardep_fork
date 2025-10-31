@@ -14,7 +14,8 @@ class CopyrightStyle(Enum):
 
     @classmethod
     def from_args(cls, args: Namespace) -> "CopyrightStyle":
-        return cls(getattr(args, "copyright_style"))
+        style = getattr(args, "copyright_style", None)
+        return cls.from_string(style) or cls.SPDX_YEAR
 
     @classmethod
     def from_string(cls, style_str: Optional[str]) -> Optional["CopyrightStyle"]:

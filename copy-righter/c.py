@@ -20,10 +20,10 @@ class CProcessor(CopyrightProcessor):
     def __init__(
         self,
         path: str,
+        config: Config,
         *,
         companies: list[str] | None = None,
         license_identifier: str | None = None,
-        config: Config,
     ):
         super().__init__(path, config)
         self.companies = companies or DEFAULT_COMPANIES

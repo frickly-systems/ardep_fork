@@ -13,10 +13,10 @@ class PythonProcessor(CopyrightProcessor):
     def __init__(
         self,
         path: str,
+        config: Config,
         *,
         companies: list[str] | None = None,
         license_identifier: str | None = None,
-        config: Config,
     ):
         super().__init__(path, config)
         self.companies = companies or ["Frickly Systems GmbH"]
@@ -77,7 +77,7 @@ class PythonProcessor(CopyrightProcessor):
         header = Header(
             companies=self.companies,
             license_identifier=self.license_identifier,
-            notice_style=self.notice_style,
+            config=self.config,
         )
         for raw_line in header_lines:
             header.add_line(self._strip_comment_prefix(raw_line))

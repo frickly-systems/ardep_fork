@@ -11,7 +11,7 @@ from c import CProcessor  # type: ignore  # pylint: disable=import-error
 from cmake import CmakeProcessor  # type: ignore  # pylint: disable=import-error
 from devicetree import DevicetreeProcessor  # type: ignore  # pylint: disable=import-error
 from python import PythonProcessor  # type: ignore  # pylint: disable=import-error
-from config import Config  # type: ignore  # pylint: disable=import-error
+from util import Config, CopyrightStyle  # type: ignore  # pylint: disable=import-error
 
 
 def _run_processor(processor_cls, content: str, suffix: str, **kwargs) -> str:
@@ -65,7 +65,9 @@ def test_c_processor_formats_block_comment_header():
 
 
 def test_c_processor_formats_single_line_header():
-    original = """// Test header\n//\n// SPDX-License-Identifier: Apache-2.0\n\nint value;\n"""
+    original = (
+        """// Test header\n//\n// SPDX-License-Identifier: Apache-2.0\n\nint value;\n"""
+    )
 
     result = _run_processor(CProcessor, original, ".cpp")
 
@@ -160,8 +162,8 @@ def test_python_processor_preserves_script_metadata():
         "#!/usr/bin/env -S uv run --script\n"
         "# /// script\n"
         "# dependencies = [\n"
-        "#    \"can-isotp==2.0.3\",\n"
-        "#    \"udsoncan==1.21.2\",\n"
+        '#    "can-isotp==2.0.3",\n'
+        '#    "udsoncan==1.21.2",\n'
         "# ]\n"
         "# ///\n"
         "#\n"

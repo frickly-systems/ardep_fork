@@ -8,7 +8,7 @@ from python import PythonProcessor
 from devicetree import DevicetreeProcessor
 
 
-from config import Config
+from util import CopyrightProcessor, Config, CopyrightStyle
 from paths_to_process import PathsToProcess
 
 
@@ -34,11 +34,11 @@ def main():
         help="Override the license identifier",
     )
     parser.add_argument(
-        "-s",
-        "--style",
-        dest="notice_style",
+        "--copyright-style",
+        dest="copyright_style",
         choices=["simple", "year", "spdx", "spdx-year"],
-        help="Override copyright notice style",
+        default="spdx-year",
+        help="Set copyright notice style (default: spdx-year)",
     )
 
     args: Namespace = parser.parse_args()
@@ -49,8 +49,12 @@ def main():
 
     paths: PathsToProcess = PathsToProcess(str(base_path))
 
-    companies = [entry.strip() for entry in (args.copyrights or ["Frickly Systems GmbH"])]
-    license_identifier = args.license_identifier.strip() if args.license_identifier else None
+    companies = [
+        entry.strip() for entry in (args.copyrights or ["Frickly Systems GmbH"])
+    ]
+    license_identifier = (
+        args.license_identifier.strip() if args.license_identifier else None
+    )
     notice_style = args.notice_style
 
     if config.verbose:

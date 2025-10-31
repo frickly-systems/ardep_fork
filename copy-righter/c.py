@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from config import Config
 from header import Header
-from util import CopyrightProcessor
+from util import CopyrightProcessor, Config, CopyrightStyle
 
 
 class CommentStyle:
     SINGLE = "single"
     BLOCK = "block"
+
 
 DEFAULT_COMPANIES = ["Frickly Systems GmbH"]
 
@@ -23,28 +23,27 @@ class CProcessor(CopyrightProcessor):
         *,
         companies: list[str] | None = None,
         license_identifier: str | None = None,
-        notice_style: str | None = None,
+        config: Config,
     ):
-        super().__init__(path)
+        super().__init__(path, config)
         self.companies = companies or DEFAULT_COMPANIES
         self.license_identifier = license_identifier
-        self.notice_style = notice_style
 
-    def run(self, config: Config):
+    def run(self):
         original_lines = self._read_lines()
         processed_lines, changed = self._process_lines(original_lines)
 
         if not changed:
-            if config.verbose:
+            if self.config.verbose:
                 print(f"[OK] {self.path}")
             return
 
-        if config.dry_run:
+        if self.config.dry_run:
             print(f"[DRY-RUN] Would update {self.path}")
             return
 
         self._write_lines(processed_lines)
-        if config.verbose:
+        if self.config.verbose:
             print(f"[UPDATED] {self.path}")
 
     def _read_lines(self) -> list[str]:
@@ -88,7 +87,9 @@ class CProcessor(CopyrightProcessor):
         )
         if header_lines:
             if comment_style == CommentStyle.SINGLE:
-                header.add_lines(self._strip_single_comment_prefix(line) for line in header_lines)
+                header.add_lines(
+                    self._strip_single_comment_prefix(line) for line in header_lines
+                )
             else:
                 header.add_lines(self._strip_block_comment_lines(header_lines))
 
@@ -111,7 +112,9 @@ class CProcessor(CopyrightProcessor):
         changed = new_lines != lines
         return new_lines, changed
 
-    def _collect_single_comment(self, lines: list[str], start: int) -> tuple[list[str], int]:
+    def _collect_single_comment(
+        self, lines: list[str], start: int
+    ) -> tuple[list[str], int]:
         collected: list[str] = []
         idx = start
         while idx < len(lines):
@@ -122,7 +125,9 @@ class CProcessor(CopyrightProcessor):
             idx += 1
         return collected, idx
 
-    def _collect_block_comment(self, lines: list[str], start: int) -> tuple[list[str], int]:
+    def _collect_block_comment(
+        self, lines: list[str], start: int
+    ) -> tuple[list[str], int]:
         collected: list[str] = []
         idx = start
         while idx < len(lines):

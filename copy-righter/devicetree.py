@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from config import Config
 from header import Header
-from util import CopyrightProcessor
+from util import CopyrightProcessor, Config, CopyrightStyle
 
 
 DEFAULT_COMPANIES = ["Frickly Systems GmbH"]
@@ -19,29 +18,28 @@ class DevicetreeProcessor(CopyrightProcessor):
         *,
         companies: list[str] | None = None,
         license_identifier: str | None = None,
-        notice_style: str | None = None,
+        config: Config,
     ):
-        super().__init__(path)
+        super().__init__(path, config)
         self.companies = companies or DEFAULT_COMPANIES
         self.license_identifier = license_identifier
-        self.notice_style = notice_style
 
-    def run(self, config: Config):
+    def run(self):
         lines = self._read_lines()
         processed_lines = self._process_lines(lines)
         changed = processed_lines != lines
 
         if not changed:
-            if config.verbose:
+            if self.config.verbose:
                 print(f"[OK] {self.path}")
             return
 
-        if config.dry_run:
+        if self.config.dry_run:
             print(f"[DRY-RUN] Would update {self.path}")
             return
 
         self._write_lines(processed_lines)
-        if config.verbose:
+        if self.config.verbose:
             print(f"[UPDATED] {self.path}")
 
     def _process_lines(self, lines: list[str]) -> list[str]:
@@ -100,7 +98,9 @@ class DevicetreeProcessor(CopyrightProcessor):
 
         return new_lines
 
-    def _collect_block_comment(self, lines: list[str], start: int) -> tuple[list[str], int]:
+    def _collect_block_comment(
+        self, lines: list[str], start: int
+    ) -> tuple[list[str], int]:
         collected: list[str] = []
         idx = start
         while idx < len(lines):
@@ -111,7 +111,9 @@ class DevicetreeProcessor(CopyrightProcessor):
             idx += 1
         return collected, idx
 
-    def _collect_single_comment(self, lines: list[str], start: int) -> tuple[list[str], int]:
+    def _collect_single_comment(
+        self, lines: list[str], start: int
+    ) -> tuple[list[str], int]:
         collected: list[str] = []
         idx = start
         while idx < len(lines):

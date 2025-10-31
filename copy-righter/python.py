@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from config import Config
 from header import Header
-from util import CopyrightProcessor
+from util import CopyrightProcessor, Config, CopyrightStyle
 
 
 class PythonProcessor(CopyrightProcessor):
     path: str
+    config: Config
 
     def __init__(
         self,
@@ -16,29 +16,28 @@ class PythonProcessor(CopyrightProcessor):
         *,
         companies: list[str] | None = None,
         license_identifier: str | None = None,
-        notice_style: str | None = None,
+        config: Config,
     ):
-        super().__init__(path)
+        super().__init__(path, config)
         self.companies = companies or ["Frickly Systems GmbH"]
         self.license_identifier = license_identifier
-        self.notice_style = notice_style
 
-    def run(self, config: Config):
+    def run(self):
         lines = self._read_lines()
         processed_lines = self._process_lines(lines)
         changed = processed_lines != lines
 
         if not changed:
-            if config.verbose:
+            if self.config.verbose:
                 print(f"[OK] {self.path}")
             return
 
-        if config.dry_run:
+        if self.config.dry_run:
             print(f"[DRY-RUN] Would update {self.path}")
             return
 
         self._write_lines(processed_lines)
-        if config.verbose:
+        if self.config.verbose:
             print(f"[UPDATED] {self.path}")
 
     def _process_lines(self, lines: list[str]) -> list[str]:
@@ -84,7 +83,9 @@ class PythonProcessor(CopyrightProcessor):
             header.add_line(self._strip_comment_prefix(raw_line))
 
         formatted_header, _ = header.get_formatted()
-        rendered_header = [self._format_comment_line(entry) for entry in formatted_header]
+        rendered_header = [
+            self._format_comment_line(entry) for entry in formatted_header
+        ]
 
         new_lines: list[str] = []
         if shebang:

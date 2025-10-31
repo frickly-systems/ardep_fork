@@ -81,9 +81,9 @@ class CProcessor(CopyrightProcessor):
                 header_end = idx
 
         header = Header(
+            config=self.config,
             companies=self.companies,
             license_identifier=self.license_identifier,
-            notice_style=self.notice_style,
         )
         if header_lines:
             if comment_style == CommentStyle.SINGLE:

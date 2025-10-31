@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Iterable, Sequence, Tuple, Union
-from util import Config
+from util import Config, CopyrightStyle
 
 COMPANY_NAME = "Frickly Systems GmbH"
 LICENSE_TOKEN = "SPDX-License-Identifier: "
@@ -66,11 +66,10 @@ class Header:
         Return the normalized header lines and a flag indicating whether the
         content changed compared to the original input.
         """
-        normalized, holders, other, has_license = self._analyse()
+        normalized, holders, other, _ = self._analyse()
 
         new_holders = holders[:]
-        style_key = self._preferred_style or self._determine_notice_style(new_holders)
-        style = self._coerce_style(style_key)
+        style = self.config.copyright_style
         for company in self._missing_companies(new_holders):
             new_holders.append(self._build_notice(style, company))
 
@@ -164,17 +163,6 @@ class Header:
                 return style
         return "spdx_year"
 
-    def _coerce_style(self, style: str) -> str:
-        mapping = {
-            "simple": "simple",
-            "year": "simple_year",
-            "spdx": "spdx",
-            "spdx-year": "spdx_year",
-            "simple_year": "simple_year",
-            "spdx_year": "spdx_year",
-        }
-        return mapping.get(style, "spdx_year")
-
     def _style_from_comment(self, comment: str) -> str | None:
         if comment.startswith("SPDX-FileCopyrightText:"):
             return "spdx_year" if self._contains_year(comment) else "spdx"
@@ -188,13 +176,13 @@ class Header:
             part.isdigit() and len(part) == 4 for part in text.replace("-", " ").split()
         )
 
-    def _build_notice(self, style: str, company: str) -> str:
+    def _build_notice(self, style: CopyrightStyle, company: str) -> str:
         year = datetime.now().year
-        if style == "simple":
+        if style == CopyrightStyle.SIMPLE:
             return f"Copyright (C) {company}"
-        if style == "simple_year":
+        if style == CopyrightStyle.SIMPLE_YEAR:
             return f"Copyright (C) {year} {company}"
-        if style == "spdx":
+        if style == CopyrightStyle.SPDX:
             return f"SPDX-FileCopyrightText: Copyright (C) {company}"
         return f"SPDX-FileCopyrightText: Copyright (C) {year} {company}"
 

@@ -68,9 +68,9 @@ class DevicetreeProcessor(CopyrightProcessor):
             idx += 1
 
         header = Header(
+            config=self.config,
             companies=self.companies,
             license_identifier=self.license_identifier,
-            notice_style=self.notice_style,
         )
 
         if comment_style == "block":

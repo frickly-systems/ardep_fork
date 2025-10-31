@@ -28,16 +28,16 @@ class CmakeProcessor(CopyrightProcessor):
         changed = processed_lines != lines
 
         if not changed:
-            if config.verbose:
+            if self.config.verbose:
                 print(f"[OK] {self.path}")
             return
 
-        if config.dry_run:
+        if self.config.dry_run:
             print(f"[DRY-RUN] Would update {self.path}")
             return
 
         self._write_lines(processed_lines)
-        if config.verbose:
+        if self.config.verbose:
             print(f"[UPDATED] {self.path}")
 
     def _process_lines(self, lines: list[str]) -> list[str]:
@@ -60,9 +60,9 @@ class CmakeProcessor(CopyrightProcessor):
         rest_lines = lines[idx:]
 
         header = Header(
+            config=self.config,
             companies=self.companies,
             license_identifier=self.license_identifier,
-            notice_style=self.notice_style,
         )
         if header_lines:
             for raw in header_lines:

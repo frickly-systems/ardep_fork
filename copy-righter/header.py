@@ -21,10 +21,12 @@ class Header:
         companies: Union[Iterable[str], str, None] = None,
         license_identifier: str | None = None,
         lines: Iterable[str] | None = None,
+        notice_style: str | None = None,
     ):
         self.companies = self._coerce_companies(companies)
         self._explicit_license = license_identifier is not None
         self.license_identifier = (license_identifier or DEFAULT_LICENSE).strip()
+        self._preferred_style = notice_style
         self._lines: list[str] = []
         if lines is not None:
             self.add_lines(lines)
@@ -59,7 +61,8 @@ class Header:
         normalized, holders, other, has_license = self._analyse()
 
         new_holders = holders[:]
-        style = self._determine_notice_style(new_holders)
+        style_key = self._preferred_style or self._determine_notice_style(new_holders)
+        style = self._coerce_style(style_key)
         for company in self._missing_companies(new_holders):
             new_holders.append(self._build_notice(style, company))
 
@@ -152,6 +155,17 @@ class Header:
             if style is not None:
                 return style
         return "spdx_year"
+
+    def _coerce_style(self, style: str) -> str:
+        mapping = {
+            "simple": "simple",
+            "year": "simple_year",
+            "spdx": "spdx",
+            "spdx-year": "spdx_year",
+            "simple_year": "simple_year",
+            "spdx_year": "spdx_year",
+        }
+        return mapping.get(style, "spdx_year")
 
     def _style_from_comment(self, comment: str) -> str | None:
         if comment.startswith("SPDX-FileCopyrightText:"):

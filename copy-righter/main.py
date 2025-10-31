@@ -33,6 +33,13 @@ def main():
         dest="license_identifier",
         help="Override the license identifier",
     )
+    parser.add_argument(
+        "-s",
+        "--style",
+        dest="notice_style",
+        choices=["simple", "year", "spdx", "spdx-year"],
+        help="Override copyright notice style",
+    )
 
     args: Namespace = parser.parse_args()
 
@@ -44,6 +51,7 @@ def main():
 
     companies = [entry.strip() for entry in (args.copyrights or ["Frickly Systems GmbH"])]
     license_identifier = args.license_identifier.strip() if args.license_identifier else None
+    notice_style = args.notice_style
 
     if config.verbose:
         print("Files to process:")
@@ -57,6 +65,7 @@ def main():
             cmake_file,
             companies=companies,
             license_identifier=license_identifier,
+            notice_style=notice_style,
         ).run(config)
 
     for c_suffix in (".h", ".hpp", ".c", ".cpp"):
@@ -65,6 +74,7 @@ def main():
                 c_file,
                 companies=companies,
                 license_identifier=license_identifier,
+                notice_style=notice_style,
             ).run(config)
 
     for python_file in paths.paths.get(".py", []):
@@ -72,6 +82,7 @@ def main():
             python_file,
             companies=companies,
             license_identifier=license_identifier,
+            notice_style=notice_style,
         ).run(config)
 
     for dts_suffix in (".dts", ".dtsi", ".overlay"):
@@ -80,6 +91,7 @@ def main():
                 dt_file,
                 companies=companies,
                 license_identifier=license_identifier,
+                notice_style=notice_style,
             ).run(config)
 
 

@@ -19,10 +19,12 @@ class DevicetreeProcessor(CopyrightProcessor):
         *,
         companies: list[str] | None = None,
         license_identifier: str | None = None,
+        notice_style: str | None = None,
     ):
         super().__init__(path)
         self.companies = companies or DEFAULT_COMPANIES
         self.license_identifier = license_identifier
+        self.notice_style = notice_style
 
     def run(self, config: Config):
         lines = self._read_lines()
@@ -67,7 +69,11 @@ class DevicetreeProcessor(CopyrightProcessor):
             header_lines.append(lines[idx])
             idx += 1
 
-        header = Header(companies=self.companies, license_identifier=self.license_identifier)
+        header = Header(
+            companies=self.companies,
+            license_identifier=self.license_identifier,
+            notice_style=self.notice_style,
+        )
 
         if comment_style == "block":
             header.add_lines(self._strip_block_comment_lines(header_lines))

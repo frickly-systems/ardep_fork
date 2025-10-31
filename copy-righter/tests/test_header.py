@@ -62,11 +62,10 @@ def test_header_preserves_existing_holder_and_license():
     formatted, changed = header.get_formatted()
 
     # The config uses SPDX_YEAR style for new notices
-    expected_notice = _default_notice(frickly, style="spdx_year")
     assert changed is True
     assert formatted == [
         "Copyright (C) MBition GmbH",
-        expected_notice,
+        _default_notice(frickly),
         "",
         "SPDX-License-Identifier: Apache-2.0",
     ]
@@ -96,6 +95,7 @@ def test_header_no_changes_when_complete():
     formatted, changed = header.get_formatted()
 
     assert changed is False
+
     assert formatted == [
         notice,
         "",
@@ -110,7 +110,11 @@ def test_header_respects_explicit_license_override():
     formatted, changed = header.get_formatted()
 
     assert changed is True
-    assert "SPDX-License-Identifier: MIT" in formatted
+    assert formatted == [
+        "SPDX-License-Identifier: MIT",
+        "",
+        "Existing info",
+    ]
 
 
 def test_header_respects_requested_notice_style():
@@ -141,6 +145,14 @@ def test_header_respects_requested_notice_style():
     year = datetime.now().year
     assert formatted_year[0] == f"Copyright (C) {year} {company}"
 
+    config_spdx_year = Config(
+        dry_run=False, verbose=False, copyright_style=CopyrightStyle.SPDX_YEAR
+    )
+    header_spdx = Header(config=config_spdx_year, companies=[company])
+    header_spdx.add_lines(["", "Body"])
+    formatted_spdx, _ = header_spdx.get_formatted()
+    assert formatted_spdx[0] == f"SPDX-FileCopyrightText: Copyright (C) {company}"
+
 
 def test_header_preserves_lowercase_c_holders():
     companies = ["Frickly Systems GmbH", "MBition GmbH"]
@@ -156,10 +168,15 @@ def test_header_preserves_lowercase_c_holders():
 
     formatted, changed = header.get_formatted()
 
-    assert formatted[0].startswith("Copyright (c) 2019 STMicroelectronics")
-    # New notices use SPDX_YEAR style from config
-    expected_mbition = _default_notice("MBition GmbH", style="spdx_year")
-    assert expected_mbition in formatted
+    assert changed is True
+
+    assert formatted == [
+        "Copyright (c) 2019 STMicroelectronics.",
+        "Copyright (C) Frickly Systems GmbH",
+        _default_notice(company="MBition GmbH"),
+        "",
+        "SPDX-License-Identifier: Apache-2.0",
+    ]
 
 
 def test_header_adds_missing_companies_in_order():
@@ -177,15 +194,12 @@ def test_header_adds_missing_companies_in_order():
 
     formatted, changed = header.get_formatted()
 
-    expected_spdx = "SPDX-License-Identifier: Apache-2.0"
-    # New notices use SPDX_YEAR style from config
-    expected_notices = [
-        "Copyright (C) MBition GmbH",
-        _default_notice("Frickly Systems GmbH", style="spdx_year"),
-        _default_notice("Another Corp", style="spdx_year"),
-    ]
-
     assert changed is True
-    assert formatted[:3] == expected_notices
-    assert formatted[3] == ""
-    assert formatted[4] == expected_spdx
+
+    assert formatted == [
+        "Copyright (C) MBition GmbH",
+        _default_notice("Frickly Systems GmbH"),
+        _default_notice("Another Corp"),
+        "",
+        "SPDX-License-Identifier: Apache-2.0",
+    ]

@@ -43,10 +43,10 @@ class Config:
     @classmethod
     def from_args(cls, args: Namespace) -> "Config":
         return cls(
-            dry_run=args.dry_run,
-            verbose=args.verbose,
+            dry_run=getattr(args, "dry_run", False),
+            verbose=getattr(args, "verbose", False),
             copyright_style=CopyrightStyle.from_args(args),
-            update_copyrights=args.update_copyrights,
+            update_copyrights=getattr(args, "update_copyrights", False),
         )
 
 
@@ -60,6 +60,21 @@ class CopyrightProcessor:
 
     def run(self):
         pass
+
+
+class License:
+    identifier: str
+
+    def __init__(self, identifier: str):
+        self.identifier = identifier
+
+    @classmethod
+    def from_string(cls, text: str) -> "License":
+        text = text.strip()
+        if not text.startswith("SPDX-License-Identifier:"):
+            raise ValueError(f"Invalid license line: {text}")
+        identifier = text[len("SPDX-License-Identifier:") :].strip()
+        return cls(identifier=identifier)
 
 
 class Copyright:

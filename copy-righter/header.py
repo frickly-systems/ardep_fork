@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable, Sequence, Tuple, Union
-from util import Config, CopyrightStyle
+from typing import Iterable, Optional, Sequence, Tuple, Union
+from util import Config, CopyrightStyle, License, Copyright
 
 COMPANY_NAME = "Frickly Systems GmbH"
 LICENSE_TOKEN = "SPDX-License-Identifier: "
@@ -18,23 +18,26 @@ class Header:
 
     config: Config
     companies: list[str]
-    license_identifier: str
+    license_identifier: Optional[License]
+    copyrights: list[Copyright]
 
-    _explicit_license: bool
     _lines: list[str]
+    _license_if_has_none: Optional[License]
 
     def __init__(
         self,
         config: Config,
         *,
         companies: Union[Iterable[str], str, None] = None,
-        license_identifier: str | None = None,
-        lines: Iterable[str] | None = None,
+        license_identifier: Optional[License] = None,
+        lines: Optional[Iterable[str]] = None,
     ):
-        self.companies = self._coerce_companies(companies)
-        self._explicit_license = license_identifier is not None
-        self.license_identifier = (license_identifier or DEFAULT_LICENSE).strip()
         self.config = config
+        self.companies = self._coerce_companies(companies)
+        self.license_identifier = None
+        self.copyrights = []
+
+        self._license_if_has_none = license_identifier
         self._lines: list[str] = []
         if lines is not None:
             self.add_lines(lines)
@@ -43,6 +46,20 @@ class Header:
         """Append a single, prefix-stripped line."""
         self._lines.append(self._normalize_line(line))
 
+        try:
+            c = Copyright.from_string(line)
+            if c is not None:
+                self.copyrights.append(c)
+        except ValueError:
+            pass
+
+        try:
+            l = License.from_string(line)
+            if l is not None and self.license_identifier is None:
+                self.license_identifier = l
+        except ValueError:
+            pass
+
     def add_lines(self, lines: Iterable[str]) -> None:
         """Append multiple, prefix-stripped lines."""
         for line in lines:
@@ -50,85 +67,11 @@ class Header:
 
     def has_license(self) -> bool:
         """Return True if an SPDX license identifier is present."""
-        _, _, _, has_license = self._analyse()
-        return has_license
+        return self.license_identifier is not None
 
     def has_copyright(self) -> bool:
         """Return True if at least one copyright holder is present."""
-        _, holders, _, _ = self._analyse()
-        return all(
-            any(self._company_in_holder(holder, company) for holder in holders)
-            for company in self.companies
-        )
-
-    def get_formatted(self) -> Tuple[list[str], bool]:
-        """
-        Return the normalized header lines and a flag indicating whether the
-        content changed compared to the original input.
-        """
-        normalized, holders, other, _ = self._analyse()
-
-        new_holders = holders[:]
-        style = self.config.copyright_style
-        for company in self._missing_companies(new_holders):
-            new_holders.append(self._build_notice(style, company))
-
-        result: list[str] = []
-        if new_holders:
-            result.extend(new_holders)
-            result.append("")
-
-        result.append(f"{LICENSE_TOKEN}{self.license_identifier}")
-
-        cleaned_other = self._trim_blank_edges(other)
-        if cleaned_other:
-            result.append("")
-            result.extend(cleaned_other)
-
-        result = self._squash_blanks(result)
-        if result and result[-1] == "":
-            result.pop()
-
-        changed = result != normalized
-        return result, changed
-
-    def _analyse(self) -> Tuple[list[str], list[str], list[str], bool]:
-        normalized = [self._normalize_line(line) for line in self._lines]
-        holders: list[str] = []
-        other: list[str] = []
-        has_license = False
-
-        for entry in normalized:
-            stripped = entry.strip()
-            if not stripped:
-                other.append("")
-                continue
-            if self.is_license_line(stripped):
-                has_license = True
-                if not self._explicit_license:
-                    extracted = self._extract_license_value(stripped)
-                    if extracted:
-                        self.license_identifier = extracted
-                continue
-            if self._style_from_comment(stripped) is not None:
-                holders.append(stripped)
-                continue
-            other.append(stripped)
-
-        return normalized, holders, other, has_license
-
-    def _normalize_line(self, line: str) -> str:
-        return line.rstrip("\n")
-
-    def _missing_companies(self, holders: Sequence[str]) -> list[str]:
-        missing: list[str] = []
-        for company in self.companies:
-            if not any(self._company_in_holder(holder, company) for holder in holders):
-                missing.append(company)
-        return missing
-
-    def _company_in_holder(self, holder: str, company: str) -> bool:
-        return company.lower() in holder.lower()
+        return self.copyrights != []
 
     def _coerce_companies(
         self, companies: Union[Iterable[str], str, None]
@@ -137,73 +80,13 @@ class Header:
             return [COMPANY_NAME]
         if isinstance(companies, str):
             return [companies]
-        collected = [company for company in companies if company]
+        collected: list[str] = [company for company in companies if company]
         return collected or [COMPANY_NAME]
 
-    def is_license_line(self, line: str) -> bool:
-        return line.startswith(LICENSE_TOKEN)
+    def get_formatted(self) -> Tuple[list[str], bool]:
+        """
+        Return the normalized header lines and a flag indicating whether the
+        content changed compared to the original input.
+        """
 
-    def _extract_license_value(self, line: str) -> str:
-        if not self.is_license_line(line):
-            return ""
-        return line[len(LICENSE_TOKEN) :].strip()
-
-    def is_holder_line(self, line: str) -> bool:
-        return self._style_from_comment(line.strip()) is not None
-
-    def _determine_notice_style(self, holders: list[str]) -> str:
-        for holder in holders:
-            if any(company.lower() in holder.lower() for company in self.companies):
-                style = self._style_from_comment(holder)
-                if style is not None:
-                    return style
-        for holder in holders:
-            style = self._style_from_comment(holder)
-            if style is not None:
-                return style
-        return "spdx_year"
-
-    def _style_from_comment(self, comment: str) -> str | None:
-        if comment.startswith("SPDX-FileCopyrightText:"):
-            return "spdx_year" if self._contains_year(comment) else "spdx"
-        lowered = comment.lower()
-        if lowered.startswith("copyright (c)"):
-            return "simple_year" if self._contains_year(comment) else "simple"
-        return None
-
-    def _contains_year(self, text: str) -> bool:
-        return any(
-            part.isdigit() and len(part) == 4 for part in text.replace("-", " ").split()
-        )
-
-    def _build_notice(self, style: CopyrightStyle, company: str) -> str:
-        year = datetime.now().year
-        if style == CopyrightStyle.SIMPLE:
-            return f"Copyright (C) {company}"
-        if style == CopyrightStyle.SIMPLE_YEAR:
-            return f"Copyright (C) {year} {company}"
-        if style == CopyrightStyle.SPDX:
-            return f"SPDX-FileCopyrightText: Copyright (C) {company}"
-        return f"SPDX-FileCopyrightText: Copyright (C) {year} {company}"
-
-    def _trim_blank_edges(self, entries: list[str]) -> list[str]:
-        if not entries:
-            return []
-        start = 0
-        end = len(entries)
-        while start < end and not entries[start].strip():
-            start += 1
-        while end > start and not entries[end - 1].strip():
-            end -= 1
-        return entries[start:end]
-
-    def _squash_blanks(self, entries: list[str]) -> list[str]:
-        squashed: list[str] = []
-        previous_blank = False
-        for entry in entries:
-            is_blank = not entry.strip()
-            if is_blank and previous_blank:
-                continue
-            squashed.append("" if is_blank else entry)
-            previous_blank = is_blank
-        return squashed
+        pass

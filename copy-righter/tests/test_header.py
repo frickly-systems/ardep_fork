@@ -35,10 +35,9 @@ def test_header_adds_company_and_license_when_missing():
     header = Header(config=get_default_config(), companies=[company])
     header.add_lines(["", "Project Foo"])
 
-    formatted, changed = header.get_formatted()
+    formatted = header.get_formatted()
 
     expected_notice = _default_notice(company)
-    assert changed is True
     assert formatted == [
         expected_notice,
         "",
@@ -59,10 +58,9 @@ def test_header_preserves_existing_holder_and_license():
         ]
     )
 
-    formatted, changed = header.get_formatted()
+    formatted = header.get_formatted()
 
     # The config uses SPDX_YEAR style for new notices
-    assert changed is True
     assert formatted == [
         "Copyright (C) MBition GmbH",
         _default_notice(frickly),
@@ -92,9 +90,7 @@ def test_header_no_changes_when_complete():
         ]
     )
 
-    formatted, changed = header.get_formatted()
-
-    assert changed is False
+    formatted = header.get_formatted()
 
     assert formatted == [
         notice,
@@ -107,9 +103,8 @@ def test_header_respects_explicit_license_override():
     header = Header(config=get_default_config(), license_identifier="MIT")
     header.add_lines(["", "Existing info"])
 
-    formatted, changed = header.get_formatted()
+    formatted = header.get_formatted()
 
-    assert changed is True
     assert formatted == [
         "SPDX-License-Identifier: MIT",
         "",
@@ -125,7 +120,7 @@ def test_header_respects_requested_notice_style():
     )
     header_simple = Header(config=config_simple, companies=[company])
     header_simple.add_lines(["", "Body"])
-    formatted_simple, _ = header_simple.get_formatted()
+    formatted_simple = header_simple.get_formatted()
     assert formatted_simple[0] == f"Copyright (C) {company}"
 
     config_spdx = Config(
@@ -133,7 +128,7 @@ def test_header_respects_requested_notice_style():
     )
     header_spdx = Header(config=config_spdx, companies=[company])
     header_spdx.add_lines(["", "Body"])
-    formatted_spdx, _ = header_spdx.get_formatted()
+    formatted_spdx = header_spdx.get_formatted()
     assert formatted_spdx[0] == f"SPDX-FileCopyrightText: Copyright (C) {company}"
 
     config_year = Config(
@@ -141,7 +136,7 @@ def test_header_respects_requested_notice_style():
     )
     header_year = Header(config=config_year, companies=[company])
     header_year.add_lines(["", "Body"])
-    formatted_year, _ = header_year.get_formatted()
+    formatted_year = header_year.get_formatted()
     year = datetime.now().year
     assert formatted_year[0] == f"Copyright (C) {year} {company}"
 
@@ -150,8 +145,11 @@ def test_header_respects_requested_notice_style():
     )
     header_spdx = Header(config=config_spdx_year, companies=[company])
     header_spdx.add_lines(["", "Body"])
-    formatted_spdx, _ = header_spdx.get_formatted()
-    assert formatted_spdx[0] == f"SPDX-FileCopyrightText: Copyright (C) {company}"
+    formatted_spdx = header_spdx.get_formatted()
+    assert (
+        formatted_spdx[0]
+        == f"SPDX-FileCopyrightText: Copyright (C) {datetime.now().year} {company}"
+    )
 
 
 def test_header_preserves_lowercase_c_holders():
@@ -166,9 +164,7 @@ def test_header_preserves_lowercase_c_holders():
         ]
     )
 
-    formatted, changed = header.get_formatted()
-
-    assert changed is True
+    formatted = header.get_formatted()
 
     assert formatted == [
         "Copyright (c) 2019 STMicroelectronics.",
@@ -190,11 +186,7 @@ def test_header_adds_missing_companies_in_order():
         ]
     )
 
-    assert header.has_copyright() is False
-
-    formatted, changed = header.get_formatted()
-
-    assert changed is True
+    formatted = header.get_formatted()
 
     assert formatted == [
         "Copyright (C) MBition GmbH",
@@ -202,4 +194,30 @@ def test_header_adds_missing_companies_in_order():
         _default_notice("Another Corp"),
         "",
         "SPDX-License-Identifier: Apache-2.0",
+    ]
+
+
+def test_header_with_other_content():
+    companies = ["Frickly Systems GmbH", "MBition GmbH", "Another Corp"]
+    header = Header(config=get_default_config(), companies=companies)
+    header.add_lines(
+        [
+            "Copyright (C) MBition GmbH",
+            "",
+            "SPDX-License-Identifier: Apache-2.0",
+            "",
+            "Some other header info",
+        ]
+    )
+
+    formatted = header.get_formatted()
+
+    assert formatted == [
+        "Copyright (C) MBition GmbH",
+        _default_notice("Frickly Systems GmbH"),
+        _default_notice("Another Corp"),
+        "",
+        "SPDX-License-Identifier: Apache-2.0",
+        "",
+        "Some other header info",
     ]

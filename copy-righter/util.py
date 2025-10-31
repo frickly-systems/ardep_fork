@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from argparse import Namespace
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
@@ -38,7 +39,7 @@ class Config:
     dry_run: bool
     verbose: bool
     copyright_style: CopyrightStyle
-    update_copyrights: bool
+    update_copyrights: bool = False
 
     @classmethod
     def from_args(cls, args: Namespace) -> "Config":
@@ -76,6 +77,9 @@ class License:
         identifier = text[len("SPDX-License-Identifier:") :].strip()
         return cls(identifier=identifier)
 
+    def to_string(self) -> str:
+        return f"SPDX-License-Identifier: {self.identifier}"
+
 
 class Copyright:
     holder: str
@@ -86,7 +90,7 @@ class Copyright:
     def __init__(
         self,
         holder: str,
-        year: Optional[int] = None,
+        year: Optional[int] = datetime.now().year,
         style: Optional[CopyrightStyle] = None,
     ):
         self.holder = holder
@@ -126,7 +130,10 @@ class Copyright:
 
         return cls(holder=holder, year=year, style=style)
 
-    def to_string(self, style: CopyrightStyle) -> str:
+    def to_string(self, style: Optional[CopyrightStyle] = None) -> str:
+        if style is None:
+            style = self.style
+
         if style == CopyrightStyle.SIMPLE or (
             style == CopyrightStyle.SIMPLE_YEAR and not self.year
         ):

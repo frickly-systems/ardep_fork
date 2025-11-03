@@ -86,16 +86,19 @@ class Copyright:
     year: Optional[int]
 
     style: Optional[CopyrightStyle]
+    lowercase_c: bool
 
     def __init__(
         self,
         holder: str,
         year: Optional[int] = datetime.now().year,
         style: Optional[CopyrightStyle] = None,
+        lowercase_c: bool = False,
     ):
         self.holder = holder
         self.year = year
         self.style = style
+        self.lowercase_c = lowercase_c
 
     @classmethod
     def from_string(cls, text: str) -> "Copyright":
@@ -103,6 +106,7 @@ class Copyright:
         year = None
         holder = ""
         style = None
+        lowercase_c = "(c)" in text and "(C)" not in text
 
         if text.startswith("SPDX-FileCopyrightText:"):
             style = (
@@ -128,29 +132,31 @@ class Copyright:
         else:
             holder = " ".join(parts)
 
-        return cls(holder=holder, year=year, style=style)
+        return cls(holder=holder, year=year, style=style, lowercase_c=lowercase_c)
 
     def to_string(self, style: Optional[CopyrightStyle] = None) -> str:
         if style is None:
             style = self.style
 
+        copyright_casing = "(c)" if self.lowercase_c else "(C)"
+
         if style == CopyrightStyle.SIMPLE or (
             style == CopyrightStyle.SIMPLE_YEAR and not self.year
         ):
-            return f"Copyright (C) {self.holder}"
+            return f"Copyright {copyright_casing} {self.holder}"
         elif style == CopyrightStyle.SIMPLE_YEAR:
-            return f"Copyright (C) {self.year} {self.holder}"
+            return f"Copyright {copyright_casing} {self.year} {self.holder}"
         elif style == CopyrightStyle.SPDX or (
             style == CopyrightStyle.SPDX_YEAR and not self.year
         ):
-            return f"SPDX-FileCopyrightText: Copyright (C) {self.holder}"
+            return f"SPDX-FileCopyrightText: Copyright {copyright_casing} {self.holder}"
         elif style == CopyrightStyle.SPDX_YEAR and self.year:
-            return f"SPDX-FileCopyrightText: Copyright (C) {self.year} {self.holder}"
+            return f"SPDX-FileCopyrightText: Copyright {copyright_casing} {self.year} {self.holder}"
 
         # Fallback (should not reach here)
         if self.year:
-            return f"SPDX-FileCopyrightText: Copyright (C) {self.year} {self.holder}"
-        return f"SPDX-FileCopyrightText: Copyright (C) {self.holder}"
+            return f"SPDX-FileCopyrightText: Copyright {copyright_casing} {self.year} {self.holder}"
+        return f"SPDX-FileCopyrightText: Copyright {copyright_casing} {self.holder}"
 
     @classmethod
     def _contains_year(self, text: str) -> bool:

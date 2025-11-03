@@ -8,7 +8,7 @@ if project_root_str not in sys.path:
     sys.path.insert(0, project_root_str)
 
 from header import Header
-from util import Config, CopyrightStyle
+from util import Config, CopyrightStyle, License
 
 
 def get_default_config() -> Config:
@@ -32,7 +32,11 @@ def _default_notice(company: str, style: str = "spdx_year") -> str:
 
 def test_header_adds_company_and_license_when_missing():
     company = "Frickly Systems GmbH"
-    header = Header(config=get_default_config(), companies=[company])
+    header = Header(
+        config=get_default_config(),
+        license_identifier=License("Apache-2.0"),
+        companies=[company],
+    )
     header.add_lines(["", "Project Foo"])
 
     formatted = header.get_formatted()
@@ -99,7 +103,7 @@ def test_header_no_changes_when_complete():
     ]
 
 
-def test_header_respects_explicit_license_override():
+def test_header_adds_license_if_missing():
     header = Header(config=get_default_config(), license_identifier="MIT")
     header.add_lines(["", "Existing info"])
 

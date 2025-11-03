@@ -18,26 +18,40 @@ class Header:
 
     config: Config
     companies: list[str]
-    license_identifier: Optional[License]
+    license_identifier: Optional[License | str]
     copyrights: list[Copyright]
 
     _lines: list[str]
     _license_if_has_none: Optional[License]
+
+    _parsing_between_copyright_and_license: bool
+    _parsed_license: bool
+    _parsed_copyright: bool
 
     def __init__(
         self,
         config: Config,
         *,
         companies: Union[Iterable[str], str, None] = None,
-        license_identifier: Optional[License] = None,
+        license_identifier: Optional[License | str] = None,
         lines: Optional[Iterable[str]] = None,
     ):
+        self._parsing_between_copyright_and_license = False
+        self._parsed_license = False
+        self._parsed_copyright = False
+
         self.config = config
         self.companies = self._coerce_companies(companies)
         self.license_identifier = None
         self.copyrights = []
 
-        self._license_if_has_none = license_identifier
+        if isinstance(license_identifier, License):
+            self._license_if_has_none = license_identifier
+        elif isinstance(license_identifier, str):
+            self._license_if_has_none = License(license_identifier)
+        else:
+            self._license_if_has_none = None
+
         self._lines: list[str] = []
         if lines is not None:
             self.add_lines(lines)
@@ -49,6 +63,14 @@ class Header:
             c = Copyright.from_string(line)
             if c is not None:
                 self.copyrights.append(c)
+                if not self._parsed_copyright:
+                    self._parsed_copyright = True
+
+                if self._parsed_license:
+                    self._parsing_between_copyright_and_license = False
+                else:
+                    self._parsing_between_copyright_and_license = True
+
             return
         except ValueError:
             pass
@@ -57,9 +79,23 @@ class Header:
             l = License.from_string(line)
             if l is not None and self.license_identifier is None:
                 self.license_identifier = l
+
+                if not self._parsed_license:
+                    self._parsed_license = True
+
+                if self._parsed_copyright:
+                    self._parsing_between_copyright_and_license = False
+                else:
+                    self._parsing_between_copyright_and_license = True
             return
         except ValueError:
             pass
+
+        if (
+            self._parsing_between_copyright_and_license
+            and self._normalize_line(line).strip() == ""
+        ):
+            return
 
         self._lines.append(self._normalize_line(line))
 
@@ -82,11 +118,11 @@ class Header:
         self, companies: Union[Iterable[str], str, None]
     ) -> list[str]:
         if companies is None:
-            return [COMPANY_NAME]
+            return []
         if isinstance(companies, str):
             return [companies]
         collected: list[str] = [company for company in companies if company]
-        return collected or [COMPANY_NAME]
+        return collected or []
 
     def _normalize_line(self, line: str) -> str:
         return line.rstrip("\n")
@@ -120,7 +156,7 @@ class Header:
                 lines.append("")
             lines.append(l.to_string())
 
-        if lines:
+        if lines and self._lines and self._lines[0] != "":
             lines.append("")
 
         lines.extend(self._lines)

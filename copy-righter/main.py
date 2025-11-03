@@ -19,7 +19,6 @@ def main():
         "--dry-run", action="store_true", help="Run without making actual changes"
     )
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
-    parser.add_argument("--config", choices=["zephyr", "python"], help="configuration")
     parser.add_argument(
         "-c",
         "--copyright",

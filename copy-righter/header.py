@@ -147,7 +147,10 @@ class Header:
                 )
 
         for c in copyrights:
-            lines.append(c.to_string())
+            if self.config.update_copyrights:
+                lines.append(c.to_string(self.config.copyright_style))
+            else:
+                lines.append(c.to_string())
 
         l: Optional[License] = self.license_identifier or self._license_if_has_none
 

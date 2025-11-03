@@ -82,7 +82,7 @@ class PythonProcessor(CopyrightProcessor):
         for raw_line in header_lines:
             header.add_line(self._strip_comment_prefix(raw_line))
 
-        formatted_header, _ = header.get_formatted()
+        formatted_header = header.get_formatted()
         rendered_header = [
             self._format_comment_line(entry) for entry in formatted_header
         ]

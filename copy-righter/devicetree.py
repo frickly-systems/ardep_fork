@@ -80,7 +80,7 @@ class DevicetreeProcessor(CopyrightProcessor):
         else:
             header.add_lines([line.rstrip("\n") for line in header_lines])
 
-        formatted_header, _ = header.get_formatted()
+        formatted_header = header.get_formatted()
         rendered_header = self._render_header(formatted_header, comment_style)
 
         rest_lines = lines[idx:]

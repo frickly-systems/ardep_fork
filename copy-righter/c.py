@@ -93,7 +93,7 @@ class CProcessor(CopyrightProcessor):
             else:
                 header.add_lines(self._strip_block_comment_lines(header_lines))
 
-        formatted_header, _ = header.get_formatted()
+        formatted_header = header.get_formatted()
         rendered_header = self._render_header(formatted_header, comment_style)
 
         rest_lines = lines[header_end:]

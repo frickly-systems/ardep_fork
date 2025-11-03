@@ -11,7 +11,7 @@ from c import CProcessor  # type: ignore  # pylint: disable=import-error
 from cmake import CmakeProcessor  # type: ignore  # pylint: disable=import-error
 from devicetree import DevicetreeProcessor  # type: ignore  # pylint: disable=import-error
 from python import PythonProcessor  # type: ignore  # pylint: disable=import-error
-from util import Config, CopyrightStyle  # type: ignore  # pylint: disable=import-error
+from util import Config, CopyrightStyle, License  # type: ignore  # pylint: disable=import-error
 
 
 def get_default_config() -> Config:
@@ -35,13 +35,23 @@ def _run_processor(
 
 
 def test_cmake_processor_formats_header():
-    original = """# Existing header\n#\n# SPDX-License-Identifier: Apache-2.0\n\nset(VAR 1)\n"""
+    original = "\n".join(
+        [
+            "# Existing header",
+            "#",
+            "# SPDX-License-Identifier: Apache-2.0",
+            "",
+            "set(VAR 1)",
+            "",
+        ]
+    )
 
     result = _run_processor(
         CmakeProcessor,
         original,
         ".cmake",
         get_default_config(),
+        license_identifier=License("Apache-2.0"),
     )
 
     year = datetime.now().year
@@ -59,13 +69,23 @@ def test_cmake_processor_formats_header():
 
 
 def test_c_processor_formats_block_comment_header():
-    original = """/*\n * Test header\n *\n */\nint main(void) { return 0; }\n"""
+    original = "\n".join(
+        [
+            "/*",
+            " * Test header",
+            " *",
+            " */",
+            "int main(void) { return 0; }",
+            "",
+        ]
+    )
 
     result = _run_processor(
         CProcessor,
         original,
         ".c",
         get_default_config(),
+        license_identifier=License("Apache-2.0"),
     )
 
     year = datetime.now().year
@@ -118,6 +138,7 @@ def test_python_processor_formats_header():
         original,
         ".py",
         get_default_config(),
+        license_identifier=License("Apache-2.0"),
     )
 
     year = datetime.now().year
@@ -140,6 +161,7 @@ def test_python_processor_handles_shebang():
         original,
         ".py",
         get_default_config(),
+        license_identifier=License("Apache-2.0"),
     )
 
     year = datetime.now().year
@@ -164,6 +186,7 @@ def test_devicetree_processor_formats_block_comment():
         original,
         ".dts",
         get_default_config(),
+        license_identifier=License("Apache-2.0"),
     )
 
     year = datetime.now().year

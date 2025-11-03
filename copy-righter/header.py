@@ -159,7 +159,11 @@ class Header:
         if lines and self._lines and self._lines[0] != "":
             lines.append("")
 
-        lines.extend(self._lines)
+        trailing_lines = self._lines.copy()
+        while trailing_lines and trailing_lines[-1].strip() == "":
+            trailing_lines.pop()
+
+        lines.extend(trailing_lines)
 
         return lines
 

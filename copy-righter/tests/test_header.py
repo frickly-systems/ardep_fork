@@ -225,3 +225,58 @@ def test_header_with_other_content():
         "",
         "Some other header info",
     ]
+
+
+def test_header_with_other_content_and_trailing_empty_line():
+    companies = ["Frickly Systems GmbH", "MBition GmbH", "Another Corp"]
+    header = Header(config=get_default_config(), companies=companies)
+    header.add_lines(
+        [
+            "Copyright (C) MBition GmbH",
+            "",
+            "SPDX-License-Identifier: Apache-2.0",
+            "",
+            "Some other header info",
+            "",
+        ]
+    )
+
+    formatted = header.get_formatted()
+
+    assert formatted == [
+        "Copyright (C) MBition GmbH",
+        _default_notice("Frickly Systems GmbH"),
+        _default_notice("Another Corp"),
+        "",
+        "SPDX-License-Identifier: Apache-2.0",
+        "",
+        "Some other header info",
+    ]
+
+
+def test_header_with_other_content_and_multiple_trailing_empty_lines():
+    companies = ["Frickly Systems GmbH", "MBition GmbH", "Another Corp"]
+    header = Header(config=get_default_config(), companies=companies)
+    header.add_lines(
+        [
+            "Copyright (C) MBition GmbH",
+            "",
+            "SPDX-License-Identifier: Apache-2.0",
+            "",
+            "Some other header info",
+            "",
+            "",
+        ]
+    )
+
+    formatted = header.get_formatted()
+
+    assert formatted == [
+        "Copyright (C) MBition GmbH",
+        _default_notice("Frickly Systems GmbH"),
+        _default_notice("Another Corp"),
+        "",
+        "SPDX-License-Identifier: Apache-2.0",
+        "",
+        "Some other header info",
+    ]

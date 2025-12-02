@@ -27,7 +27,7 @@
 - Die Boards und der Host werden über `CAN` miteinander verbunden
 - Um die Logs von eiem Board über `CAN` zu erhalten füre auf dem Host aus:
     ```sh
-    python3 samples/uds_bus_sample/can_log_recv.py -id 0x100
+    west ardep can-log-receiver -id 0x100
     ```
     Wobei die id (`0x100`) der Adresse des board (`n`) `+ 0x100` entspricht
 - Starte die Demo:

@@ -77,3 +77,36 @@ Wir benötigen ein ARDEP Baord (es kann auch am Aufbau von obiger Demo hängen)
 - Demonstration von Routine-Control (synchron und asynchron)
 - Security Access Level anhand eine Data Identier, der nur mit Security Access gelesen werden kann
 - Authentication für Data Identifier (wie Security Access)
+
+
+
+
+
+
+
+
+# Commands
+
+## Bus sample mit flash
+
+```sh
+python3 samples/uds_bus_sample/client.py -c can0 -b "ardep@1" -u -n 4
+```
+
+## Bus sample ohne flash
+
+```sh
+python3 samples/uds_bus_sample/client.py -c can0
+```
+
+## Tim sample flashen
+
+```sh
+python3 firmware_loader/client.py -c can0 -f build/zephyr/zephyr.signed.bin -r
+```
+
+## Tim sample runnen
+
+```sh
+python3 samples/uds/client.py -c can0
+```

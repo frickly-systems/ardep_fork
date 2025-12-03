@@ -39,9 +39,9 @@ def change_session(client: Client):
 
 def ecu_reset(client: Client):
     # Send ECU reset request (hard reset)
-    print("Sending ECU hard reset request...")
+    #print("Sending ECU hard reset request...")
     client.ecu_reset(ECUReset.ResetType.hardReset)
-    print("\tECU reset request sending successfully")
+    #print("\tECU reset request sending successfully")
 
 
 def erase_slot0_memory_routine(client: Client):
@@ -145,6 +145,8 @@ def create_and_test_addresses(intf: str) -> List[isotp.Address]:
     addresses = []
     i = 0
 
+    print_headline("Discovering UDS Clients")
+
     while i < 8:
         addr = isotp.Address(isotp.AddressingMode.Normal_11bits, rxid=0x7E0 + i, txid=0x7E8 + i)
         conn = IsoTPSocketConnection(intf, addr)
@@ -154,14 +156,18 @@ def create_and_test_addresses(intf: str) -> List[isotp.Address]:
 
         try:
             with Client(conn, config=config, request_timeout=0.5) as client:
+                print_indented(f"Testing connection {i} ...")
+                print_indented(f"Client {i}: TesterPresent", 2)
                 client.tester_present()
-                print(f"Connection {i} successful (RXID: 0x{addr._rxid:X}, TXID: 0x{addr._txid:X})")
+                print_indented(f"Connection {i} successful (RXID: 0x{addr._rxid:X}, TXID: 0x{addr._txid:X})")
         except Exception:
-            print(f"Connection {i} failed (RXID: 0x{addr._rxid:X}, TXID: 0x{addr._txid:X})")
+            # print_indented(f"Connection {i} failed (RXID: 0x{addr._rxid:X}, TXID: 0x{addr._txid:X})")
             break
 
         addresses.append(addr)
         i += 1
+
+    print_indented(f"Discovered {len(addresses)} clients")
 
     return addresses
 
@@ -183,17 +189,16 @@ def main(args: Namespace):
     upgrade: bool = args.upgrade
 
     if upgrade:
-        print("Building client firmwares")
+        print_headline("Building client firmwares")
         for i in range(int(args.count)):
-            print("Building firmware for client", i)
+            print_indented(f"Building firmware for client {i}")
             cmd = ["west","build", "-d","builds/fw"+str(i)]
             if pristine:
                 cmd += ["-p","auto","samples/uds_bus_sample","-b", args.board, "--sysbuild","--","-DSB_CONFIG_UDS_BASE_ADDR="+str(i)]
-            print("Running command:", " ".join(cmd))
+            print_indented("Running command: " + " ".join(cmd))
             a = subprocess.run(cmd, check=True)
 
     addresses = create_and_test_addresses(can)
-    print(f"Discovered {len(addresses)} clients")
 
     if upgrade and len(addresses) > int(args.count):
         print(f"Error: Cannot upgrade all clients, discovered {len(addresses)} but only built for {args.count}")
@@ -206,30 +211,42 @@ def main(args: Namespace):
     }
 
     if upgrade:
-        print("Upgrading clients")
+        print_headline("Upgrading clients")
 
         for addr in addresses:
             conn = IsoTPSocketConnection(can, addr)
             with Client(conn, config=config, request_timeout=2) as client:
-                print(f"\n--- Upgrading client on RXID: 0x{addr._rxid:X}, TXID: 0x{addr._txid:X} ---")
+                print_indented(f"--- Upgrading client on RXID: 0x{addr._rxid:X}, TXID: 0x{addr._txid:X} ---")
                 try_run(lambda: change_session(client))
 
                 try_run(lambda: erase_slot0_memory_routine(client))
                 try_run(lambda: firmware_download(client, "builds/fw"+str((addr._rxid - 0x7E0))+"/uds_bus_sample/zephyr/zephyr.signed.bin"))
 
                 try_run(lambda: ecu_reset(client))
-        print("\nAll clients upgraded")
+        print_indented("All clients upgraded")
         time.sleep(1)
+
+    if not upgrade:
+        print_headline("Resetting clients")
+        for addr in addresses:
+            conn = IsoTPSocketConnection(can, addr)
+            with Client(conn, config=config, request_timeout=2) as client:
+                print_indented(f"Client: ECUReset HardReset")
+                try_run(lambda: ecu_reset(client))
+    
+    time.sleep(1)
 
     shuffle(addresses)
 
-    print("Configuring client chain")
+    print_headline("Configuring client chain")
 
     first_reponder_receive_address = 0x001
     last_responder_send_address = 0x000
 
+    do_nothing_address = 0x200
+
     client_cnt  = len(addresses)
-    for i in range(1, client_cnt): # skip first client, this will be our controller
+    for i in range(client_cnt):
         addr = addresses[i]
         conn = IsoTPSocketConnection(can, addr)
         with Client(conn, config=config, request_timeout=2) as client:
@@ -237,38 +254,50 @@ def main(args: Namespace):
             send_address = i + 2
 
             # setup receive addresses
+            if i == 0:
+                receive_address = do_nothing_address # first client should not receive anything as this is our controller
             if i == 1:
                 receive_address = first_reponder_receive_address
             client.write_data_by_identifier(0x1100, receive_address)
 
+            print_indented(f"Client {i}: WriteDataByIdentifier 0x1100 = 0x{receive_address:03X}")
+
             # setup send addresses
+            if i == 0:
+                send_address = do_nothing_address # first client is our controller
             if i == client_cnt - 1:
                 send_address = last_responder_send_address
             client.write_data_by_identifier(0x1101, send_address)
 
-    print("Client chain configured successfully")
+            print_indented(f"Client {i}: WriteDataByIdentifier 0x1101 = 0x{send_address:03X}")
 
+    print_indented("Client chain configured successfully")
+
+
+
+    print_headline("Starting controller routine...")
     received_final_frame = None
     addr = addresses[0]
     conn = IsoTPSocketConnection(can, addr)
     with Client(conn, config=config, request_timeout=2) as client:
         # start controller routine
-        print("Starting controller routine...")
+        print_indented("Controller: RoutineControl StartRoutine 0x0000")
         client.start_routine(routine_id=0x0000)
 
         # poll for completion and get final frame
         for i in range(5):
+            print_indented("Controller: RoutineControl GetRoutineResult 0x0000")
             a = client.get_routine_result(routine_id=0x0000)
             completed = False
             match a.service_data.routine_status_record[0]:
                 case 0xff:
-                    print("Routine still running...")
+                    print_indented("Routine still running...")
                 case 0x00:
-                    print("Routine completed successfully")
+                    print_indented("Routine completed successfully")
                     received_final_frame = a.service_data.routine_status_record[1:]
                     completed = True
                 case other:
-                    print(f"Routine failed with code: 0x{other:02X}")
+                    print_indented(f"Routine failed with code: 0x{other:02X}")
                     completed = True
 
             if completed:
@@ -279,6 +308,9 @@ def main(args: Namespace):
     if received_final_frame is None:
         print("Did not receive final frame from controller routine")
         return
+
+    print_headline("Verifying signatures")
+    print_indented(f"Received final frame: {" ".join([f'0x{b:02X}' for b in received_final_frame[0:len(addresses)]])}")
 
     to_sign = received_final_frame[0]
     for i in range(1, len(addresses)): # 1 because the controller does not sign

@@ -294,6 +294,16 @@ int uds_init(struct uds_instance_t *inst,
              void *user_context);
 
 /**
+ * @brief Get the isotp address configuration for given uds instance
+ * @param inst UDS Instance pointer
+ * @param iso_tp_config output parameter for the isotp address configuration
+ * @returns 0 on success
+ * @return -EINVAL if any of the two pointers are null
+ */
+int uds_get_isotp_config(struct uds_instance_t *inst,
+                         UDSISOTpCConfig_t *iso_tp_config);
+
+/**
  * @brief type identifier for `struct uds_registration_t`
  */
 enum uds_registration_type_t {
@@ -772,5 +782,27 @@ UDSErr_t uds_switch_to_firmware_loader_with_programming_session();
 
 // Include macro declarations after all types are defined
 #include "ardep/uds_macro.h"  // IWYU pragma: keep
+
+#ifdef CONFIG_UDS_DEFAULT_INSTANCE
+extern struct uds_instance_t uds_default_instance;
+
+/**
+ * @brief Provide user context for the default UDS instance
+ * @note This weak function can be overridden by the user to provide a custom
+ * user context pointer for the default UDS instance
+ * @param user_context Pointer to store the user context
+ */
+__weak void uds_default_instance_user_context(void **user_context);
+
+#ifdef CONFIG_UDS_DEFAULT_INSTANCE_EXTERNAL_ADDRESS_PROVIDER
+/**
+ * @brief Get the ISOTP address configuration for the default UDS instance
+ * @note Must be implemented by the user if
+ * `CONFIG_UDS_DEFAULT_INSTANCE_EXTERNAL_ADDRESS_PROVIDER` is enabled
+ * @returns The ISOTP address configuration
+ */
+UDSISOTpCConfig_t uds_default_instance_get_addresses();
+#endif  // CONFIG_UDS_DEFAULT_INSTANCE_EXTERNAL_ADDRESS_PROVIDER
+#endif  // CONFIG_UDS_DEFAULT_INSTANCE
 
 #endif  // ARDEP_UDS_H

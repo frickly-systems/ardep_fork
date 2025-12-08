@@ -46,3 +46,16 @@ Pin-mapping
     *   - PF1
         - 2
 
+Software Usage
+==============
+
+The gearshift position can be read in software to dynamically configure various parameters. The three position pins (0, 1, 2) provide 8 possible configurations (0-7).
+
+An example for reading the gearshift position is located in the :ref:`gearshift_sample`.
+
+Dynamic Address Configuration
+-----------------------------
+
+The :ref:`gearshift-address-providers` library uses the gearshift position to automatically configure CAN addresses for UDS and logging services.
+This allows multiple ARDEP boards on the same CAN bus to use unique addresses without requiring different firmware builds.
+

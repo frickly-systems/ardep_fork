@@ -1,0 +1,12 @@
+# Copyright (C) Frickly Systems GmbH
+# Copyright (C) MBition GmbH
+
+description: Driver for reading the current gearshift position
+compatible: "ardep-gearshift"
+include: base.yaml
+
+properties:
+  gearshift-gpios:
+    type: phandle-array
+    required: true
+    description: GPIOs connected to the gearshift position pins

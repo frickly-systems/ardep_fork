@@ -212,7 +212,7 @@ static UDSErr_t auth_timeout_action(struct uds_context *const context,
   return UDS_PositiveResponse;
 }
 
-UDS_REGISTER_AUTHENTICATION_HANDLER(&instance,
+UDS_REGISTER_AUTHENTICATION_HANDLER(&uds_default_instance,
                                     auth_check,
                                     auth_action,
                                     auth_timeout_check,

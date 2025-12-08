@@ -3,7 +3,22 @@
 UDS Sample
 ##########
 
-This sample can be used to test the uds implementation.
+This sample demonstrates comprehensive UDS (Unified Diagnostic Services) functionality using the default UDS instance.
+
+Overview
+========
+
+The sample uses ``uds_default_instance`` provided by the UDS library, which automatically handles:
+
+- UDS instance initialization
+- CAN interface setup and configuration
+- Thread startup
+- Common handler registration (session control, ECU reset, link control)
+
+The application only needs to:
+
+1. Implement service-specific handlers
+2. Optionally provide custom user context via ``uds_default_instance_user_context()``
 
 Test with virtual CAN on posix
 ==============================

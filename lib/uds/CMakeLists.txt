@@ -20,6 +20,8 @@ zephyr_library_sources(security_access.c)
 zephyr_library_sources(uds.c)
 zephyr_library_sources(util.c)
 
+zephyr_library_sources_ifdef(CONFIG_UDS_DEFAULT_INSTANCE default_instance.c)
+
 zephyr_library_sources_ifdef(CONFIG_UDS_FILE_TRANSFER upload_download_file_transfer.c)
 zephyr_library_sources_ifdef(CONFIG_UDS_UPLOAD_DOWNLOAD_MODULE upload_download.c)
 zephyr_library_sources_ifdef(CONFIG_UDS_USE_LINK_CONTROL link_control.c)

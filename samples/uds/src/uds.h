@@ -10,8 +10,6 @@
 
 #include <ardep/uds.h>
 
-extern struct uds_instance_t instance;
-
 struct authentication_data {
   bool authenticated;
   uint8_t seeed[16];

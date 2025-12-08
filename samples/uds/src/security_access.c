@@ -123,7 +123,7 @@ UDSErr_t security_access_validate_key_action(struct uds_context *const context,
 }
 
 // Register the security access handler for level 1
-UDS_REGISTER_SECURITY_ACCESS_HANDLER(&instance,
+UDS_REGISTER_SECURITY_ACCESS_HANDLER(&uds_default_instance,
                                      security_access_request_seed_check,
                                      security_access_request_seed_action,
                                      security_access_validate_key_check,
@@ -172,7 +172,7 @@ UDSErr_t read_secure_data_action(struct uds_context *const context,
 }
 
 // Register the secure data identifier handler
-UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&instance,
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&uds_default_instance,
                                         secure_data_id,
                                         &secure_data,
                                         read_secure_data_check,

@@ -13,7 +13,9 @@ module = APP
 module-str = app
 source "subsys/logging/Kconfig.template.log_config"
 
-comment "UDS Addresses"
+if !UDS_DEFAULT_INSTANCE_EXTERNAL_ADDRESS_PROVIDER
+
+# alias configs for easier access of UDS_DEFAULT_INSTANCE addresses
 
 config FIRMWARE_LOADER_PHYS_SA
     hex "Physical Source Address"
@@ -35,6 +37,17 @@ config FIRMWARE_LOADER_FUNC_SA
     help
       The functional source address used for UDS communication.
       Should be the same as the main application's address
+
+config UDS_DEFAULT_INSTANCE_SOURCE_ADDRESS
+  default FIRMWARE_LOADER_PHYS_SA
+
+config UDS_DEFAULT_INSTANCE_TARGET_ADDRESS
+  default FIRMWARE_LOADER_PHYS_TA
+
+config UDS_DEFAULT_INSTANCE_FUNCTIONAL_SOURCE_ADDRESS
+  default FIRMWARE_LOADER_FUNC_SA
+
+endif
 
 config DISABLE_WAIT_BEFORE_ERASE
     bool "Disable waiting before erasing slot0"

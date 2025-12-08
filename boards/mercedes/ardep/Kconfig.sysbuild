@@ -8,7 +8,8 @@
 
 choice ARDEP_BOOT_LOGIC
   prompt "Boot logic choices"
-  default BOOT_LOGIC_LEGACY
+  default BOOT_LOGIC_LEGACY if BOARD_REVISION="1.0.0"
+  default BOOT_LOGIC_UDS_FIRMWARE_LOADER
 
   config BOOT_LOGIC_UDS_FIRMWARE_LOADER
     bool "UDS Firmware Loader"

@@ -108,7 +108,9 @@ int iso14229_zephyr_init(struct iso14229_zephyr_instance* inst,
                          void* user_context);
 
 /**
- * @brief Inject a received CAN frame into the UDS server instance
+ * @brief Inject a received CAN frame into the UDS server instance. Overwrites
+ * the frame ID with the actual source address of the instance, either physical
+ * or functional, depending on the \c functional_address parameter.
  *
  * Use this function to inject a CAN frame into the UDS server instance
  * The result of this may be a response to the received frame, which gets send
@@ -122,7 +124,11 @@ int iso14229_zephyr_init(struct iso14229_zephyr_instance* inst,
  *
  * @param inst Pointer to the UDS server instance
  * @param frame Pointer to the received CAN frame
+ * @param functional_address If true, the functional source address of the
+ *                           instance is used as frame ID, otherwise the
+ *                           physical source address.
  */
 void iso14229_inject_can_frame_rx(struct iso14229_zephyr_instance* inst,
-                                  struct can_frame* frame);
+                                  struct can_frame* frame,
+                                  bool functional_address);
 #endif  // ARDEP_ISO14229_H

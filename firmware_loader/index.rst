@@ -5,7 +5,9 @@ UDS Firmware Loader
 
 This firmware loader is used to update the firmware on ARDEP devices via UDS.
 The bootloader runs this firmware under certain conditions, such as when the *BOOT* labeled jumper is set during start up,
-when ``uds_switch_to_firmware_loader_with_programming_session()`` is called or when no valid application is flashed.
+when ``uds_switch_to_firmware_loader_with_programming_session()`` is called (or automatically with the UDS default instance), or when no valid application is flashed.
+
+The firmware loader uses the UDS library's default instance for simplified UDS server setup, automatically handling CAN configuration and session management.
 
 For this firmware loader to work as intended, use sysbuild to build the bootloader with this firmware loader.
 

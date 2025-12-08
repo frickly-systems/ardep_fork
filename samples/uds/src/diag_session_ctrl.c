@@ -43,11 +43,6 @@ UDSErr_t diag_session_ctrl_action(struct uds_context* const context,
                                   bool* consume_event) {
   UDSDiagSessCtrlArgs_t* args = context->arg;
 
-  if (args->type == UDS_DIAG_SESSION__PROGRAMMING) {
-    LOG_INF("Switching into firmware loader");
-    return uds_switch_to_firmware_loader_with_programming_session();
-  }
-
   LOG_INF("Changing diagnostic session to 0x%02X", args->type);
 
   // We don't want to consume the event here, because the LinkControl handler
@@ -90,7 +85,7 @@ UDSErr_t diag_session_timeout_action(struct uds_context* const context,
 UDS_REGISTER_DIAG_SESSION_CTRL_HANDLER(
     // The UDS instance we want to register
     // the handler for
-    &instance,
+    &uds_default_instance,
     // Check and Action functions for the events
     diag_session_ctrl_check,
     diag_session_ctrl_action,

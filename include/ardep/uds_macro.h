@@ -16,6 +16,14 @@
 #define _UDS_CAT_EXPAND(a, b) _UDS_CAT(a, b)
 #endif
 
+#ifndef _UDS_UNIQUE_REGISTRATION_NAME
+#define _UDS_CAT_4(a, b, c, d) a##b##c##d
+#define _UDS_CAT_4_EXP(a, b, c, d) _UDS_CAT_4(a, b, c, d)
+
+#define _UDS_UNIQUE_REGISTRATION_NAME(category) \
+  _UDS_CAT_4_EXP(__uds_registration##category##_, __COUNTER__, _l, __LINE__)
+#endif
+
 // #region READ_DTC_INFORMATION
 
 // clang-format off
@@ -309,7 +317,7 @@
 )                                                                             \
   STRUCT_SECTION_ITERABLE(uds_registration_t,                                 \
       /* Use a counter to generate unique names for the iterable section */   \
-        _UDS_CAT_EXPAND(__uds_registration_id_memory_, __COUNTER__)) = {      \
+        _UDS_UNIQUE_REGISTRATION_NAME(memory)) = {                            \
     .instance = _instance,                                                    \
     .type = UDS_REGISTRATION_TYPE__MEMORY,                                    \
     .memory = {                                                               \
@@ -376,7 +384,7 @@
   _user_context                                                               \
 )                                                                             \
   STRUCT_SECTION_ITERABLE(uds_registration_t,                                 \
-        _UDS_CAT_EXPAND(__uds_registration_id, _reset_type)) = {              \
+        _UDS_UNIQUE_REGISTRATION_NAME(ecu_reset)) = {                         \
     .instance = _instance,                                                    \
     .type = UDS_REGISTRATION_TYPE__ECU_RESET,                                 \
     .ecu_reset = {                                                            \
@@ -502,7 +510,7 @@
   _user_context                                                                \
 )                                                                              \
   STRUCT_SECTION_ITERABLE(uds_registration_t,                                  \
-        _UDS_CAT_EXPAND(__uds_registration_diag_session_id_, __COUNTER__)) = { \
+        _UDS_UNIQUE_REGISTRATION_NAME(diag_session)) = { \
     .instance = _instance,                                                     \
     .type = UDS_REGISTRATION_TYPE__DIAG_SESSION_CTRL,                          \
     .diag_session_ctrl = {                                                     \
@@ -542,7 +550,7 @@
   _user_context                                                                \
 )                                                                              \
   STRUCT_SECTION_ITERABLE(uds_registration_t,                                  \
-        _UDS_CAT_EXPAND(__uds_registration_clear_diag_info_, __COUNTER__)) = { \
+        _UDS_UNIQUE_REGISTRATION_NAME(clear_diag_info)) = {                    \
     .instance = _instance,                                                     \
     .type = UDS_REGISTRATION_TYPE__CLEAR_DIAG_INFO,                            \
     .clear_diagnostic_information = {                                          \
@@ -579,7 +587,7 @@
   _user_context                                                                \
 )                                                                              \
   STRUCT_SECTION_ITERABLE(uds_registration_t,                                  \
-        _UDS_CAT_EXPAND(__uds_registration_routine_control_, _routine_id)) = { \
+        _UDS_UNIQUE_REGISTRATION_NAME(routine_control)) = {                    \
     .instance = _instance,                                                     \
     .type = UDS_REGISTRATION_TYPE__ROUTINE_CONTROL,                            \
     .routine_control = {                                                       \
@@ -620,7 +628,7 @@
   _user_context                                                                \
 )                                                                              \
   STRUCT_SECTION_ITERABLE(uds_registration_t,                                  \
-        _UDS_CAT_EXPAND(__uds_registration_security_access_, __COUNTER__)) = { \
+        _UDS_UNIQUE_REGISTRATION_NAME(security_access)) = {                    \
     .instance = _instance,                                                     \
     .type = UDS_REGISTRATION_TYPE__SECURITY_ACCESS,                            \
     .security_access = {                                                       \
@@ -660,7 +668,7 @@
   _user_context                                                                \
 )                                                                              \
   STRUCT_SECTION_ITERABLE(uds_registration_t,                                  \
-        _UDS_CAT_EXPAND(__uds_registration_comm_ctrl_, __COUNTER__)) = {       \
+        _UDS_UNIQUE_REGISTRATION_NAME(comm_ctrl)) = {                          \
     .instance = _instance,                                                     \
     .type = UDS_REGISTRATION_TYPE__COMMUNICATION_CONTROL,                      \
     .communication_control = {                                                 \
@@ -696,7 +704,7 @@
   _user_context                                                                    \
 )                                                                                  \
   STRUCT_SECTION_ITERABLE(uds_registration_t,                                      \
-        _UDS_CAT_EXPAND(__uds_registration_control_dtc_setting_, __COUNTER__)) = { \
+        _UDS_UNIQUE_REGISTRATION_NAME(control_dtc_setting)) = {                    \
     .instance = _instance,                                                         \
     .type = UDS_REGISTRATION_TYPE__CONTROL_DTC_SETTING,                            \
     .control_dtc_setting = {                                                       \
@@ -791,7 +799,7 @@
   _user_context                                                                \
 )                                                                              \
   STRUCT_SECTION_ITERABLE(uds_registration_t,                                  \
-        _UDS_CAT_EXPAND(__uds_registration_authentication_, __COUNTER__)) = {  \
+        _UDS_UNIQUE_REGISTRATION_NAME(authentication)) = {                     \
     .instance = _instance,                                                     \
     .type = UDS_REGISTRATION_TYPE__AUTHENTICATION,                             \
     .auth = {                                                                  \

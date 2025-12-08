@@ -81,6 +81,30 @@ Core Concepts
 
 The UDS library operates on an event-driven model where diagnostic requests trigger events that are handled by registered event handlers.
 
+Default UDS Instance
+--------------------
+
+The UDS library provides a **default instance** (``uds_default_instance``) that simplifies UDS server setup. When enabled via ``CONFIG_UDS_DEFAULT_INSTANCE=y`` (default), the library automatically:
+
+- Initializes the UDS instance at application startup
+- Configures CAN communication
+- Registers common handlers (session control, ECU reset, optional link control)
+- Starts the UDS thread
+
+This approach eliminates most boilerplate code, allowing you to focus on implementing service-specific handlers.
+
+**When to use the default instance:**
+
+- Single UDS server applications
+- Standard CAN addressing schemes
+- Quick prototyping and testing
+
+**When to create a custom instance:**
+
+- Multiple UDS servers on different CAN interfaces
+- Complex initialization requirements
+- Non-standard transport layer configurations
+
 Event Handlers
 --------------
 
@@ -123,24 +147,17 @@ When a diagnostic request arrives:
 
 4. If no handler processes the event, a negative response is sent to the client
 
-Example
--------
+Quick Start Example (Default Instance)
+---------------------------------------
 
-The following example demonstrates a minimal setup of an UDS server that registers a single Data Identifier handler.
+The following example demonstrates the simplest UDS server setup using the default instance:
 
 .. code-block:: c
 
     #include <zephyr/logging/log.h>
     LOG_MODULE_REGISTER(uds_sample, LOG_LEVEL_DBG);
 
-    #include <zephyr/drivers/can.h>
-
-    #include <ardep/iso14229.h>
     #include <ardep/uds.h>
-    
-    static const struct device *can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
-
-    struct uds_instance_t instance;
 
     // Define a data identifier and its associated data
     const uint16_t primitive_type_id = 0x50;
@@ -155,7 +172,6 @@ The following example demonstrates a minimal setup of an UDS server that registe
     UDSErr_t read_data_by_id_action(struct uds_context *const context,
                                     bool *consume_event) {
         UDSRDBIArgs_t *args = context->arg;
-
         *consume_event = true;
 
         // Convert to big-endian for network transmission
@@ -163,18 +179,43 @@ The following example demonstrates a minimal setup of an UDS server that registe
         return args->copy(context->server, t, sizeof(t));
     }
 
+    // Register handler for the default instance
     UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(
-        &instance,
+        &uds_default_instance,  // Use the default instance
         primitive_type_id,
         &primitive_type,
         read_data_by_id_check,
         read_data_by_id_action,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL);
+        NULL, NULL, NULL, NULL, NULL);
 
+That's it! The default instance handles initialization, CAN setup, and thread management automatically.
+
+Custom Instance Example
+-----------------------
+
+For advanced use cases requiring manual control, you can create and manage your own UDS instance.
+Don't forget to disable the UDS default instance by setting ``CONFIG_UDS_DEFAULT_INSTANCE=n`` in your ``prj.conf``.
+
+.. code-block:: c
+
+    #include <zephyr/logging/log.h>
+    LOG_MODULE_REGISTER(uds_sample, LOG_LEVEL_DBG);
+
+    #include <zephyr/drivers/can.h>
+    #include <ardep/uds.h>
+    
+    static const struct device *can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
+    struct uds_instance_t my_instance;
+
+    // ... (handler definitions as above)
+
+    UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(
+        &my_instance,  // Use custom instance
+        primitive_type_id,
+        &primitive_type,
+        read_data_by_id_check,
+        read_data_by_id_action,
+        NULL, NULL, NULL, NULL, NULL);
 
     int main(void) {
         int err = 0;
@@ -183,12 +224,11 @@ The following example demonstrates a minimal setup of an UDS server that registe
         UDSISOTpCConfig_t cfg = {
             .source_addr = 0x7E8,
             .target_addr = 0x7E0,
-
             .source_addr_func = 0x7DF,
             .target_addr_func = UDS_TP_NOOP_ADDR,
         };
 
-        uds_init(&instance, &cfg, can_dev, NULL);
+        uds_init(&my_instance, &cfg, can_dev, NULL);
 
         if (!device_is_ready(can_dev)) {
             LOG_INF("CAN device not ready");
@@ -207,20 +247,105 @@ The following example demonstrates a minimal setup of an UDS server that registe
             return err;
         }
 
-        instance.iso14229.thread_start(&instance.iso14229);
+        my_instance.iso14229.thread_start(&my_instance.iso14229);
     }
 
 For more examples on how to setup the different UDS services with macros, see the code of the :ref:`uds-sample` and the documentation on the Macros in ``uds_macro.h``.
 
-The ``UDSISOTpCConfig_t`` allows to describe the addressing scheme used on the CAN bus:
-    
-- ``source_addr``: The physical address the ECU listens to for "physical" requests (the address of the ECU). ``0x7E8`` in the example above.
+Default Instance Configuration
+==============================
 
-- ``target_addr``: The physical address the ECU uses in "physical" responses (the address of the Tester). Used for ECU → tester responses under physical addressing. ``0x7E0`` in the example above.
+The default instance can be configured via Kconfig options:
+
+**Enable/Disable Default Instance:**
+
+.. code-block:: cfg
+
+    # In prj.conf
+    CONFIG_UDS_DEFAULT_INSTANCE=y  # Enabled by default
+
+**CAN ID Configuration:**
+
+You can either use static CAN IDs or provide them dynamically:
+
+**Option 1a: Gearshift Address Provider (default)**
+
+This is the default for ARDEP boards.
+It uses the :ref:`gearshift-address-providers` module to determine CAN IDs based on gearshift position.
+
+
+**Option 1b: External Address Provider**
+
+.. code-block:: cfg
+
+    # In prj.conf
+    CONFIG_GEARSHIFT_UDS_ADDRESS_PROVIDER=n # needed on ardep boards to disable gearshift provider
+    CONFIG_UDS_DEFAULT_INSTANCE_EXTERNAL_ADDRESS_PROVIDER=y
+
+Then implement this function in your application:
+
+.. code-block:: c
+
+    UDSISOTpCConfig_t uds_default_instance_get_addresses(void) {
+        UDSISOTpCConfig_t cfg = {
+            .source_addr = /* your dynamic address */,
+            .target_addr = /* your dynamic address */,
+            .source_addr_func = /* your dynamic address */,
+            .target_addr_func = /* your dynamic address */,
+        };
+        return cfg;
+    }
+
+**Option 2: Static CAN IDs**
+
+.. code-block:: cfg
+
+    # In prj.conf
+    CONFIG_GEARSHIFT_UDS_ADDRESS_PROVIDER=n # needed on ardep boards to disable gearshift provider
+    CONFIG_UDS_DEFAULT_INSTANCE_SOURCE_ADDRESS=0x7E8
+    CONFIG_UDS_DEFAULT_INSTANCE_TARGET_ADDRESS=0x7E0
+    CONFIG_UDS_DEFAULT_INSTANCE_FUNCTIONAL_SOURCE_ADDRESS=0x7DF
+    CONFIG_UDS_DEFAULT_INSTANCE_FUNCTIONAL_TARGET_ADDRESS=0xFFFFFFFF
+
+
+**Custom User Context:**
+
+If your handlers need access to custom context data, override this weak function:
+
+.. code-block:: c
+
+    #include <ardep/uds.h>
+
+    struct my_context {};
+    static struct my_context ctx;
+
+    void uds_default_instance_user_context(void **user_context) {
+        *user_context = &ctx;
+    }
+
+**Disable Firmware Loader Switching:**
+
+This is only needed if you either want to manage the programming session switch manually or if you dont use the firmware loader at all.
+
+Note that this is enabled for the firmware loader to prevent boot-loops.
+
+.. code-block:: cfg
+
+    # In prj.conf
+    CONFIG_UDS_DEFAULT_INSTANCE_DISABLE_SWITCH_TO_FIRMWARE_LOADER=y
+
+ISO-TP Addressing
+=================
+
+The ``UDSISOTpCConfig_t`` structure describes the addressing scheme used on the CAN bus:
+    
+- ``source_addr``: The physical address the ECU listens to for "physical" requests (the address of the ECU). Default: ``0x7E8``
+
+- ``target_addr``: The physical address the ECU uses in "physical" responses (the address of the Tester). Used for ECU → tester responses under physical addressing. Default: ``0x7E0``
       
-- ``source_addr_func``: The functional/group request ID the ECU listens to for "functional" requests. ``0x7DF`` in the example above.
+- ``source_addr_func``: The functional/group request ID the ECU listens to for "functional" requests. Default: ``0x7DF``
       
-- ``target_addr_func``: The ECU uses this address in "functional" responses. Usually set to ``UDS_TP_NOOP_ADDR`` as functional requests do not expect a response.
+- ``target_addr_func``: The ECU uses this address in "functional" responses. Usually set to ``UDS_TP_NOOP_ADDR`` (``0xFFFFFFFF``) as functional requests typically do not expect a response.
 
 
 API Reference
@@ -587,6 +712,44 @@ Note that they do not perform flash erase operations; any required erasure must 
 
     # In prj.conf
     CONFIG_UDS_FILE_TRANSFER=y              # Required for file transfer (0x38)
+
+Utility Functions
+=================
+
+``uds_get_isotp_config()``
+--------------------------
+
+Retrieves the current ISO-TP configuration from a UDS instance.
+
+**Signature**:
+
+.. code-block:: c
+
+    int uds_get_isotp_config(struct uds_instance_t *inst,
+                             UDSISOTpCConfig_t *iso_tp_config);
+
+**Parameters**:
+
+- ``inst``: Pointer to the UDS instance
+- ``iso_tp_config``: Pointer to structure to receive the configuration
+
+**Returns**:
+
+- ``0`` on success
+- ``-EINVAL`` if either parameter is NULL
+
+**Example**:
+
+.. code-block:: c
+
+    UDSISOTpCConfig_t config;
+    int err = uds_get_isotp_config(&uds_default_instance, &config);
+    if (err == 0) {
+        LOG_INF("Source address: 0x%03X", config.source_addr);
+        LOG_INF("Target address: 0x%03X", config.target_addr);
+    }
+
+This function is useful when you need to query the current addressing configuration, for example when implementing custom CAN communication alongside UDS.
 
 Dynamic Registration
 ====================

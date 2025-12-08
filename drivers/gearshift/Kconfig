@@ -1,0 +1,15 @@
+menuconfig GEARSHIFT
+  bool
+  prompt "Gearshift Driver"
+  imply GPIO
+
+if GEARSHIFT
+  module = GEARSHIFT
+  module-str = Gearshift Driver
+  source "subsys/logging/Kconfig.template.log_config"
+
+  config GEARSHIFT_INIT_PRIORITY
+    int
+    prompt "Gearshift Driver init priority"
+    default 42
+endif

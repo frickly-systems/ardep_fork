@@ -38,9 +38,12 @@ static void can_rx_cb(const struct device *dev,
 }
 
 void iso14229_inject_can_frame_rx(struct iso14229_zephyr_instance *inst,
-                                  struct can_frame *frame) {
-  LOG_INF("Injecting Received CAN Frame: %03x [%u] %x ...", frame->id,
-          frame->dlc, frame->data[0]);
+                                  struct can_frame *frame,
+                                  bool functional_address) {
+  frame->id = functional_address ? inst->tp.func_sa : inst->tp.phys_sa;
+
+  LOG_INF("Injecting CAN Frame: %03x [%u] %x ...", frame->id, frame->dlc,
+          frame->data[0]);
   can_rx_cb((const struct device *)inst->tp.phys_link.user_send_can_arg, frame,
             &inst->can_phys_msgq);
 }

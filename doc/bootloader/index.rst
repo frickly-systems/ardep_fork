@@ -6,6 +6,32 @@ Bootloader
 .. contents::
    :local:
    :depth: 2
+
+Overview
+++++++++
+
+The ARDEP bootloader uses MCUboot and supports different firmware update mechanisms depending on the board version:
+
+.. tabs::
+
+    .. tab:: Ardep v2.0.0 and later
+
+        **Default boot logic: UDS Firmware Loader**
+
+        V2 boards come with an :ref:`on_board_debugger` and use UDS (Unified Diagnostic Services) over CAN as the default firmware update mechanism via the :ref:`firmware_loader`.
+        
+        The BOOT jumper (PE4) triggers entry into the UDS firmware loader for UDS updates.
+
+    .. tab:: Ardep v1.0.0
+
+        **Default boot logic: USB DFU**
+
+        V1 boards use USB DFU (Device Firmware Update) as the default firmware update mechanism.
+        
+        The BOOT jumper (PE4) triggers entry into USB DFU mode for firmware updates via the ``dfu-util`` tool.
+
+        .. note::
+            V1 boards can optionally be configured to use the UDS firmware loader by explicitly enabling it in sysbuild configuration.
    
 Building the bootloader
 +++++++++++++++++++++++
@@ -63,28 +89,27 @@ Flashing the bootloader
 
 .. _bootloader_mode:
 
-Bootloader mode
-+++++++++++++++
-
+USB DFU Bootloader Mode (ARDEP v1)
++++++++++++++++++++++++++++++++++++
 
 .. note::
 
-    This section only applies to Ardep v1 since later versions have an :ref:`on_board_debugger`.
+    This section applies primarily to **ARDEP v1** boards, which use USB DFU as the default firmware update mechanism.
+    
+    **ARDEP v2 and later** boards use the :ref:`uds_bootloader` by default and have an :ref:`on_board_debugger`, allowing standard flashing via ``west flash``.
 
-    This means you can just build and flash the bootloader like any other firmware.
-
-In this mode, the ardep board does not load any firmware and waits for a firmware upgrade via the ``dfu-util`` tool.
+In USB DFU mode, the ARDEP board does not load any firmware and waits for a firmware upgrade via the ``dfu-util`` tool.
 This is handy if your firmware is broken and you can't update it from there.
 
 It is helpful to see the Bootloader console output on ``UART-A`` for this.
 
 
-Entering Bootloader mode
-========================
+Entering USB DFU Bootloader Mode
+=================================
 
-To enter the bootloader mode, pull the ``PE4`` pin (labeld *BOOT*) to a LOW (setting the jumper) state while power-cycling or pushing the Reset button.
+To enter the USB DFU bootloader mode, pull the ``PE4`` pin (labeled *BOOT*) to a LOW state (by setting the jumper) while power-cycling or pushing the Reset button.
 
-When the red led light up permanently, the board is in bootloader mode.
+When the red LED lights up permanently, the board is in USB DFU bootloader mode.
 
 On ``UART-A`` you will see the following output:
 
@@ -99,8 +124,13 @@ On ``UART-A`` you will see the following output:
 
     ``UART-A`` is the output that is forwarded by the on-board debugger.
 
-Upgrading the firmware
-======================
+.. note::
+
+    If you flashed the UDS firmware loader on the ARDEP v1 board, the bootloader will enter the UDS firmware loader instead of USB DFU mode when the BOOT jumper is set.
+    This means, that flashing via USB DFU is only possible when not using the UDS firmware loader and according bootloader.
+
+Upgrading the Firmware via USB DFU
+===================================
 
 - Build the firmware you want to flash (assuming it is in the *build* directory)
 - Perform the upgrade with ``west flash``
@@ -109,10 +139,16 @@ Upgrading the firmware
 
 .. _uds_bootloader:
 
-UDS Bootloader
-++++++++++++++
+UDS Firmware Loader
++++++++++++++++++++
 
-For UDS Applications where upgrading the firmware over UDS is required,
+.. note::
+
+    **ARDEP v2.0.0 and later**: The UDS firmware loader is the **default** boot logic. You can build any application with sysbuild and it will automatically include the UDS firmware loader.
+    
+    **ARDEP v1.0.0**: USB DFU is the default. To use the UDS firmware loader, you must explicitly enable it in the sysbuild configuration and flash the application, bootloader and firmware loader via an external debug probe, see :ref:`flashing_the_bootloader`.
+
+For applications that require firmware updates over UDS (Unified Diagnostic Services),
 a :ref:`firmware_loader` is provided which can be built using sysbuild.
 
 It is not recommended to build the firmware loader independently as the bootloader needs configuration options to handle the firmware loader correctly.
@@ -139,7 +175,9 @@ Or more permanently by creating a ``sysbuild.conf`` file in your application fol
     SB_CONFIG_BOOT_LOGIC_UDS_FIRMWARE_LOADER=y
 
 .. important::
-    Do not forget to call ``uds_switch_to_firmware_loader_with_programming_session()`` in the diagnostic session control action handler, if a programming session is requested.
+    When using the default UDS instance (``CONFIG_UDS_DEFAULT_INSTANCE=y``, enabled by default on ARDEP boards), the firmware loader switch is handled automatically on programming session requests unless disabled with ``CONFIG_UDS_DEFAULT_INSTANCE_DISABLE_SWITCH_TO_FIRMWARE_LOADER=y``.
+    
+    If you create a custom UDS instance or disable the automatic switch, you must call ``uds_switch_to_firmware_loader_with_programming_session()`` in your diagnostic session control action handler when a programming session is requested.
 
 
 Sysbuild

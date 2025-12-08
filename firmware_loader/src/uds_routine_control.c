@@ -10,8 +10,6 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(firmware_loader, CONFIG_APP_LOG_LEVEL);
 
-#include "uds.h"
-
 #include <zephyr/init.h>
 #include <zephyr/kernel.h>
 #include <zephyr/storage/flash_map.h>
@@ -89,7 +87,6 @@ static void erase_slot0_work_handler(struct k_work *work) {
 
 UDSErr_t erase_memory_routine_check(const struct uds_context *const context,
                                     bool *apply_action) {
-  LOG_INF("Routine Control CHECK");
   UDSRoutineCtrlArgs_t *args = (UDSRoutineCtrlArgs_t *)context->arg;
 
   struct uds_memory_erasure_routine_status *status =
@@ -117,13 +114,11 @@ UDSErr_t erase_memory_routine_check(const struct uds_context *const context,
   }
 
   *apply_action = true;
-  LOG_INF("Routine Control CHECK finished");
   return UDS_OK;
 }
 
 UDSErr_t erase_memory_routine_action(struct uds_context *const context,
                                      bool *consume_event) {
-  LOG_INF("Routine Control Action");
   UDSRoutineCtrlArgs_t *args = (UDSRoutineCtrlArgs_t *)context->arg;
 
   struct uds_memory_erasure_routine_status *status =
@@ -180,7 +175,7 @@ UDSErr_t erase_memory_routine_action(struct uds_context *const context,
   }
 }
 
-UDS_REGISTER_ROUTINE_CONTROL_HANDLER(&instance,
+UDS_REGISTER_ROUTINE_CONTROL_HANDLER(&uds_default_instance,
                                      0xFF00,
                                      erase_memory_routine_check,
                                      erase_memory_routine_action,

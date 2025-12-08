@@ -16,6 +16,7 @@
 #include "clock.dtsi"
 #include "uart.dtsi"
 #include "lin.dtsi"
+#include "gearshift.dtsi"
 
 / {
     model = "Automotive Rapid Development board";
@@ -65,21 +66,6 @@
         mcuboot_button0: mcuboot_button {
             label = "MCUBoot";
             gpios = <&gpioe 4  (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; // Gearshift 1 Jumper
-        };
-    };
-    
-    config_jumpers: jumpers {
-        compatible = "gpio-keys";
-        jumper0 {
-            gpios = <&gpioc 13 (GPIO_ACTIVE_LOW|GPIO_PULL_UP)>;
-        };
-    
-        jumper1 {
-            gpios = <&gpioc 1 (GPIO_ACTIVE_LOW|GPIO_PULL_UP)>;
-        };
-    
-        jumper2 {
-            gpios = <&gpiof 1 (GPIO_ACTIVE_LOW|GPIO_PULL_UP)>;
         };
     };
 };

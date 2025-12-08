@@ -96,7 +96,7 @@ UDSErr_t read_dtc_info_action(struct uds_context *const context,
 }
 
 UDS_REGISTER_READ_DTC_INFO_HANDLER(
-    &instance,
+    &uds_default_instance,
     read_dtc_info_check,
     read_dtc_info_action,
     UDS_READ_DTC_INFO_SUBFUNC__DTC_BY_STATUS_MASK,
@@ -143,7 +143,7 @@ UDSErr_t clear_diag_info_act(struct uds_context *const context,
   return UDS_PositiveResponse;
 }
 
-UDS_REGISTER_CLEAR_DIAG_INFO_HANDLER(&instance,
+UDS_REGISTER_CLEAR_DIAG_INFO_HANDLER(&uds_default_instance,
                                      clear_diag_info_check,
                                      clear_diag_info_act,
                                      NULL)
@@ -194,7 +194,7 @@ UDSErr_t control_dtc_setting_action(struct uds_context *const context,
   return UDS_PositiveResponse;
 }
 
-UDS_REGISTER_CONTROL_DTC_SETTING_HANDLER(&instance,
+UDS_REGISTER_CONTROL_DTC_SETTING_HANDLER(&uds_default_instance,
                                          control_dtc_setting_check,
                                          control_dtc_setting_action,
                                          NULL)

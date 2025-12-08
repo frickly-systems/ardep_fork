@@ -6,30 +6,18 @@
 # enable UDS module per default
 
 config UDS
-	default y
+    default y
 
-config ISO14229
-	default n # Disables minimal UDS support when UDS gets disabled
+# Provide UDS Address via gearshift address providers
+# Only enable if UDS is really enabled
+if UDS
+    config GEARSHIFT_UDS_ADDRESS_PROVIDER
+        default y
+endif # UDS
 
 choice STD_C
-	default STD_C11 # requirement for external iso14229 module
+    default STD_C11 # requirement for external iso14229 module
 endchoice
 
 config CAN
-	default y
-
-config FLASH
     default y
-
-config STREAM_FLASH
-    default y
-
-config IMG_MANAGER
-    default y
-
-config IMG_ERASE_PROGRESSIVELY
-    default y
-
-config REBOOT
-    default y
-

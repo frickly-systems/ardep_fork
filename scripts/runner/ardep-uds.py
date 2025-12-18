@@ -94,6 +94,17 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
             slot0_start_address=int(args.slot0_start_address, 16),
         )
 
+    def read_and_split_firmware_into_blocks(self, bin_file):
+        with open(bin_file, "rb") as firmware_file:
+            firmware_data = firmware_file.read()
+
+        blocks = [
+            firmware_data[i : i + self.block_size]
+            for i in range(0, len(firmware_data), self.block_size)
+        ]
+
+        return blocks
+
     def get_isotp_address(self) -> isotp.Address:
         source_id = 0x7E0 + self.gearshift if self.gearshift is not None else int(self.uds_source_address, 0)
         target_id = 0x7E8 + self.gearshift if self.gearshift is not None else int(self.uds_target_address, 0)
@@ -105,74 +116,77 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
         config = dict(udsoncan.configs.default_client_config)
         return Client(conn, config=config, request_timeout=2)
 
+    def test_connection(self, client: Client):
+        print("Testing communication with ECU...")
+        client.tester_present()
+
+    def switch_to_programming_session(self, client: Client):
+        print("Switching to programming session...")
+        client.change_session(DiagnosticSessionControl.Session.programmingSession)
+
+        print("Waiting for the device to come back online...")
+        for _ in range(10):
+            time.sleep(1)
+            try:
+                client.tester_present()
+                break
+            except Exception:
+                pass
+
+    def erase_slot0(self, client: Client):
+        print("Erasing slot0 ...")
+        client.start_routine(0xFF00) # Erase slot0 routine
+
+        time.sleep(3)
+
+        for _ in range(5):
+            try:
+                client.tester_present()
+                break
+            except udsoncan.exceptions.TimeoutException:
+                pass
+            time.sleep(1)
+
+        response = client.get_routine_result(0xFF00)
+        result = struct.unpack(">I", response.service_data.routine_status_record)[0]
+        if result != 0:
+            raise RuntimeError(f"Erase slot0 routine failed with code 0x{result:08X}")
+
+        print("Slot0 erased successfully.")
+
+    def upload_firmware(self, client: Client, blocks):
+        current_address = self.slot0_start_address
+
+        print("Starting firmware transfer...")
+        while len(blocks) > 0:
+            # block count for this round of RequestDownload
+            block_count = min(len(blocks), 255)
+
+            print(f"Requesting download of {block_count} blocks starting at address 0x{current_address:08X}...")
+            address = udsoncan.MemoryLocation(memorysize=block_count * self.block_size, address=current_address, address_format=32)
+            client.request_download(memory_location=address)
+
+            for i in range(block_count):
+                print(f"Transferring block {i + 1}/{block_count}...")
+                client.transfer_data(i + 1, blocks.pop(0))
+                current_address += self.block_size
+                client.tester_present()
+
+                time.sleep(0.05)
+
+            client.request_transfer_exit()
 
     def do_run(self, command, **kwargs):  # pylint: disable=unused-argument
         bin_file = self._bin_file
+        blocks = self.read_and_split_firmware_into_blocks(bin_file)
 
         with self.create_client() as client:
-            print("Testing communication with ECU...")
-            client.tester_present()
+            self.test_connection(client)
+            self.switch_to_programming_session(client)
 
-            print("Switching to programming session...")
-            client.change_session(DiagnosticSessionControl.Session.programmingSession)
-
-            print("Waiting for the device to come back online...")
-            for _ in range(10):
-                time.sleep(1)
-                try:
-                    client.tester_present()
-                    break
-                except Exception:
-                    pass
-
-            print("Erasing slot0 ...")
-            client.start_routine(0xFF00) # Erase slot0 routine
-
-            time.sleep(1)
-
-            for _ in range(5):
-                time.sleep(1)
-                try:
-                    client.tester_present()
-                    break
-                except udsoncan.exceptions.TimeoutException:
-                    pass
-
-            response = client.get_routine_result(0xFF00)
-            result = struct.unpack(">I", response.service_data.routine_status_record)[0]
-            if result != 0:
-                raise RuntimeError(f"Erase slot0 routine failed with code 0x{result:08X}")
-
-            print("Slot0 erased successfully.")
-
-            with open(bin_file, "rb") as firmware_file:
-                firmware_data = firmware_file.read()
-
-            blocks = [
-                firmware_data[i : i + self.block_size]
-                for i in range(0, len(firmware_data), self.block_size)
-            ]
-            current_address = self.slot0_start_address
-
-            print("Starting firmware transfer...")
-            while len(blocks) > 0:
-                # block count for this round of RequestDownload
-                block_count = min(len(blocks), 255)
-
-                print(f"Requesting download of {block_count} blocks starting at address 0x{current_address:08X}...")
-                address = udsoncan.MemoryLocation(memorysize=block_count * self.block_size, address=current_address, address_format=32)
-                client.request_download(memory_location=address)
-
-                for i in range(block_count):
-                    print(f"Transferring block {i + 1}/{block_count}...")
-                    block = blocks.pop(0)
-                    client.transfer_data(i + 1, block)
-                    current_address += len(block) # todo: aka self.block_size
-                    client.tester_present()
-
-                    time.sleep(0.05)
-
-                client.request_transfer_exit()
+            self.erase_slot0(client)
+            self.upload_firmware(client, blocks)
 
             client.ecu_reset(ECUReset.ResetType.hardReset)
-            print("Firmware transfer completed and ECU reset successfully.")
+
+            print("Firmware transfer complete")

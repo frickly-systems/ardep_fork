@@ -35,7 +35,7 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
 
     @classmethod
     def name(cls):
-        return "ardep"
+        return "ardep-uds"
 
     @classmethod
     def capabilities(cls):
@@ -44,7 +44,7 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
     @classmethod
     def do_add_parser(cls, parser):
         parser.add_argument(
-            "-i",
+            "-ci",
             "--can-interface",
             help="CAN interface to use for UDS flashing",
             default="can0",
@@ -101,7 +101,7 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
 
     def create_client(self) -> Client:
         addr = self.get_isotp_address()
-        conn = isotp.socketconnection.IsoTPSocketConnection(self.can_interface, addr)
+        conn = udsoncan.connections.IsoTPSocketConnection(self.can_interface, addr)
         config = dict(udsoncan.configs.default_client_config)
         return Client(conn, config=config, request_timeout=2)
 
@@ -160,7 +160,8 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
                 block_count = min(len(blocks), 255)
 
                 print(f"Requesting download of {block_count} blocks starting at address 0x{current_address:08X}...")
-                client.request_download(current_address, block_count * self.block_size)
+                address = udsoncan.MemoryLocation(memorysize=block_count * self.block_size, address=current_address, address_format=32)
+                client.request_download(memory_location=address)
 
                 for i in range(block_count):
                     print(f"Transferring block {i + 1}/{block_count}...")

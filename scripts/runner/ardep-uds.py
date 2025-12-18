@@ -49,6 +49,7 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
             help="CAN interface to use for UDS flashing",
             default="can0",
         )
+        # todo: check if these addresses are client or server side
         parser.add_argument(
             "-sa",
             "--uds-source-address",

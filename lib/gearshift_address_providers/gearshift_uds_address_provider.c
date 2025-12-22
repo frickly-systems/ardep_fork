@@ -7,7 +7,7 @@
 
 #include <zephyr/logging/log.h>
 
-#include <ardep/drivers/gearshift.h>
+#include <ardep/drivers/binary_encoded_gpio.h>
 #include <ardep/uds.h>
 
 LOG_MODULE_REGISTER(gearshift_uds_address_provider,
@@ -27,7 +27,7 @@ UDSISOTpCConfig_t uds_default_instance_get_addresses() {
     .target_addr_func = UDS_TP_NOOP_ADDR,
   };
 
-  int ret = gearshift_get_position(gearshift_dev);
+  int ret = binary_encoded_gpios_get_value(gearshift_dev);
   if (ret < 0) {
     LOG_ERR("Failed to read gearshift position: %d", ret);
     return cfg;

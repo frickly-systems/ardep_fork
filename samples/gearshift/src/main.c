@@ -8,7 +8,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include <ardep/drivers/gearshift.h>
+#include <ardep/drivers/binary_encoded_gpio.h>
 
 LOG_MODULE_REGISTER(app, LOG_LEVEL_INF);
 
@@ -24,7 +24,7 @@ int main(void) {
   LOG_INF("Starting Gearshift sample application");
 
   while (1) {
-    int position = gearshift_get_position(gearshift_dev);
+    int position = binary_encoded_gpios_get_value(gearshift_dev);
     if (position < 0) {
       LOG_ERR("Failed to read gearshift position: %d", position);
     } else {

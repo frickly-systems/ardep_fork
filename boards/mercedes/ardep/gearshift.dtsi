@@ -7,10 +7,10 @@
 
 / {
     gearshift: gearshift {
-        compatible = "ardep-gearshift";
-        gearshift-gpios = <&gpioc 13 (GPIO_ACTIVE_LOW|GPIO_PULL_UP)>,
-                          <&gpioc 1  (GPIO_ACTIVE_LOW|GPIO_PULL_UP)>,
-                          <&gpiof 1  (GPIO_ACTIVE_LOW|GPIO_PULL_UP)>;
+        compatible = "zephyr,binary-encoded-gpio";
+        input-gpios = <&gpioc 13 (GPIO_ACTIVE_LOW|GPIO_PULL_UP)>,
+                      <&gpioc 1  (GPIO_ACTIVE_LOW|GPIO_PULL_UP)>,
+                      <&gpiof 1  (GPIO_ACTIVE_LOW|GPIO_PULL_UP)>;
         status = "okay";
     };
 };

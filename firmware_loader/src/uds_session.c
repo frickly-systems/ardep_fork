@@ -9,8 +9,6 @@
 
 LOG_MODULE_DECLARE(firmware_loader, CONFIG_APP_LOG_LEVEL);
 
-#include "uds.h"
-
 #include <zephyr/logging/log_ctrl.h>
 #include <zephyr/sys/reboot.h>
 #include <zephyr/sys/util.h>
@@ -64,7 +62,7 @@ UDSErr_t on_session_timeout_action(struct uds_context *const context,
   CODE_UNREACHABLE;
 }
 
-UDS_REGISTER_DIAG_SESSION_CTRL_HANDLER(&instance,
+UDS_REGISTER_DIAG_SESSION_CTRL_HANDLER(&uds_default_instance,
                                        on_session_ctrl_check,
                                        on_session_ctrl_action,
                                        on_session_timeout_check,

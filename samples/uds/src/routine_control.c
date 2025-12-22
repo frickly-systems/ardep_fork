@@ -54,7 +54,7 @@ static UDSErr_t sync_routine_control_action(struct uds_context *const context,
   return args->copyStatusRecord(context->server, &output, sizeof(output));
 }
 
-UDS_REGISTER_ROUTINE_CONTROL_HANDLER(&instance,
+UDS_REGISTER_ROUTINE_CONTROL_HANDLER(&uds_default_instance,
                                      SYNCHRONOUS_ROUTINE_ID,
                                      sync_routine_control_check,
                                      sync_routine_control_action,
@@ -201,7 +201,7 @@ static UDSErr_t async_routine_control_action(struct uds_context *const context,
   }
 }
 
-UDS_REGISTER_ROUTINE_CONTROL_HANDLER(&instance,
+UDS_REGISTER_ROUTINE_CONTROL_HANDLER(&uds_default_instance,
                                      ASYNCHRONOUS_ROUTINE_ID,
                                      async_routine_control_check,
                                      async_routine_control_action,

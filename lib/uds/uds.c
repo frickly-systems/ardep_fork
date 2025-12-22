@@ -272,3 +272,17 @@ int uds_init(struct uds_instance_t* inst,
 
   return 0;
 }
+
+int uds_get_isotp_config(struct uds_instance_t* inst,
+                         UDSISOTpCConfig_t* iso_tp_config) {
+  if (inst == NULL || iso_tp_config == NULL) {
+    return -EINVAL;
+  }
+
+  iso_tp_config->source_addr = inst->iso14229.tp.phys_sa;
+  iso_tp_config->target_addr = inst->iso14229.tp.phys_ta;
+  iso_tp_config->source_addr_func = inst->iso14229.tp.func_sa;
+  iso_tp_config->target_addr_func = inst->iso14229.tp.func_ta;
+
+  return 0;
+}

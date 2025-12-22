@@ -1,7 +1,7 @@
-#include "uds.h"
-
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+
+#include <ardep/uds.h>
 
 LOG_MODULE_REGISTER(controller, LOG_LEVEL_INF);
 
@@ -159,7 +159,7 @@ static UDSErr_t async_routine_control_action(struct uds_context *const context,
   }
 }
 
-UDS_REGISTER_ROUTINE_CONTROL_HANDLER(&instance,
+UDS_REGISTER_ROUTINE_CONTROL_HANDLER(&uds_default_instance,
                                      0x0000,
                                      async_routine_control_check,
                                      async_routine_control_action,

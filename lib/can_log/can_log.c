@@ -11,14 +11,38 @@
 #include <zephyr/logging/log_backend.h>
 #include <zephyr/logging/log_backend_std.h>
 
-#include <ardep/can_router.h>
+#include <ardep/can_log.h>
 
+struct k_sem can_tx_sem;  // semaphore for CAN TX completion
+
+static uint16_t can_log_id;
 static uint8_t buf[128];
 static uint32_t log_format_type = LOG_OUTPUT_TEXT;
 static const struct device *can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
 static bool panic_mode = false;
 
+#ifdef CONFIG_CAN_LOG_ADDRESS_PROVIDER_EXTERNAL
+uint16_t can_log_get_id();
+#endif
+
 static int can_log_is_ready(const struct log_backend *const backend);
+
+static void can_log_tx_cb_no_wait(const struct device *dev,
+                                  int error,
+                                  void *user_data) {
+  ARG_UNUSED(dev);
+  ARG_UNUSED(user_data);
+  ARG_UNUSED(error);
+}
+
+static void can_log_tx_cb(const struct device *dev,
+                          int error,
+                          void *user_data) {
+  struct k_sem *tx_sem = (struct k_sem *)user_data;
+  ARG_UNUSED(dev);
+  ARG_UNUSED(error);
+  k_sem_give(tx_sem);
+}
 
 static int can_log_line_out(uint8_t *data, size_t length, void *output_ctx) {
   const bool synchronous = panic_mode || IS_ENABLED(CONFIG_LOG_MODE_IMMEDIATE);
@@ -32,19 +56,23 @@ static int can_log_line_out(uint8_t *data, size_t length, void *output_ctx) {
     length = CAN_MAX_DLEN;
   }
 
-  frame.id = CONFIG_CAN_LOG_ID;
+  frame.id = can_log_id;
   frame.dlc = length;
   frame.flags = 0;
   memcpy(frame.data, data, length);
-  int ret = can_send(can_dev, &frame, synchronous ? K_NO_WAIT : K_MSEC(100),
-                     NULL, NULL);
-  // in panic mode ignore errors and return as if everything was sent
-  if (panic_mode) {
-    return length;
-  }
 
-  if (ret < 0) {
-    return 0;  // error -> nothing was sent
+  if (synchronous) {
+    // in synchronous mode we don't wait for completion, just throw it on the
+    // bus
+    can_send(can_dev, &frame, K_NO_WAIT, can_log_tx_cb_no_wait, NULL);
+  } else {
+    k_sem_take(&can_tx_sem, K_NO_WAIT);  // Reset semaphore
+
+    can_send(can_dev, &frame, K_MSEC(CONFIG_CAN_LOG_SEND_TIMEOUT_MS),
+             can_log_tx_cb, &can_tx_sem);
+
+    // wait for transmission to complete
+    k_sem_take(&can_tx_sem, K_MSEC(CONFIG_CAN_LOG_SEND_TIMEOUT_MS));
   }
 
   return length;
@@ -66,6 +94,14 @@ static int can_format_set(const struct log_backend *const backend,
 
 static void can_log_init(const struct log_backend *const backend) {
   ARG_UNUSED(backend);
+
+  k_sem_init(&can_tx_sem, 0, 1);
+
+#ifdef CONFIG_CAN_LOG_ADDRESS_PROVIDER_EXTERNAL
+  can_log_id = can_log_get_id();
+#else
+  can_log_id = CONFIG_CAN_LOG_ID;
+#endif
 }
 
 static void can_log_dropped(const struct log_backend *const backend,
@@ -91,10 +127,12 @@ static int can_log_is_ready(const struct log_backend *const backend) {
     return -ENODEV;
   }
 
-  if (state == CAN_STATE_ERROR_ACTIVE) {
-    return 0;
-  } else {
-    return -EIO;
+  switch (state) {
+    case CAN_STATE_BUS_OFF:
+    case CAN_STATE_STOPPED:
+      return -EIO;
+    default:
+      return 0;
   }
 }
 

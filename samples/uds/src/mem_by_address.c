@@ -88,7 +88,7 @@ UDSErr_t write_mem_by_address_action(struct uds_context *const context,
   return UDS_PositiveResponse;
 }
 
-UDS_REGISTER_MEMORY_HANDLER(&instance,
+UDS_REGISTER_MEMORY_HANDLER(&uds_default_instance,
                             read_mem_by_address_check,
                             read_mem_by_address_action,
                             write_mem_by_address_check,

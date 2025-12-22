@@ -2,10 +2,10 @@
 # Copyright (C) MBition GmbH
 
 sample:
-  name: config_jumpers example
+  name: Gearshift
 common:
   build_only: true
   integration_platforms:
     - ardep
 tests:
-  example.config_jumpers.default: {}
+  example.gearshift.default: {}

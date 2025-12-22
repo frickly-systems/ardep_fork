@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-add_subdirectory(can)
-add_subdirectory(binary_encoded_gpio)
-add_subdirectory(hv_shield)
-add_subdirectory(power_io_shield)
-add_subdirectory(lin)
+if(CONFIG_BINARY_ENCODED_GPIO)
+  zephyr_library()
+  zephyr_library_sources(binary_encoded_gpio.c)
+endif()

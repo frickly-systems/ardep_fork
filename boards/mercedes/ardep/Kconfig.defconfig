@@ -28,7 +28,14 @@ if !MCUBOOT
 	config FLASH_MAP
 		default y
 
+	# enable Gearshift addresses
+	config BINARY_ENCODED_GPIO
+		default y
+	config GEARSHIFT_ADDRESS_PROVIDERS
+		default y
+
 	rsource "Kconfig.uds"
+	rsource "Kconfig.can_log"
 
 	config MCUBOOT_GENERATE_UNSIGNED_IMAGE
 		default y

@@ -5,6 +5,7 @@
 
 menu "Drivers"
 rsource "can/Kconfig"
+rsource "binary_encoded_gpio/Kconfig"
 rsource "hv_shield/Kconfig"
 rsource "power_io_shield/Kconfig"
 rsource "lin/Kconfig"

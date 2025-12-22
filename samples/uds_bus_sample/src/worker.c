@@ -1,8 +1,8 @@
-#include "uds.h"
-
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/byteorder.h>
+
+#include <ardep/uds.h>
 
 LOG_MODULE_REGISTER(worker, LOG_LEVEL_INF);
 
@@ -34,12 +34,19 @@ static void can_rx_cb_work_handler(struct k_work *work) {
   to_send.id = can_send_addr;
   to_send.dlc = received_can_frame.dlc + 1;
 
+  UDSISOTpCConfig_t isotp_config;
+
+  int err = uds_get_isotp_config(&uds_default_instance, &isotp_config);
+  if (err) {
+    LOG_ERR("Failed to get ISO-TP config: %d", err);
+  }
+
   // append a simple signature: XOR of the first byte and LSB of physical source
   // address
   to_send.data[received_can_frame.dlc] =
-      to_send.data[0] ^ (CONFIG_UDS_ADDR_PHYS_SA & 0xff);
+      to_send.data[0] ^ (isotp_config.source_addr & 0xff);
 
-  int err = can_send(can_dev, &to_send, K_FOREVER, NULL, NULL);
+  err = can_send(can_dev, &to_send, K_FOREVER, NULL, NULL);
   if (err) {
     LOG_ERR("Failed to send CAN frame: %d", err);
     return;
@@ -141,7 +148,7 @@ static UDSErr_t w_data_by_id_action(struct uds_context *const context,
   return UDS_PositiveResponse;
 }
 
-UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&instance,
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&uds_default_instance,
                                         0x1100,
                                         NULL,
                                         rw_data_by_id_check,
@@ -151,7 +158,7 @@ UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&instance,
                                         NULL,
                                         NULL,
                                         NULL);
-UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&instance,
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&uds_default_instance,
                                         0x1101,
                                         NULL,
                                         rw_data_by_id_check,

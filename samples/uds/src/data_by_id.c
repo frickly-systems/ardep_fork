@@ -127,7 +127,7 @@ UDSErr_t write_primitive_data_by_id_action(struct uds_context *const context,
 // Register the data identifiers defined above
 UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(
     // UDS instance the event handler is registered for
-    &instance,
+    &uds_default_instance,
     // Data Identifier of the data
     primitive_type_id,
     // Pointer to the data
@@ -143,7 +143,7 @@ UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(
     // User context pointer (used to store the size of the data here)
     &primitive_type_size);
 
-UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&instance,
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&uds_default_instance,
                                         string_id,
                                         &string,
                                         read_data_by_id_check,
@@ -154,7 +154,7 @@ UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&instance,
                                         NULL,
                                         &string_size);
 
-UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&instance,
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&uds_default_instance,
                                         authenticated_type_id,
                                         &authenticated_type,
                                         read_data_by_id_check,
@@ -296,7 +296,7 @@ UDSErr_t io_ctrl_led_action(struct uds_context *const context,
   return UDS_NRC_RequestOutOfRange;
 }
 
-UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&instance,
+UDS_REGISTER_DATA_BY_IDENTIFIER_HANDLER(&uds_default_instance,
                                         led_id,
                                         &led_data.led_state,
                                         read_led_check,

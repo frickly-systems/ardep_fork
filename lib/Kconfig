@@ -10,4 +10,5 @@ menu "ARDEP"
     rsource "uds/Kconfig"
     rsource "uds_legacy/Kconfig"
     rsource "can_log/Kconfig"
+    rsource "gearshift_address_providers/Kconfig"
 endmenu

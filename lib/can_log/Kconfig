@@ -20,12 +20,30 @@ if CAN_LOG
     module-str = CAN Logger
     source "subsys/logging/Kconfig.template.log_config"
 
-    config CAN_LOG_ID
-        hex
-        prompt "CAN Log ID"
-        default 0x100
+
+    config CAN_LOG_ADDRESS_PROVIDER_EXTERNAL
+        bool "External CAN Log ID Provider"
+        default n
         help
-          CAN identifier used for logging messages.
+          Use an external address provider to get the CAN ID for logging messages.
+          This requires an external module that implements the address provider interface.
+
+    if !CAN_LOG_ADDRESS_PROVIDER_EXTERNAL
+        config CAN_LOG_ID
+            hex
+            prompt "CAN Log ID"
+            default 0x100
+            help
+              CAN identifier used for logging messages.
+    endif # CAN_LOG_ADDRESS_PROVIDER_EXTERNAL
+
+    config CAN_LOG_SEND_TIMEOUT_MS
+        int "CAN Log Send Timeout (ms)"
+        default 10
+        help
+          Timeout in milliseconds for sending CAN log messages.
+          Used as a timeout for waiting until a queue slot is free
+          for sending and for waiting until the message is sent itself.
 
     config CAN_LOG_AUTOSTART_BUS
         bool "Auto-start CAN bus for logging"

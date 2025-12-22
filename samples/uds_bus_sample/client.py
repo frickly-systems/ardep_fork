@@ -183,21 +183,15 @@ def main(args: Namespace):
     upgrade: bool = args.upgrade
 
     if upgrade:
-        print("Building client firmwares")
-        for i in range(int(args.count)):
-            print("Building firmware for client", i)
-            cmd = ["west","build", "-d","builds/fw"+str(i)]
-            if pristine:
-                cmd += ["-p","auto","samples/uds_bus_sample","-b", args.board, "--sysbuild","--","-DSB_CONFIG_UDS_BASE_ADDR="+str(i)]
-            print("Running command:", " ".join(cmd))
-            a = subprocess.run(cmd, check=True)
+        print("Building client firmware")
+        cmd = ["west","build"]
+        if pristine:
+            cmd += ["-p", "auto", "samples/uds_bus_sample", "-b", args.board]
+        print("Running command:", " ".join(cmd))
+        a = subprocess.run(cmd, check=True)
 
     addresses = create_and_test_addresses(can)
     print(f"Discovered {len(addresses)} clients")
-
-    if upgrade and len(addresses) > int(args.count):
-        print(f"Error: Cannot upgrade all clients, discovered {len(addresses)} but only built for {args.count}")
-        return
 
     config = dict(udsoncan.configs.default_client_config)
     config["data_identifiers"] = {
@@ -215,7 +209,7 @@ def main(args: Namespace):
                 try_run(lambda: change_session(client))
 
                 try_run(lambda: erase_slot0_memory_routine(client))
-                try_run(lambda: firmware_download(client, "builds/fw"+str((addr._rxid - 0x7E0))+"/uds_bus_sample/zephyr/zephyr.signed.bin"))
+                try_run(lambda: firmware_download(client, "build/zephyr/zephyr.signed.bin"))
 
                 try_run(lambda: ecu_reset(client))
         print("\nAll clients upgraded")
@@ -300,7 +294,6 @@ if __name__ == "__main__":
     parser.add_argument("-u", "--upgrade",action="store_true", help="Upgrade clients")
     parser.add_argument("-p", "--pristine", action="store_true", help="Build pristine. Only used when --upgrade is set")
     parser.add_argument("-b", "--board", help="Board name, e.g. ardep@1 or ardep. Only used when --upgrade is set", default="ardep")
-    parser.add_argument("-n", "--count", help="Number of clients to build. This is only used for building, not for discovery of UDS clients")
 
     parsed_args = parser.parse_args()
 

@@ -4,13 +4,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from runners.core import RunnerCaps, ZephyrBinaryRunner  # pylint: disable=import-error
-import subprocess
 import time
+
 
 import udsoncan
 from udsoncan.client import Client
 from udsoncan.services import DiagnosticSessionControl, ECUReset
 import isotp
+from intelhex import IntelHex
 import struct
 
 class ArdepUDSRunner(ZephyrBinaryRunner):
@@ -21,17 +22,16 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
     uds_target_address: str
     gearshift: int | None
     block_size: int
-    slot0_start_address: int
+    hex_file: IntelHex | None
 
     def __init__(self, cfg, can_interface="can0", uds_source_address="0x7E0", uds_target_address="0x7E8", gearshift=None, block_size=512, slot0_start_address=0x08018000):
         super().__init__(cfg)
-        self._bin_file = cfg.bin_file
+        self.hex_file = IntelHex(cfg.hex_file) if cfg.hex_file else None
         self.can_interface = can_interface
         self.uds_source_address = uds_source_address
         self.uds_target_address = uds_target_address
         self.gearshift = gearshift
         self.block_size = block_size
-        self.slot0_start_address = slot0_start_address
 
     @classmethod
     def name(cls):
@@ -76,12 +76,6 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
             type=int,
             default=512,
         )
-        parser.add_argument(
-            "-s",
-            "--slot0-start-address",
-            help="Start address of slot0 in device memory (default: 0x08018000)",
-            default="0x08018000"
-        )
 
     @classmethod
     def do_create(cls, cfg, args):
@@ -92,19 +86,18 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
             uds_target_address=args.uds_target_address,
             gearshift=args.gearshift,
             block_size=args.block_size,
-            slot0_start_address=int(args.slot0_start_address, 16),
         )
 
-    def read_and_split_firmware_into_blocks(self, bin_file):
-        with open(bin_file, "rb") as firmware_file:
-            firmware_data = firmware_file.read()
+    def read_and_split_firmware_into_blocks(self):
+        base_address = self.hex_file.addresses()[0]
+        firmware_data = bytes(self.hex_file.tobinarray(base_address))
 
         blocks = [
             firmware_data[i : i + self.block_size]
             for i in range(0, len(firmware_data), self.block_size)
         ]
 
-        return blocks
+        return blocks, base_address
 
     def get_isotp_address(self) -> isotp.Address:
         source_id = 0x7E0 + self.gearshift if self.gearshift is not None else int(self.uds_source_address, 0)
@@ -155,14 +148,14 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
 
         print("Slot0 erased successfully.")
 
-    def upload_firmware(self, client: Client, blocks):
+    def upload_firmware(self, client: Client, blocks, base_address):
         print("Starting firmware transfer...")
 
         # block count for this round of RequestDownload
         block_count = len(blocks)
 
-        print(f"Requesting download of {block_count} blocks starting at address 0x{self.slot0_start_address:08X}...")
-        address = udsoncan.MemoryLocation(memorysize=block_count * self.block_size, address=self.slot0_start_address, address_format=32)
+        print(f"Requesting download of {block_count} blocks starting at address 0x{base_address:08X}...")
+        address = udsoncan.MemoryLocation(memorysize=block_count * self.block_size, address=base_address, address_format=32)
         client.request_download(memory_location=address)
 
         for i in range(block_count):
@@ -175,15 +168,18 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
         client.request_transfer_exit()
 
     def do_run(self, command, **kwargs):  # pylint: disable=unused-argument
-        bin_file = self._bin_file
-        blocks = self.read_and_split_firmware_into_blocks(bin_file)
+        if self.hex_file == None:
+            print("No hex file provided, please check that you are building a hex file")
+            exit(1)
+
+        blocks, base_address = self.read_and_split_firmware_into_blocks()
 
         with self.create_client() as client:
             self.test_connection(client)
             self.switch_to_programming_session(client)
 
             self.erase_slot0(client)
-            self.upload_firmware(client, blocks)
+            self.upload_firmware(client, blocks, base_address)
 
             client.ecu_reset(ECUReset.ResetType.hardReset)
 

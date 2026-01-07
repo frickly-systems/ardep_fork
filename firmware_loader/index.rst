@@ -25,27 +25,7 @@ Then, using `RequestDownload`, `TransferData`, `RequestTransferExit` the applica
 Flashing firmware
 +++++++++++++++++
 
-If your application supports UDS firmware loading, you can use the :ref:`ardep-uds` runner to flash new firmware.
-
-To use it, make sure not to use sysbuild, as the runner can only flash the application binary, not the bootloader or firmware loader.
-
-Example command:
-
-.. code-block:: shell
-
-    west flash --runner ardep-uds
-
-If you want to use a different gearshift address, specify it with the ``--gearshift`` option:
-
-.. code-block:: shell
-
-    west flash --runner ardep-uds --gearshift 2 # Use gearshift address 2
-
-If you want to use custom UDS CAN IDs, specify them with the ``--uds-source-address`` and ``--uds-target-address`` options:
-
-.. code-block:: shell
-
-    west flash --runner ardep-uds --uds-source-address 0x7E0 --uds-target-address 0x7E8
+If your application supports UDS firmware loading, you can use the :ref:`ardep_uds` runner to flash the new firmware.
 
 
 Building using sysbuild

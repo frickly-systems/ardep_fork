@@ -24,7 +24,7 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
     block_size: int
     hex_file: IntelHex | None
 
-    def __init__(self, cfg, can_interface="can0", uds_source_address="0x7E0", uds_target_address="0x7E8", gearshift=None, block_size=512, slot0_start_address=0x08018000):
+    def __init__(self, cfg, can_interface="can0", uds_source_address="0x7E0", uds_target_address="0x7E8", gearshift=None, block_size=512):
         super().__init__(cfg)
         self.hex_file = IntelHex(cfg.hex_file) if cfg.hex_file else None
         self.can_interface = can_interface
@@ -49,17 +49,16 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
             help="CAN interface to use for UDS flashing",
             default="can0",
         )
-        # todo: check if these addresses are client or server side
         parser.add_argument(
             "-sa",
             "--uds-source-address",
-            help="UDS source address",
+            help="UDS source address, set this to the target address of the ARDEP",
             default="0x7E0",
         )
         parser.add_argument(
             "-ta",
             "--uds-target-address",
-            help="UDS target address",
+            help="UDS target address, set this to the source address of the ARDEP",
             default="0x7E8",
         )
         parser.add_argument(
@@ -124,7 +123,7 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
             try:
                 client.tester_present()
                 break
-            except Exception:
+            except udsoncan.exceptions.TimeoutException:
                 pass
 
     def erase_slot0(self, client: Client):

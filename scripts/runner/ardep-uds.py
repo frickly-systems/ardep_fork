@@ -23,7 +23,7 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
     block_size: int
     slot0_start_address: int
 
-    def __init__(self, cfg, can_interface="can0", uds_source_address="0x7E0", uds_target_address="0x7E8", gearshift=None, block_size=1024, slot0_start_address=0x08018000):
+    def __init__(self, cfg, can_interface="can0", uds_source_address="0x7E0", uds_target_address="0x7E8", gearshift=None, block_size=512, slot0_start_address=0x08018000):
         super().__init__(cfg)
         self._bin_file = cfg.bin_file
         self.can_interface = can_interface
@@ -72,9 +72,9 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
         parser.add_argument(
             "-b",
             "--block-size",
-            help="Size of individual UDS TransferData blocks payload in bytes (default: 1024)",
+            help="Size of individual UDS TransferData blocks payload in bytes (default: 512)",
             type=int,
-            default=1024,
+            default=512,
         )
         parser.add_argument(
             "-s",
@@ -156,26 +156,23 @@ class ArdepUDSRunner(ZephyrBinaryRunner):
         print("Slot0 erased successfully.")
 
     def upload_firmware(self, client: Client, blocks):
-        current_address = self.slot0_start_address
-
         print("Starting firmware transfer...")
-        while len(blocks) > 0:
-            # block count for this round of RequestDownload
-            block_count = min(len(blocks), 255)
 
-            print(f"Requesting download of {block_count} blocks starting at address 0x{current_address:08X}...")
-            address = udsoncan.MemoryLocation(memorysize=block_count * self.block_size, address=current_address, address_format=32)
-            client.request_download(memory_location=address)
+        # block count for this round of RequestDownload
+        block_count = len(blocks)
 
-            for i in range(block_count):
-                print(f"Transferring block {i + 1}/{block_count}...")
-                client.transfer_data(i + 1, blocks.pop(0))
-                current_address += self.block_size
-                client.tester_present()
+        print(f"Requesting download of {block_count} blocks starting at address 0x{self.slot0_start_address:08X}...")
+        address = udsoncan.MemoryLocation(memorysize=block_count * self.block_size, address=self.slot0_start_address, address_format=32)
+        client.request_download(memory_location=address)
 
-                time.sleep(0.05)
+        for i in range(block_count):
+            print(f"Transferring block {i + 1}/{block_count}...")
+            client.transfer_data((i + 1) % 256, blocks.pop(0))
+            client.tester_present()
 
-            client.request_transfer_exit()
+            time.sleep(0.05)
+
+        client.request_transfer_exit()
 
     def do_run(self, command, **kwargs):  # pylint: disable=unused-argument
         bin_file = self._bin_file

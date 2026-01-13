@@ -1,8 +1,17 @@
 ARDEP - Automotive Rapid Development Platform
 ##############################################
 
+..  image:: boards/mercedes/ardep/doc/3d_view_v2.png
+    :width: 100%
+
 ARDEP is a powerful toolkit specifically designed for automotive developers based on the `Zephyr RTOS <https://www.zephyrproject.org/>`_.
-It provides easy to use abstractions, features and tools to simplify the development process for automotive applications.
+It provides easy to use abstractions, features and tools to simplify the development process for automotive applications:
+
+WIP
+- **Open Source**: From Hardware to Software, ARDEP is fully open source, allowing developers to customize and adapt it to their specific needs.
+- **Communication**: CAN, UDS, LIN, SPI, I2C, UART are all supported by ARDEP with easy to use APIs.
+
+
 
 Getting Started
 ===============

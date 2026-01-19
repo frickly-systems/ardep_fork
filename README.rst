@@ -6,82 +6,52 @@ ARDEP - Automotive Rapid Development Platform
    :width: 50%
 
 
-ARDEP (**A**\ utomotive **R**\ apid **DE**\ velopment **P**\ latform) is an open-source
-hardware and software platform designed for rapid prototyping and development
-of automotive products based on the `Zephyr RTOS <https://www.zephyrproject.org/>`_.
+ARDEP (**A**\ utomotive **R**\ apid **DE**\ velopment **P**\ latform) is an open-source hardware and software platform 
+that simplifies automotive development. It combines a feature-rich development board with a robust 
+Zephyr-based software framework, enabling you to build and deploy automotive applications quickly.
 
-It targets automotive developers and alike who need a robust, UDS-capable development environment with
-real automotive communication interfaces.
+Whether you're prototyping a new automotive device or experimenting with diagnostics,
+ARDEP provides the tools and infrastructure you need.
+
+
+At a Glance
+===========
+
+* **Complete hardware solution** - Ready-to-use development board with CAN, LIN and other common communication interfaces
+* **PowerIO Shield** - Extended Power capabilities for 6 Outputs and 6 Inputs up to 48V and 3A per channel
+* **Automotive-ready software** - Built-in UDS diagnostics (ISO 14229) and DFU firmware update support
+* **Proven foundation** - Based on the reliable Zephyr RTOS with a large ecosystem
+* **Fast prototyping** - Develop and iterate quickly without worrying about hardware integration
 
 
 Key Features
 ============
 
-* **Automotive development board**
+**Hardware**
 
-  * Open-Source Integrated development board for rapid prototyping and evaluation
-  * Onboard CAN and LIN transceivers: no external transceivers required
-  * Onboard debugger and programmer with UART connection
-  * Easy access to GPIOs and communication interfaces
+* **Integrated development board** - Open-source design with everything you need built-in
+* **Automotive communication** - Onboard CAN and LIN transceivers (no external components needed)
+* **Debugger & programmer onboard** - Integrated debugger and programmer with UART connection
+* **PowerIO Shield** - Extended power capabilities with six 3A high-side switches at up to 48V
+* **Arduino headers** - Compatible with a wide range of Arduino shields and accessories
 
-* **PowerIO Shield**
+**Software & Framework**
 
-  * Dedicated PowerIO Shield for extended power capabilities
-  * Six high-power high-side switches with up to 3A continuous current per channel and 10A in total at up to 48V
-  * Six 48V tolerant digital inputs
-  * Stackable design for up to 8 PowerIO shields
-  * Abstraction layer for easy control of high-voltage IOs with Zephyr's GPIO API
-
-* **Versatile connectivity**
-
-  * CAN, LIN, SPI, I2C, UART and more
-  * Unified and easy-to-use APIs for automotive communication
-
-* **Robust software framework**
-
-  * Solid foundation for building automotive applications
-  * Designed for modularity and long-term maintainability
-
-* **Automotive diagnostics**
-
-  * Built-in support for UDS services (ISO 14229)
-  * Integrated DFU over UDS for firmware updates
-  * Configurable UDS addresses via Jumpers on the board
-
-* **Zephyr RTOS based**
-
-  * Built on the reliable and widely-used Zephyr RTOS
-  * Access to a large ecosystem of drivers, tools and libraries
+* **Zephyr RTOS based** - Built on the reliable, widely-adopted open-source Zephyr RTOS
+* **Automotive diagnostics** - Built-in UDS support (ISO 14229) for professional diagnostics
+* **Firmware updates** - Integrated DFU (Device Firmware Update) over UDS
+* **Modular architecture** - Clean separation of concerns, designed for long-term maintainability
+* **Rich connectivity** - CAN, LIN, SPI, I2C, UART and more with unified and easy-to-use APIs
 
 
 Getting Started
 ===============
 
-Please refer to the `documentation <https://mercedes-benz.github.io/ardep/>`_
-for detailed information on how to use ARDEP.
+Ready to dive in? Start with the `Getting Started Guide <https://mercedes-benz.github.io/ardep/getting_started/index.html>`_ 
+for a comprehensive step-by-step introduction. You'll find sample projects and examples to help you get up and running quickly.
 
-A step-by-step introduction is available in the
-`Getting Started Guide <https://mercedes-benz.github.io/ardep/getting_started/index.html>`_.
-
-
-Quick Start
-===========
-
-Create a Zephyr workspace using the provided ``west.yml`` file.
-
-.. code-block:: console
-
-    # create a workspace
-    mkdir ardep-workspace
-
-    # clone this repository into the workspace
-    cd ardep-workspace && git clone git@github.com:mercedes-benz/ardep.git ardep
-
-    # initialize the west workspace
-    cd ardep && west init -l --mf ./west.yml .
-
-    # fetch all dependencies
-    west update
+For detailed information on using ARDEP, API references, and troubleshooting, refer to the 
+`complete documentation <https://mercedes-benz.github.io/ardep/>`_.
 
 
 Contributing
